@@ -32,5 +32,7 @@ Run the tests with `npm test`. NPM test will pick up any file in the 'tests' dir
 
 To run a particular test, try `node tests/liteserv-phalanx.js`
 
+## How to run performance tests:
 
+Just like the above (for tests) but you run it with `npm run perf`
 
