@@ -5,4 +5,4 @@ module.exports = {
   SyncGatewayPath : "/Users/jchris/code/cb/mobile/sync_gateway/bin/sync_gateway"
 }
 
-module.exports.SyncGatewayConfigPath = __dirname+"/admin_party.json"
+module.exports.SyncGatewayAdminParty = __dirname+"/admin_party.json"

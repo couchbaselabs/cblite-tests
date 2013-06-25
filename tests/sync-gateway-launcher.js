@@ -10,7 +10,7 @@ test("can launch a Sync Gateway", function(t) {
     port : port,
     dir : __dirname+"/../tmp/sg",
     path : config.SyncGatewayPath,
-    configPath : config.SyncGatewayConfigPath
+    configPath : config.SyncGatewayAdminParty
   })
   serve.once("ready", function(err){
     t.false(err, "no error, Sync Gateway running on our port")
