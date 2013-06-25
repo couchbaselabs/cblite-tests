@@ -9,6 +9,8 @@ var phalanx = require("../lib/phalanx"),
   perf = require("../config/perf"),
   test = require("tap").test;
 
+var writeRateFullMesh = require("./workloads/write-rate-full-mesh")
+
 var ph, sg;
 
 test("create a phalanx of "+perf.numSyncClients+" LiteServs", function(t) {
@@ -39,6 +41,8 @@ test("launch a Sync Gateway", function(t) {
       t.end()
     })
   });
+  sg.stdout.pipe(process.stdout)
+  sg.stderr.pipe(process.stderr)
 });
 
 test("create test-perf dbs on each client", function(t){
@@ -75,7 +79,14 @@ test("get all the clients pulling from the Sync Gateway", function(t){
 })
 
 test("this is where you could plug in different workloads", function(t){
-  t.end()
+  // for now let's plug in one of them
+  writeRateFullMesh(t,
+    ph.servers.map(function(url){return coax([url,"test-perf"]).pax.toString()}),
+    coax([sg.url,"db"]).pax.toString(),
+    perf.clientWriteDelay,
+    t.end.bind(t))
+  // write docs to clients
+  // ensure they show up on other clients
 })
 
 test("exit", function(t) {
