@@ -41,7 +41,42 @@ test("launch a Sync Gateway", function(t) {
   });
 });
 
+test("create test-perf dbs on each client", function(t){
+  async.map(ph.servers, function(url, cb){
+    coax.put([url,"test-perf"], cb)
+  }, function(err, oks){
+    t.equals(null,err,"all dbs created")
+    t.end()
+  })
+})
 
+test("get all the clients pushing with the Sync Gateway", function(t){
+  async.map(ph.servers, function(url, cb){
+    coax.post([url,"_replicate"], {
+      source : "test-perf",
+      target : coax([sg.url,"db"]).pax.toString()
+    }, cb)
+  }, function(err, oks){
+    t.equals(null,err,"all clients pushing")
+    t.end()
+  })
+})
+
+test("get all the clients pulling from the Sync Gateway", function(t){
+  async.map(ph.servers, function(url, cb){
+    coax.post([url,"_replicate"], {
+      target : "test-perf",
+      source : coax([sg.url,"db"]).pax.toString()
+    }, cb)
+  }, function(err, oks){
+    t.equals(null,err,"all clients pulling")
+    t.end()
+  })
+})
+
+test("this is where you could plug in different workloads", function(t){
+  t.end()
+})
 
 test("exit", function(t) {
   ph.kill()
