@@ -1,17 +1,17 @@
-var phalanx = require("./lib/phalanx"),
-  rmdir = require("./lib/rmdir"),
+var phalanx = require("../lib/phalanx"),
+  rmdir = require("../lib/rmdir"),
   async = require("async"),
   coax = require("coax"),
-  config = require("./config"),
+  config = require("../config/local"),
   test = require("tap").test;
 
 var ph, port = 59800, size = 3;
 
 test("can launch a phalanx of LiteServ", function(t) {
-  rmdir(__dirname+"/tmp") // synchronously
+  rmdir(__dirname+"/../tmp") // synchronously
   ph = phalanx.launchLiteServ(size, {
     port : port,
-    dir : __dirname+"/tmp",
+    dir : __dirname+"/../tmp",
     path : config.LiteServPath
   })
 

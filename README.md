@@ -22,11 +22,11 @@ First edit `config/local.js` to point to your build of LiteServ (found via "Prod
 
 Get the dependencies with `npm install`. (It reads `package.json` to know what to get.)
 
-Make a tmp directory `mkdir tmp`
+Make a `tmp` directory inside your `test-mobile` checkout, by running `mkdir tmp`
 
-Run the tests with `npm test`.
+Run the tests with `npm test`. NPM test will pick up any file in the 'tests' directory.
 
-To run a particular test, try `node phalanx-test.js`
+To run a particular test, try `node tests/liteserv-phalanx.js`
 
-NPM test will pick up any file that matches `*-test.js`.
+
 

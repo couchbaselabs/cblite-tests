@@ -1,6 +1,6 @@
-var launcher = require("./lib/launcher"),
+var launcher = require("../lib/launcher"),
   coax = require("coax"),
-  config = require("./config"),
+  config = require("../config/local.js"),
   test = require("tap").test;
 
 var serve, port = 8888, server = "http://localhost:"+port+"/"
@@ -8,7 +8,7 @@ var serve, port = 8888, server = "http://localhost:"+port+"/"
 test("can launch a Sync Gateway", function(t) {
   serve = launcher.launchSyncGateway({
     port : port,
-    dir : __dirname+"/tmp/sg",
+    dir : __dirname+"/../tmp/sg",
     path : config.SyncGatewayPath,
     configPath : config.SyncGatewayConfigPath
   })

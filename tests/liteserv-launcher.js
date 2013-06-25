@@ -1,6 +1,6 @@
-var launcher = require("./lib/launcher"),
+var launcher = require("../lib/launcher"),
   coax = require("coax"),
-  config = require("./config"),
+  config = require("../config/local"),
   test = require("tap").test;
 
 var serve, port = 59850, server = "http://localhost:"+port+"/"
@@ -8,7 +8,7 @@ var serve, port = 59850, server = "http://localhost:"+port+"/"
 test("can launch a LiteServ", function(t) {
   serve = launcher.launchLiteServ({
     port : port,
-    dir : __dirname+"/tmp/single",
+    dir : __dirname+"/../tmp/single",
     path : config.LiteServPath
   })
   serve.once("ready", function(err){
