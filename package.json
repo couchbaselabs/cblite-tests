@@ -11,7 +11,8 @@
   ],
   "dependencies" : ["tap", "coax", "fast-stats", "async"],
   "scripts": {
-    "test": "tap ./tests --tap"
+    "test": "tap ./tests --tap",
+    "perf": "tap ./perf --tap"
   },
   "author": "Couchbase, Inc.",
   "license": "Apache 2.0"

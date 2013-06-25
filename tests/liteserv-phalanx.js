@@ -5,7 +5,9 @@ var phalanx = require("../lib/phalanx"),
   config = require("../config/local"),
   test = require("tap").test;
 
-var ph, port = 59800, size = 3;
+var replicateClientServerClient = require("./subtests/replicate-client-server-client")
+
+var ph, port = 59810, size = 3;
 
 test("can launch a phalanx of LiteServ", function(t) {
   rmdir(__dirname+"/../tmp") // synchronously
@@ -37,7 +39,7 @@ test("can launch a phalanx of LiteServ", function(t) {
   });
 });
 
-test("empty test databases", function(t){
+test("setup test databases", function(t){
   async.map(ph.servers, function(url, cb) {
     var db = coax([url,"phalanx-test"])
     console.log("coax", db.pax)
@@ -59,80 +61,11 @@ test("empty test databases", function(t){
   })
 })
 
-function loadDb(db, count, done) {
-  async.times(count, function(i,cb){
-    db.post({_id:"i"+i}, cb)
-  }, done)
-}
-
-function verifyDb(db, count, done) {
-  async.times(count, function(i,cb){
-    db.get("i"+i, cb)
-  }, done)
-}
-
-test("load a test database", function(t){
-  var db = coax([ph.servers[0], "phalanx-test"])
-  db.put(function(err, ok){
-    db.get(function(err, ok){
-      t.equals(ok.db_name, "phalanx-test", "ready to load")
-      loadDb(db, 50, function(err, oks){
-        t.equals(err, null, "all ok")
-        t.end()
-      })
-    })
-  })
+test("replicate between all 3 servers", function(t){
+  var dbs = ph.servers.map(function(server) {return coax([server, "phalanx-test"])})
+  replicateClientServerClient(t, dbs, t.end.bind(t))
 })
 
-test("verify the database", function(t){ // assumes "load a test database" just ran
-  var db = coax([ph.servers[0], "phalanx-test"])
-  verifyDb(db, 50, function(err, ok){
-    t.equals(err, null, "all ok")
-    t.end()
-  })
-})
-
-test("can pull replicate LiteServ to LiteServ", function(t){
-  var source = coax([ph.servers[0], "phalanx-test"])
-    // target = coax([ph.servers[1], "phalanx-test"]),
-    // replicator = coax([, "_replicate"])
-
-  coax(ph.servers[1]).post("_replicate", {
-    source : source.pax.toString(),
-    target : "phalanx-test"
-  }, function(err, ok){
-    t.equals(err, null, "replicating")
-    t.end()
-  })
-})
-
-
-test("verify the pull target", function(t){ // assumes "can pull replicate LiteServ to LiteServ" just ran
-  var db = coax([ph.servers[1], "phalanx-test"])
-  verifyDb(db, 50, function(err, ok){
-    t.equals(err, null, "all replicated")
-    t.end()
-  })
-})
-
-test("can push replicate LiteServ to LiteServ", function(t){
-  var target = coax([ph.servers[2], "phalanx-test"])
-  coax(ph.servers[0]).post("_replicate", {
-    target : target.pax.toString(),
-    source : "phalanx-test"
-  }, function(err, ok){
-    t.equals(err, null, "replicating")
-    t.end()
-  })
-})
-
-test("verify the push target", function(t){ // assumes "can pull replicate LiteServ to LiteServ" just ran
-  var db = coax([ph.servers[2], "phalanx-test"])
-  verifyDb(db, 50, function(err, ok){
-    t.equals(err, null, "all replicated")
-    t.end()
-  })
-})
 
 test("exit", function(t){
   ph.kill()

@@ -1,0 +1,75 @@
+
+var launcher = require("../lib/launcher"),
+  phalanx = require("../lib/phalanx"),
+  coax = require("coax"),
+  async = require("async"),
+  config = require("../config/local"),
+  test = require("tap").test,
+  replicateClientServerClient = require("./subtests/replicate-client-server-client")
+
+var sg, ph;
+
+test("launch 2 LiteServs", function(t) {
+  ph = phalanx.launchLiteServ(2, {
+    port : 59845,
+    dir : __dirname+"/../tmp",
+    path : config.LiteServPath
+  })
+  ph.once("ready", function(){
+    async.map(ph.servers, coax, function(err, oks){
+      t.false(err, "all servers reachable")
+      t.end()
+    })
+  });
+  ph.once("error", function(err){
+    ph.kill()
+    t.fail()
+    console.log("error launching phalanx", err)
+    process.exit()
+  })
+});
+
+
+test("launch a Sync Gateway", function(t) {
+  sg = launcher.launchSyncGateway({
+    port : 9888,
+    dir : __dirname+"/../tmp/sg",
+    path : config.SyncGatewayPath,
+    configPath : config.SyncGatewayConfigPath
+  })
+  sg.once("ready", function(err){
+    t.false(err, "no error, Sync Gateway running on our port")
+    sg.db = coax([sg.url,"db"])
+    sg.db(function(err, ok){
+      t.false(err, "no error, Sync Gateway reachable")
+      t.end()
+    })
+  });
+});
+
+test("create test databases", function(t) {
+  async.map(ph.servers, function(url, cb){
+    coax.put([url, "test-repl"], cb)
+  }, function(err, oks){
+    t.false(err,"all dbs created")
+    t.end()
+  })
+})
+
+
+test("replicate between all 3 servers", function(t){
+  var dbs = [
+  coax([ph.servers[0], "test-repl"]),
+  sg.db,
+  coax([ph.servers[1], "test-repl"])];
+  // console.log("servers", dbs);
+  replicateClientServerClient(t, dbs, t.end.bind(t))
+})
+
+
+test("exit", function(t){
+  sg.kill()
+  ph.kill()
+  t.end()
+})
+

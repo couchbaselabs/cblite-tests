@@ -23,13 +23,26 @@ test("can launch a Sync Gateway", function(t) {
 
 test("can get db info", function(t){
   coax([server, "db"]).get(function(err, ok){
-    if (err) {
-      t.equals(412, err.status, "database exists")
-    } else {
-      t.ok(ok, "created database")
-      t.equals(ok.db_name, "db", "correct name")
-    }
-    serve.kill()
+    t.ok(ok, "created database")
+    t.equals(ok.db_name, "db", "correct name")
     t.end()
   })
+})
+test("can write and read", function(t) {
+  var doc = coax([server, "db", "docid"])
+  console.log(doc.pax.toString())
+  doc.put({"ok":true}, function(err, ok){
+    console.log(err, ok)
+    t.false(err, "saved")
+    t.equals(ok.id, "docid")
+    doc.get(function(err, ok){
+      t.false(err, "loaded")
+    })
+  })
+
+})
+
+test("exit", function(t) {
+  serve.kill()
+  t.end()
 })
