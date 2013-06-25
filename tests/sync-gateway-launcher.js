@@ -37,6 +37,7 @@ test("can write and read", function(t) {
     t.equals(ok.id, "docid")
     doc.get(function(err, ok){
       t.false(err, "loaded")
+      t.end()
     })
   })
 
