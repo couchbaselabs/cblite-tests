@@ -14,7 +14,7 @@ To install LiteServ, download the latest stable build from the link [in the Couc
 
 ### Sync Gateway
 
-Follow the instructions [on the Sync Gateway readme, about how to install](https://github.com/couchbaselabs/sync_gateway/wiki/Installing-and-Upgrading). Edit `config/local.js`
+Follow the instructions [on the Sync Gateway readme, about how to install](https://github.com/couchbaselabs/sync_gateway/wiki/Installing-and-Upgrading). Remember the path you downloaded it to so you can edit `config/local.js` to point to it.
 
 ### Node.js
 
@@ -22,7 +22,7 @@ You'll need a newish Node.js install (>0.8) with npm. We recommend `brew install
 
 ## How to run these tests
 
-First edit `config/local.js` to point to your build of LiteServ (found via "Products" in Xcode).
+First edit `config/local.js` to point to your build of LiteServ (found via "Products" in Xcode). Also to your local bin/sync_gateway
 
 Get the dependencies with `npm install`. (It reads `package.json` to know what to get.)
 
