@@ -61,7 +61,11 @@ test("get all the clients pushing with the Sync Gateway", function(t){
       target : coax([sg.url,"db"]).pax.toString()
     }, cb)
   }, function(err, oks){
+    // console.log("all clients pushing", oks)
     t.equals(null,err,"all clients pushing")
+    oks.forEach(function (ok) {
+      t.ok(ok.session_id, "has a session")
+    })
     t.end()
   })
 })
@@ -73,6 +77,7 @@ test("get all the clients pulling from the Sync Gateway", function(t){
       source : coax([sg.url,"db"]).pax.toString()
     }, cb)
   }, function(err, oks){
+    // console.log("all clients pulling",oks)
     t.equals(null,err,"all clients pulling")
     t.end()
   })

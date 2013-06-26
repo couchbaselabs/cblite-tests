@@ -36,3 +36,6 @@ To run a particular test, try `node tests/liteserv-phalanx.js`
 
 Just like the above (for tests) but you run it with `npm run perf`
 
+## Troubleshooting
+
+`killall LiteServ` is your friend.
