@@ -72,7 +72,7 @@ test("replicate between all 3 servers", function(t){
   coax([ph.servers[0], "test-repl"]),
   sg.db,
   coax([ph.servers[1], "test-repl"])];
-  console.log("servers", dbs);
+  //console.log("servers", dbs);
   replicateClientServerClient(t, dbs, t.end.bind(t))
 })
 
