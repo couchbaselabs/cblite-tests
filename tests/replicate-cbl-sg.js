@@ -49,20 +49,30 @@ test("launch a Sync Gateway", function(t) {
 
 test("create test databases", function(t) {
   async.map(ph.servers, function(url, cb){
-    coax.put([url, "test-repl"], cb)
-  }, function(err, oks){
-    t.false(err,"all dbs created")
-    t.end()
-  })
+    /* check if db exists */
+    coax([url,"test-repl"], function(err, json){
+        if(!err){
+            /* delete db */
+            coax.del([url, "test-repl"], function(err, json){
+                t.false(err, "deleted existing db")
+                coax.put([url, "test-repl"], cb)
+            });
+        } else {
+            coax.put([url, "test-repl"], cb)
+        }
+    });
+    }, function(err, oks){
+        t.false(err,"all dbs created")
+        t.end()
+        })
 })
-
 
 test("replicate between all 3 servers", function(t){
   var dbs = [
   coax([ph.servers[0], "test-repl"]),
   sg.db,
   coax([ph.servers[1], "test-repl"])];
-  // console.log("servers", dbs);
+  console.log("servers", dbs);
   replicateClientServerClient(t, dbs, t.end.bind(t))
 })
 
