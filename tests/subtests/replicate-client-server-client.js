@@ -1,7 +1,7 @@
 // take a two instances of a client and one of a server
 // write a workload to client a
 // sync to the server
-// sync from the server to client b
+// sync from the server to client b (todo: or from n clients)
 // verify the data
 
 var coax = require("coax"),
