@@ -89,6 +89,7 @@ test("this is where you could plug in different workloads", function(t){
     ph.servers.map(function(url){return coax([url,"test-perf"]).pax.toString()}),
     coax([sg.url,"db"]).pax.toString(),
     perf.clientWriteDelay,
+    perf.runSeconds,
     t.end.bind(t))
   // write docs to clients
   // ensure they show up on other clients
