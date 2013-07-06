@@ -9,7 +9,7 @@
     "mobile",
     "sync"
   ],
-  "dependencies" : ["tap", "coax", "fast-stats", "async", "nodeload", "restify"],
+  "dependencies" : ["tap", "coax", "cb-fast-stats", "async", "nodeload","restify"],
   "scripts": {
     "test": "TAP_TIMEOUT=20 tap ./tests --tap",
     "perf": "TAP_TIMEOUT=60 tap ./perf --tap"
