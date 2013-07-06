@@ -3,7 +3,6 @@ var phalanx = require("../lib/phalanx"),
   async = require("async"),
   test = require("tap").test,
   loop = require("nodeload/lib/loop"),
-  rmdir = require("../lib/rmdir"),
   resources = require("../config/local").resources,
   perf = require("../config/perf"),
   listener = require("../lib/listener");
@@ -26,7 +25,6 @@ module.exports.setup = function(){
 
   test("start liteservs", function(t){
 
-    rmdir(__dirname+"/../tmp")
 
     resources.LiteServProviders.forEach(function(url){
 
@@ -64,32 +62,20 @@ module.exports.setup = function(){
 
 module.exports.teardown = function(){
 
-  test("stop liteservs", function(t) {
+  test("cleanup", function(t){
 
-    if (resources.LiteServProviders.length > 0){
-      resources.LiteServProviders.forEach(function(url){
-          coax([url,"stop","liteservs"], function(err, json){
-              t.false(err, json)
-              t.end()
+      providers = resources.LiteServProviders.concat(resources.SyncGatewayProviders)
+
+      async.mapSeries(providers, function(url, cb){
+          coax([url,"cleanup"], function(err, json){
+            cb(err,json)
           })
-      })
-    } else {
-      t.end()
-    }
-  })
-
-
-
-  test("stop gateways", function(t){
-
-      resources.SyncGatewayProviders.forEach(function(url){
-          coax([url,"stop","syncgateways"], function(err, json){
-              t.false(err, "stopped sync_gateway on url: "+url)
-              t.end()
-          })
+      }, function(err, result){
+        console.log(err)
+        t.false(err, "cleanup done")
+        t.end()
       })
   });
-
 
   test("stop local listener", function(t) {
     server.close()
