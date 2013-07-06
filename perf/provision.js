@@ -34,7 +34,7 @@ module.exports.setup = function(){
 
           coax.post([url,"start","liteserv",{}],
             function(err, json){
-                next(err, json['ok'])
+                next(err, json.toString())
             })},
             function(err, results){
               t.false(err, results)
@@ -52,7 +52,8 @@ module.exports.setup = function(){
 
         async.timesSeries(perf.numGateways, function(n, next){
             coax.post([url,"start","syncgateway", {}], function(err, json){
-                t.false(err, json['ok'])
+                console.log(err)
+                t.false(err, json.toString())
                 t.end()
             })
         })

@@ -16,20 +16,30 @@ if (resources.Provision== true){
 
 
 test("init", function(t){
-
-  resources.LiteServProviders.forEach(function(url){
-    coax([url,"liteservs"],
-        function(err, json){
-          t.false(err, json['ok'].length + " clients ready")
-          clients = json['ok']
-
+  async.series({
+    set_clients: function(cb){
+      async.map(resources.LiteServProviders, function(url, _cb){
+        coax([url,"liteservs"],
+          function(err, json){
+            if(!err)
+            clients = clients.concat(json['ok'])
+            _cb(err,json)
+        })
+      }, function(err, results){ cb(err,results) })
+    },
+    set_gateways: function(cb){
+      async.map(resources.SyncGatewayProviders, function(url, _cb){
         coax([url,"syncgateways"],
-            function(err, json){
-              t.false(err, json['ok'].length + " gateways ready")
-              gateways = json['ok']
-             t.end()
-            })
-    })
+          function(err, json){
+            if(!err)
+            gateways = gateways.concat(json['ok'])
+            _cb(err,'ok')
+      })
+    }, function(err, results){ cb(err,results) })
+    }
+  }, function(err, results){
+     t.false(err, "setup => "+clients.length+" clients, "+gateways.length+" gateways")
+     t.end()
   })
 })
 
@@ -45,7 +55,6 @@ test("create test-perf dbs on each client", function(t){
 test("get all the clients pushing with the Sync Gateway", function(t){
 
   async.map(clients, function(url, cb){
-
     coax.post([url,"_replicate"], {
       source : "test-perf",
       target : coax([gateways[0],"db"]).pax.toString()
@@ -84,6 +93,7 @@ test("this is where you could plug in different workloads", function(t){
     perf.runSeconds,
     t.end.bind(t))
 })
+
 
 if (resources.Provision== true){
   provision.teardown()
