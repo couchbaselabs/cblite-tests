@@ -20,7 +20,7 @@ Follow the instructions [on the Sync Gateway readme, about how to install](https
 
 You'll need a newish Node.js install (>0.8) with npm. We recommend `brew install nodejs`
 
-## How to run these tests
+# How to run these tests
 
 First edit `config/local.js` to point to your build of LiteServ (found via "Products" in Xcode). Also to your local bin/sync_gateway
 

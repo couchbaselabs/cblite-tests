@@ -11,7 +11,7 @@
   ],
   "dependencies" : ["tap", "coax", "cb-fast-stats", "async", "nodeload","restify"],
   "scripts": {
-    "test": "TAP_TIMEOUT=20 tap ./tests --tap",
+    "test": "TAP_TIMEOUT=20 tap ./tests",
     "perf": "TAP_TIMEOUT=60 tap ./perf --tap"
   },
   "author": "Couchbase, Inc.",
