@@ -11,6 +11,11 @@ test("can launch a LiteServ", function(t) {
     dir : __dirname+"/../tmp/single",
     path : config.LiteServPath
   })
+  serve.on("error", function(e){
+    console.log("error launching LiteServe", e)
+    t.fail("error launching LiteServe")
+    t.end()
+  })
   serve.once("ready", function(err){
     t.false(err, "no error, LiteServe running on our port")
     coax(server, function(err, ok){
