@@ -5,4 +5,5 @@ var perf = module.exports = {
   channelsPerClient : 5,
   channelsPerDoc : 5,
   runSeconds : 10,
+  requestsPerSec: 10,
 }
