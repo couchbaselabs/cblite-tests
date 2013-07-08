@@ -2,14 +2,15 @@ var phalanx = require("../lib/phalanx"),
   coax = require("coax"),
   async = require("async"),
   test = require("tap").test,
-  loop = require("nodeload/lib/loop"),
   resources = require("../config/local").resources,
   perf = require("../config/perf"),
   listener = require("../lib/listener");
 
 var server;
 
+
 module.exports.setup = function(){
+
 
   test("test start local listener", function(t){
 
@@ -23,6 +24,16 @@ module.exports.setup = function(){
 
   })
 
+  test("cleanup", function(t){
+    cleanup(t, function(err, result){
+        t.false(err, "cleanup done")
+        t.end()
+
+    })
+
+  });
+
+
   test("start liteservs", function(t){
 
 
@@ -32,13 +43,12 @@ module.exports.setup = function(){
 
           coax.post([url,"start","liteserv",{}],
             function(err, json){
-                next(err, json.toString())
+                next(err, 'ok' in json ? json['ok'] : json)
             })},
             function(err, results){
               t.false(err, results)
               t.end()
             })
-
     })
 
 
@@ -50,11 +60,12 @@ module.exports.setup = function(){
 
         async.timesSeries(perf.numGateways, function(n, next){
             coax.post([url,"start","syncgateway", {}], function(err, json){
-                console.log(err)
-                t.false(err, json.toString())
-                t.end()
+                next(err, 'ok' in json ? json['ok'] : json)
+            })},
+            function(err, results){
+              t.false(err, results)
+              t.end()
             })
-        })
       })
   });
 
@@ -63,23 +74,31 @@ module.exports.setup = function(){
 module.exports.teardown = function(){
 
   test("cleanup", function(t){
-
-      providers = resources.LiteServProviders.concat(resources.SyncGatewayProviders)
-
-      async.mapSeries(providers, function(url, cb){
-          coax([url,"cleanup"], function(err, json){
-            cb(err,json)
-          })
-      }, function(err, result){
-        console.log(err)
+    cleanup(t, function(err, result){
         t.false(err, "cleanup done")
         t.end()
-      })
-  });
+
+    })
+  })
 
   test("stop local listener", function(t) {
     server.close()
     t.end()
   });
+
+}
+
+
+function cleanup(t, cb){
+
+  providers = resources.LiteServProviders.concat(resources.SyncGatewayProviders)
+
+  async.mapSeries(providers, function(url, _cb){
+      coax([url,"cleanup"], function(err, json){
+        _cb(err,json)
+      })
+  }, function(err, result){
+    cb(err, "cleanup done")
+  })
 
 }
