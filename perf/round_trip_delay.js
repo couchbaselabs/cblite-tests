@@ -89,16 +89,27 @@ test("get all clients pushing with the Sync Gateway", function(t){
 })
 
 
-test("concurrent workload writer",
+test("1x phase writer",
      {timeout : perf.runSeconds*10000},
      function(t){
+        ph_clients = clients.splice(0, Math.floor(clients.length*0.10) + 1)
         writeConcurrentLoader(t,
-            clients.map(function(url){return coax([url,"test-perf"]).pax.toString()}),
+            ph_clients.map(function(url){return coax([url,"test-perf"]).pax.toString()}),
             coax([gateways[0],"db"]).pax.toString(),
             perf,
             t.end.bind(t))
 })
 
+test("5x phase writer  writer",
+     {timeout : perf.runSeconds*10000},
+     function(t){
+        ph_clients = clients.splice(0, Math.floor(clients.length*0.20) + 1)
+        writeConcurrentLoader(t,
+            ph_clients.map(function(url){return coax([url,"test-perf"]).pax.toString()}),
+            coax([gateways[0],"db"]).pax.toString(),
+            perf,
+            t.end.bind(t))
+})
 
 
 if (resources.Provision== true){
