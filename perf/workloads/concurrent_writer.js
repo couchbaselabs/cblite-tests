@@ -4,6 +4,7 @@ var coax = require("coax"),
   statr = require("../../lib/statr"),
   running = false
   writer_index = 0
+  doc_map = {}
 
 module.exports = function(t, clients, server, perf, done) {
 
@@ -22,11 +23,12 @@ module.exports = function(t, clients, server, perf, done) {
       clients = clients.splice(1,clients.length)
      }
      async.map(clients, function(client, cb){
+       doc_map[client] = 0
        writer = startWriter(client, perf)
        cb(null, writer)
      }, function(err, result){
        writers = result
-       t.false(err, "started "+result.length+"writers")
+       t.false(err, "started "+result.length+" writers")
        t.end()
      })
 
@@ -35,12 +37,7 @@ module.exports = function(t, clients, server, perf, done) {
   t.test('measure latencies coming off one client\'s changes feed',
     {timeout : perf.runSeconds*10000},
     function(t){
-      writers[0].on('end', function() {
-        running = false
-        console.log("writer done")
-        writer.removeAllListeners()
-        t.end()
-      })
+
       changes = coax(pull_client).changes({feed : "continuous"}, function(){})
       changes.on("data", function(data){
         if(running){
@@ -55,7 +52,7 @@ module.exports = function(t, clients, server, perf, done) {
           var gotch = new Date()
           coax([pull_client, json.id], function(err, doc) {
             // record how long it took to receive doc from another client //
-            if(doc.on != pull_client){
+            if(doc && doc.on != pull_client){
               mystatr.stat("change", (gotch-new Date(doc.at)))
               mystatr.stat("doc", (new Date()-new Date(doc.at)))
               console.log("took "+(gotch-new Date(doc.at))+" milliseconds to see doc "+json.id)
@@ -63,6 +60,66 @@ module.exports = function(t, clients, server, perf, done) {
           })
         }
       })
+
+    /* wait for all writers to finish */
+    async.map(writers, function(writer, cb){
+      writer.on('end', function(){
+          cb(null, {ok : "done"})
+      })
+    }, function(err, result){
+        /* verify gateway and every client has total # of docs written */
+        var total_docs = 0
+        for (var key in doc_map){
+          console.log(key+"->"+doc_map[key])
+          total_docs = total_docs + doc_map[key]
+        }
+
+        // gateway
+        setTimeout(
+          function(){
+            coax([server], function(err, doc) {
+
+              t.false(err, "got gateway docs")
+              if (doc && 'doc_count' in doc){
+                t.false(doc.doc_count < total_docs, "all documents replicated")
+              } else {
+                t.fail("unable to retrieve doc count")
+              }
+          })
+          }, 5000)
+
+          // clients
+          async.map(clients, function(client, cb){
+            var client_docs = 0
+            var retry = 0
+            async.whilst(
+              function() {
+                if (retry < 120){
+                  return client_docs < total_docs
+                } else {
+                  return false
+                }
+               },
+              function(err_cb) {
+                /* query doc count every second */
+                setTimeout( function(){
+                              coax([client], function(err, doc) {
+                                        client_docs = doc.doc_count
+                                        retry = retry + 1
+                                        err_cb(null)
+                              })
+                }, 1000)
+               },
+              function(err){
+                  t.false(client_docs < total_docs, client +"  has "+ client_docs+" docs")
+                  cb(null, 'ok')
+              })
+          }, function(err, result){
+            t.false(err, 'ok')
+            t.end()
+          });
+    })
+
   })
 
   t.test("print stats", function(t){
@@ -90,6 +147,7 @@ function startWriter(client, perf){
                 }
                 var now = new Date();
                 lasttime = now;
+                doc_map[client] = i
                 i++;
                 finished();
              })
