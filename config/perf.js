@@ -6,4 +6,6 @@ var perf = module.exports = {
   channelsPerDoc : 5,
   runSeconds : 20,
   requestsPerSec: 10,
+  readRatio: 90,
+  writeRatio: 10,
 }

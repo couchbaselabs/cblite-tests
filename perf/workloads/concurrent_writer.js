@@ -109,17 +109,22 @@ function startWriter(client, perf){
 
   var url = client
   var db = coax(url)
-  var i = 0,
+  var loop_counter = doc_counter = 0
+
   writer = new loop.Loop({
       fun: function(finished) {
-            db.post({at : new Date(), on : url}, function(err, json){
-                if (err != null){
-                  console.log("ERROR: "+err)
-                }
-                doc_map[client] = i
-                i++;
-                finished();
-             })
+            if ((10 - loop_counter%10)/(perf.writeRatio/10) <= 1){
+              console.log("Post: "+loop_counter)
+               db.post({at : new Date(), on : url}, function(err, json){
+                  if (err != null){
+                    console.log("ERROR: "+err)
+                  }
+                  doc_map[client] = doc_counter
+                  doc_counter++
+               })
+            }
+            loop_counter++
+            finished();
       },
       rps: perf.requestsPerSec, 
       duration: perf.runSeconds,
