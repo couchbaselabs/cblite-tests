@@ -116,7 +116,7 @@ function startReaderWriter(client, perf){
 
   writer = new loop.Loop({
       fun: function(finished) {
-            if ((10 - loop_counter%10) > (perf.writeRatio/10)){
+            if ((loop_counter%10) < (perf.writeRatio/10)){
                db.post({at : new Date(), on : url}, function(err, json){
                   if (err != null){
                     console.log("ERROR: "+err)
@@ -130,17 +130,18 @@ function startReaderWriter(client, perf){
                   doc_map[client] = doc_map[client] + 1
                })
                total_writes++
-            }
-            if ((10 - loop_counter%10) > (perf.readRatio/10)){
-              if(recent_docs.length > 0){
-                id = recent_docs[Math.floor(Math.random()*recent_docs.length)]
-                coax([url, id], function(err, doc) {
-                  if(err){
-                    console.log("Error retrieving doc: "+err)
-                   }
-                })
+            }else {
+              if ((loop_counter%10) < (perf.readRatio/10)){
+                if(recent_docs.length > 0){
+                  id = recent_docs[Math.floor(Math.random()*recent_docs.length)]
+                  coax([url, id], function(err, doc) {
+                    if(err){
+                      console.log("Error retrieving doc: "+err)
+                     }
+                  })
+                }
+                 total_reads++
               }
-               total_reads++
             }
             loop_counter++
             finished();
