@@ -43,7 +43,10 @@ module.exports.setup = function(){
 
           coax.post([url,"start","liteserv",{}],
             function(err, json){
-                next(err, 'ok' in json ? json['ok'] : json)
+                if ('error' in json){
+                  err = json['error']
+                }
+                next(err, 'ok' in json ? json['ok'] : err)
             })},
             function(err, results){
               t.false(err, results)
@@ -60,7 +63,10 @@ module.exports.setup = function(){
 
         async.timesSeries(perf.numGateways, function(n, next){
             coax.post([url,"start","syncgateway", {}], function(err, json){
-                next(err, 'ok' in json ? json['ok'] : json)
+                if ('error' in json){
+                  err = json['error']
+                }
+                next(err, 'ok' in json ? json['ok'] : err)
             })},
             function(err, results){
               t.false(err, results)
