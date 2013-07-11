@@ -115,18 +115,15 @@ module.exports = function(clients, server, perf, done) {
 function startWriter(client, perf){
 
   running = true
-  var i = 0, start = new Date(), lasttime = start,
+  var url = client
+  var db = coax(url)
+  var i = 0,
   writer = new loop.Loop({
       fun: function(finished) {
-            url = client
-            var db = coax(url);
-            var doc={at : new Date(), on : url}
-            db.post(doc, function(err, json){
+            db.post({at : new Date(), on : url}, function(err, json){
                 if (err != null){
                   console.log("ERROR: "+err)
                 }
-                var now = new Date();
-                lasttime = now;
                 doc_map[client] = i
                 i++;
                 finished();
