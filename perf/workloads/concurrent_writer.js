@@ -2,13 +2,10 @@ var coax = require("coax"),
   async = require("async"),
   loop = require("nodeload/lib/loop"),
   statr = require("../../lib/statr"),
-  running = false
   writer_index = 0
+  perf_running = true
+  mystatr = statr()
   doc_map = {}
-
-function startWriters(){
-
-}
 
 
 module.exports = function(clients, server, perf, done) {
@@ -17,8 +14,8 @@ module.exports = function(clients, server, perf, done) {
 
   var delay = perf.clientWriteDelay
   var RUNSECONDS = perf.runSeconds
-  var mystatr = statr()
   var changes, writers, pull_client = clients[0]
+  statCheckPointer()
 
   console.log("Pull client "+pull_client)
 
@@ -29,32 +26,28 @@ module.exports = function(clients, server, perf, done) {
 
   changes = coax(pull_client).changes({feed : "continuous"}, function(){})
   changes.on("data", function(data){
-    if(running){
-        try {
-          var json = JSON.parse(data.toString())
-        } catch(e) {}
-        if (json) changes.emit("json",json)
-    }
+      try {
+        var json = JSON.parse(data.toString())
+        changes.emit("json",json)
+      } catch(e) {}
   })
+
   changes.on("json", function(json){
-    if(running){
       var gotch = new Date()
       coax([pull_client, json.id], function(err, doc) {
         // record how long it took to receive doc from another client //
         if(doc && doc.on != pull_client){
           mystatr.stat("change", (gotch-new Date(doc.at)))
           mystatr.stat("doc", (new Date()-new Date(doc.at)))
-          //console.log("took "+(gotch-new Date(doc.at))+" milliseconds to see doc "+json.id)
         }
       })
-    }
   })
 
   async.map(clients, function(client, cb){
-    doc_map[client] = 0
     writer = startWriter(client, perf)
     cb(null, writer)
   }, function(err, result){
+
     writers = result
 
     /* wait for all writers to finish */
@@ -65,15 +58,14 @@ module.exports = function(clients, server, perf, done) {
     }, function(err, result)
       {
         console.log("writers done")
-        /* verify gateway and every client has total # of docs written */
+        /* verify every client has total # of docs written */
         var total_docs = 0
         for (var key in doc_map){
-          console.log(key+" created ->"+doc_map[key])
+          //console.log(key+" created ->"+doc_map[key])
           total_docs = total_docs + doc_map[key]
         }
+        console.log("total docs ->"+total_docs)
 
-
-          // clients
           async.map(clients, function(client, cb){
             var retry = 0
             async.whilst(
@@ -96,12 +88,13 @@ module.exports = function(clients, server, perf, done) {
                 }, 1000)
                },
               function(err){
-                  console.log( client +" finished with "+ doc_map[client]+"/"+total_docs+" total docs")
+                  //console.log( client +" finished with "+ doc_map[client]+"/"+total_docs+" total docs")
                   cb(null, 'ok')
               })
           }, function(err, result){
             console.log("stats", mystatr.summary())
             console.log("pull client: "+clients[0]+" has "+doc_map[clients[0]]+' of total_docs='+total_docs+' docs pulled')
+            perf_running = false
             done()
           });
     })
@@ -114,7 +107,6 @@ module.exports = function(clients, server, perf, done) {
 
 function startWriter(client, perf){
 
-  running = true
   var url = client
   var db = coax(url)
   var i = 0,
@@ -129,9 +121,22 @@ function startWriter(client, perf){
                 finished();
              })
       },
-      rps: perf.requestsPerSec, // times per second (every 200ms)
-      duration: perf.runSeconds, // second
+      rps: perf.requestsPerSec, 
+      duration: perf.runSeconds,
   }).start();
 
   return writer
+}
+
+function statCheckPointer(){
+
+  async.whilst(
+    function() { return perf_running},
+    function(cb) {
+      setTimeout(function(){
+        console.log(mystatr.summary())
+        cb(null)
+      }, 10000)},
+    function(err){} )
+
 }
