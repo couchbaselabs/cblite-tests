@@ -5,6 +5,7 @@ var coax = require("coax"),
   writer_index = 0
   perf_running = true
   mystatr = statr()
+  total_reads = total_writes = 0
   doc_map = {}
 
 
@@ -44,7 +45,7 @@ module.exports = function(clients, server, perf, done) {
   })
 
   async.map(clients, function(client, cb){
-    writer = startWriter(client, perf)
+    writer = startReaderWriter(client, perf)
     cb(null, writer)
   }, function(err, result){
 
@@ -61,7 +62,7 @@ module.exports = function(clients, server, perf, done) {
         /* verify every client has total # of docs written */
         var total_docs = 0
         for (var key in doc_map){
-          //console.log(key+" created ->"+doc_map[key])
+          console.log(key+" created ->"+doc_map[key])
           total_docs = total_docs + doc_map[key]
         }
         console.log("total docs ->"+total_docs)
@@ -95,6 +96,7 @@ module.exports = function(clients, server, perf, done) {
             console.log("stats", mystatr.summary())
             console.log("pull client: "+clients[0]+" has "+doc_map[clients[0]]+' of total_docs='+total_docs+' docs pulled')
             perf_running = false
+            console.log("total reads: "+total_reads+" total_writes: "+total_writes)
             done()
           });
     })
@@ -104,24 +106,41 @@ module.exports = function(clients, server, perf, done) {
 
 }
 
-
-function startWriter(client, perf){
+function startReaderWriter(client, perf){
 
   var url = client
   var db = coax(url)
-  var loop_counter = doc_counter = 0
+  var loop_counter = 0
+  var recent_docs = [] /* keep last 10 known docs around */
+  doc_map[client] = 0
 
   writer = new loop.Loop({
       fun: function(finished) {
-            if ((10 - loop_counter%10)/(perf.writeRatio/10) <= 1){
-              console.log("Post: "+loop_counter)
+            if ((10 - loop_counter%10) > (perf.writeRatio/10)){
                db.post({at : new Date(), on : url}, function(err, json){
                   if (err != null){
                     console.log("ERROR: "+err)
                   }
-                  doc_map[client] = doc_counter
-                  doc_counter++
+                  if ('id' in json){
+                   if (recent_docs.length > 10){
+                     recent_docs.shift()
+                    }
+                    recent_docs.push(json.id)
+                  }
+                  doc_map[client] = doc_map[client] + 1
                })
+               total_writes++
+            }
+            if ((10 - loop_counter%10) > (perf.readRatio/10)){
+              if(recent_docs.length > 0){
+                id = recent_docs[Math.floor(Math.random()*recent_docs.length)]
+                coax([url, id], function(err, doc) {
+                  if(err){
+                    console.log("Error retrieving doc: "+err)
+                   }
+                })
+              }
+               total_reads++
             }
             loop_counter++
             finished();
@@ -132,6 +151,7 @@ function startWriter(client, perf){
 
   return writer
 }
+
 
 function statCheckPointer(){
 
