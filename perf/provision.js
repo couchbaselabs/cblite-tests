@@ -34,8 +34,7 @@ module.exports.setup = function(){
   });
 
 
-  test("start liteservs", function(t){
-
+  test("start liteservs",{timeout : 300000},  function(t){
 
     resources.LiteServProviders.forEach(function(url){
 
@@ -52,10 +51,27 @@ module.exports.setup = function(){
               t.false(err, results)
               t.end()
             })
+
+
     })
 
-
   });
+
+  test("start embedded clients", {timeout : 300000},function(t){
+      async.timesSeries(perf.numEmbClients, function(n, next){
+          coax.post([url,"start","embeddedclient"],{dbname : 'test-perf'},
+            function(err, json){
+                if ('error' in json){
+                  err = json['error']
+                }
+                next(err, 'ok' in json ? json['ok'] : err)
+            })},
+            function(err, results){
+              t.false(err, results)
+              t.end()
+            })
+
+  })
 
   test("start gateways", function(t){
 

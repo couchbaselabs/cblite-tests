@@ -15,12 +15,11 @@ if (resources.Provision== true){
   provision.setup()
 }
 
-
 test("init", function(t){
   async.series({
     set_clients: function(cb){
       async.map(resources.LiteServProviders, function(url, _cb){
-        coax([url,"liteservs"],
+        coax([url,"clients"],
           function(err, json){
             if(!err){
               clients = clients.concat(json['ok'])
@@ -46,6 +45,7 @@ test("init", function(t){
       t.end()
   })
 })
+
 
 test("create test-perf dbs on each client", function(t){
   async.map(clients, function(url, cb){
@@ -84,13 +84,18 @@ test("get all clients pushing with the Sync Gateway", function(t){
   }, function(err, oks){
     t.equals(null,err,"all clients pushing")
     oks.forEach(function (ok) {
-      t.ok(ok.session_id, "has a session")
+      if('session_id' in ok){
+        t.ok(ok.session_id, "has a session") //liteserv
+      } else if ('ok' in ok){
+        t.equals(ok.ok, true, "has a session") //pouch
+      } else {
+        t.fail("has a session")
+      }
     })
     t.end()
   })
 
 })
-
 
 test("start N client perf test", {timeout : 3600000}, function(t){
   writeConcurrentLoader(clients.map(function(url){return coax([url,"test-perf"]).pax.toString()}),
@@ -105,4 +110,3 @@ test("teardown", function(t){
   }
   t.end()
 })
-
