@@ -58,6 +58,7 @@ test("create test-perf dbs on each client", function(t){
 
 test("get all the clients pulling from the Sync Gateway", function(t){
 
+  console.log(clients)
   async.map(clients, function(url, cb){
     coax.post([url,"_replicate"], {
       continuous : true,
@@ -71,9 +72,7 @@ test("get all the clients pulling from the Sync Gateway", function(t){
 })
 
 
-test("get all clients pushing with the Sync Gateway", function(t){
-
-
+test("get all clients pushing with the Sync Gateway", { timeout : 300000 }, function(t){
 
   async.map(clients, function(url, cb){
     coax.post([url,"_replicate"], {
@@ -84,7 +83,9 @@ test("get all clients pushing with the Sync Gateway", function(t){
   }, function(err, oks){
     t.equals(null,err,"all clients pushing")
     oks.forEach(function (ok) {
-      if('session_id' in ok){
+      if(!ok){
+        t.fail("has a session")
+      } else if('session_id' in ok){
         t.ok(ok.session_id, "has a session") //liteserv
       } else if ('ok' in ok){
         t.equals(ok.ok, true, "has a session") //pouch
