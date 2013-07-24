@@ -27,35 +27,49 @@ module.exports.setup = function(){
   test("cleanup", function(t){
     cleanup(t, function(err, result){
         t.false(err, "cleanup done")
-        t.end()
+
+        /* wait until no clients remaining */
+        setTimeout(function(){
+           t.end()
+        }, 8000)
 
     })
 
   });
 
 
-  test("start liteservs", function(t){
+  test("start liteservs",{timeout : 300000},  function(t){
 
+    if(perf.numSyncClients > 0){
+      async.map(resources.LiteServProviders, function(url, callback) {
 
-    resources.LiteServProviders.forEach(function(url){
-
-      async.timesSeries(perf.numSyncClients, function(n, next){
-
-          coax.post([url,"start","liteserv",{}],
-            function(err, json){
-                if ('error' in json){
-                  err = json['error']
-                }
-                next(err, 'ok' in json ? json['ok'] : err)
-            })},
-            function(err, results){
-              t.false(err, results)
-              t.end()
-            })
-    })
-
+        async.timesSeries(perf.numSyncClients, function(n, next){
+               coax.post([url,"start","liteserv",{}], next)
+             },
+             callback)
+          }, function( err, results){
+             t.false(err, " started "+results.length+" liteserv clients")
+             t.end()
+      })
+   } else { t.end() }
 
   });
+
+  test("start embedded clients", {timeout : 300000},function(t){
+
+    if (perf.numEmbClients > 0){
+      async.map(resources.LiteServProviders, function(url, callback) {
+
+        async.timesSeries(perf.numEmbClients, function(n, next){
+               coax.post([url,"start","embeddedclient",{}], next)
+             },
+             callback)
+          }, function( err, results){
+             t.false(err, " started "+results.length+" embedded clients")
+             t.end()
+      })
+   } else { t.end() }
+  })
 
   test("start gateways", function(t){
 
@@ -100,9 +114,7 @@ function cleanup(t, cb){
   providers = resources.LiteServProviders.concat(resources.SyncGatewayProviders)
 
   async.mapSeries(providers, function(url, _cb){
-      coax([url,"cleanup"], function(err, json){
-        _cb(err,json)
-      })
+      coax([url,"cleanup"], _cb)
   }, function(err, result){
     cb(err, "cleanup done")
   })
