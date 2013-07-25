@@ -11,6 +11,7 @@ var config = module.exports = {
 
 module.exports.resources = {
   LiteServProviders : ["http://127.0.0.1:8189"],
+  PouchDBProviders : ["http://127.0.0.1:8189"],
   SyncGatewayProviders : ["http://127.0.0.1:8189"],
   Provision : true
 }

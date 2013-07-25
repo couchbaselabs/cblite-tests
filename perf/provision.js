@@ -48,7 +48,7 @@ module.exports.setup = function(){
              },
              callback)
           }, function( err, results){
-             t.false(err, " started "+results.length+" liteserv clients")
+             t.false(err, " setup "+results.length+" liteserv providers")
              t.end()
       })
    } else { t.end() }
@@ -58,14 +58,14 @@ module.exports.setup = function(){
   test("start embedded clients", {timeout : 300000},function(t){
 
     if (perf.numEmbClients > 0){
-      async.map(resources.LiteServProviders, function(url, callback) {
+      async.map(resources.PouchDBProviders, function(url, callback) {
 
         async.timesSeries(perf.numEmbClients, function(n, next){
                coax.post([url,"start","embeddedclient",{}], next)
              },
              callback)
           }, function( err, results){
-             t.false(err, " started "+results.length+" embedded clients")
+             t.false(err, " setup "+results.length+" embedded providers")
              t.end()
       })
    } else { t.end() }
@@ -112,6 +112,7 @@ module.exports.teardown = function(){
 function cleanup(t, cb){
 
   providers = resources.LiteServProviders.concat(resources.SyncGatewayProviders)
+  providers = providers.concat(resources.PouchDBProviders)
 
   async.mapSeries(providers, function(url, _cb){
       coax([url,"cleanup"], _cb)

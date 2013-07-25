@@ -16,9 +16,10 @@ if (resources.Provision== true){
 }
 
 test("init", function(t){
+  clientProviders = resources.LiteServProviders.concat(resources.PouchDBProviders)
   async.series({
     set_clients: function(cb){
-      async.map(resources.LiteServProviders, function(url, _cb){
+      async.map(clientProviders, function(url, _cb){
         coax([url,"clients"],
           function(err, json){
             if(!err){
