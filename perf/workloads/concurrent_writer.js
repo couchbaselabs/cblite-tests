@@ -2,21 +2,20 @@ var coax = require("coax"),
   async = require("async"),
   loop = require("nodeload/lib/loop"),
   statr = require("../../lib/statr"),
-  writer_index = 0
-  perf_running = true
-  mystatr = statr()
-  total_reads = total_writes = 0
-  doc_map = {}
+  writer_index = 0,
+  perf_running = true,
+  mystatr = statr(),
+  doc_map = {},
+  start_time = process.hrtime(),
+  total_reads = total_writes = total_changes = 0
 
 
 module.exports = function(clients, server, perf, done) {
 
-  console.log("writeConcurrentLoader", server, clients)
-
   var delay = perf.clientWriteDelay
   var RUNSECONDS = perf.runSeconds
   var changes, writers, pull_client = clients[0]
-  statCheckPointer()
+  statCheckPointer(server)
 
 
 
@@ -37,6 +36,7 @@ module.exports = function(clients, server, perf, done) {
     changes = coax(pull_client).changes({feed : "continuous"}, function(){})
 
     changes.on("data", function(data){
+        total_changes++
         try {
           var json = JSON.parse(data.toString())
           changes.emit("json",json)
@@ -74,10 +74,9 @@ module.exports = function(clients, server, perf, done) {
         /* verify every client has total # of docs written */
         var total_docs = 0
         for (var key in doc_map){
-          console.log(key+" created ->"+doc_map[key])
           total_docs = total_docs + doc_map[key]
         }
-        console.log("total docs ->"+total_docs)
+        //console.log("total docs ->"+total_docs)
 
           async.map(clients, function(client, cb){
             var retry = 0
@@ -126,17 +125,20 @@ function startReaderWriter(client, server, perf){
   doc_map[client] = 0
   var delay  = config.clientWriteDelay
 
-  var port = url.replace(/.*:([0-9]+).*/,"$1")
+  var ip = url.replace(/[\.,\:,\/]/g,"")
   writer = new loop.Loop({
       fun: function(finished) {
             if ((loop_counter%10) < (perf.writeRatio/10)){
-              var id = "perf_"+port+"_"+doc_map[client]
-              console.log(id)
+              var d = new Date()
+              var ts = String(d.getHours())+d.getMinutes()+d.getSeconds()+d.getMilliseconds()
+              var id = "perf"+doc_map[client]+"_"+ip+"_"+ts
+              //console.log(id)
               setTimeout(function(){
                 coax.put([url,id],
                   {at : new Date(), on : url}, function(err, json){
                     if (err != null){
-                      console.log("ERROR: "+url+" "+err)
+                      console.log("ERROR Pushing doc to: "+url+" "+id)
+                      console.log(err)
                     } else {
                         if ('id' in json){
                          if (recent_docs.length > 10){
@@ -152,9 +154,9 @@ function startReaderWriter(client, server, perf){
               if ((loop_counter%10) < (perf.readRatio/10)){
                 if(recent_docs.length > 0){
                   id = recent_docs[Math.floor(Math.random()*recent_docs.length)]
-                  coax([server, id], function(err, doc) {
+                  coax([url, id], function(err, doc) {
                     if(err){
-                      console.log("Error retrieving doc: "+err)
+                      console.log("Error retrieving doc: "+id)
                      }
                   })
                 }
@@ -172,15 +174,17 @@ function startReaderWriter(client, server, perf){
 }
 
 
-function statCheckPointer(){
+function statCheckPointer(gateway){
 
-  async.whilst(
-    function() { return perf_running},
-    function(cb) {
-      setTimeout(function(){
-        console.log(mystatr.summary())
-        cb(null)
-      }, 10000)},
-    function(err){} )
-
+  if(perf_running){
+      console.log("collect stats: "+perf_running)
+      var stat_checkpoint = mystatr.summary()
+      var ts = process.hrtime(start_time)[0]
+      stat_checkpoint.total_changes = total_changes
+      stat_checkpoint.elapsed_time = ts
+      stat_checkpoint.total_reads = total_reads
+      stat_checkpoint.total_writes = total_writes
+      console.log(stat_checkpoint)
+      setTimeout(function(){statCheckPointer(gateway)}, 30000)
+  }
 }
