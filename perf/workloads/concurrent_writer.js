@@ -1,5 +1,6 @@
 var coax = require("coax"),
   async = require("async"),
+  follow = require("follow"),
   loop = require("nodeload/lib/loop"),
   statr = require("../../lib/statr"),
   writer_index = 0,
@@ -32,18 +33,8 @@ module.exports = function(clients, server, perf, done) {
     console.log("Monitoring client = "+pull_client)
     statCheckPointer(server, pull_client)
 
-
-    changes = coax(pull_client).changes({feed : "continuous"}, function(){})
-
-    changes.on("data", function(data){
-        total_changes++
-        try {
-          var json = JSON.parse(data.toString())
-          changes.emit("json",json)
-        } catch(e) {}
-    })
-
-    changes.on("json", function(json){
+    follow(pull_client, function(err, json){
+      if(!err){
         var gotch = new Date()
         coax([pull_client, json.id], function(err, doc) {
           // record how long it took to receive doc from another client //
@@ -52,6 +43,8 @@ module.exports = function(clients, server, perf, done) {
             mystatr.stat("doc", (new Date()-new Date(doc.at)))
           }
         })
+      }
+
     })
 
   })
