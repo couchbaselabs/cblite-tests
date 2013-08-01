@@ -16,7 +16,17 @@ if (resources.Provision== true){
 }
 
 test("init", function(t){
-  clientProviders = resources.LiteServProviders.concat(resources.PouchDBProviders)
+  var providers = resources.LiteServProviders
+  var i, len;
+  for (i = 0, len = resources.PouchDBProviders.length; i < len; ++i) {
+    var pdb = resources.PouchDBProviders[i]
+    providers.concat(resources.PouchDBProviders[i])
+    if (!pdb  in providers ){
+      providers.concat(pdb)
+    }
+  }
+
+  clientProviders = resources.LiteServProviders
   async.series({
     set_clients: function(cb){
       async.map(clientProviders, function(url, _cb){
@@ -46,7 +56,6 @@ test("init", function(t){
       t.end()
   })
 })
-
 
 test("create test-perf dbs on each client", function(t){
   async.map(clients, function(url, cb){
