@@ -67,12 +67,11 @@ module.exports = function(t, dbs, done, opts) {
       target = target.split('/').pop()
     }
 
-    console.log("#source: "+dbName+"-> target -> "+target)
     coax([server, "_replicate"]).post({
       target : target,
       source : dbName
     }, function(err, ok){
-      t.equals(err, null, util.inspect({_replicate : {error : err}})  )
+      t.equals(err, null, util.inspect({_replicate : dbName+" -> "+target, error : err})  )
       t.end()
     })
   })
@@ -95,12 +94,11 @@ module.exports = function(t, dbs, done, opts) {
       source = source.split('/').pop()
     }
 
-    console.log("#source: "+source+"-> target -> "+dbName)
     coax([server,"_replicate"]).post({
       target : dbName,
       source : source
     }, function(err, ok){
-      t.equals(err, null, util.inspect({_replicate : {error : err}})  )
+      t.equals(err, null, util.inspect({_replicate : source+" -> "+dbName, error : err})  )
       t.end()
     })
   })
