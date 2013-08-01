@@ -41,7 +41,7 @@ module.exports.setup = function(){
   test("create admin store", function(t){
     var listener = "http://"+config.LocalListenerIP+":"+config.LocalListenerPort
     var adminPort = config.LocalListenerPort + 1
-    coax.post([url,"start","embeddedclient"], {port : adminPort}, function(err, json){
+    coax.post([url,"start","embeddedclient"], {port : adminPort, internal : true}, function(err, json){
       t.false(err, "can create admin store")
       var adminUrl = "http://"+config.LocalListenerIP+":"+adminPort
 
