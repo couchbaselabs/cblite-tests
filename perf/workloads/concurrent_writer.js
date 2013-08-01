@@ -184,10 +184,7 @@ function statCheckPointer(gateway, pull_client){
         stat_checkpoint.docs_written = total_writes
         console.log(stat_checkpoint)
       })
-    setTimeout(function(){
-       statCheckPointer(server, pull_client)
-       cb(null)
-     },30000 )
+    setTimeout(function(){ statCheckPointer(server, pull_client) },30000 )
   }
 
 }
