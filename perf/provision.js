@@ -4,6 +4,7 @@ var phalanx = require("../lib/phalanx"),
   test = require("tap").test,
   resources = require("../config/local").resources,
   perf = require("../config/perf"),
+  config = require('../config/local'),
   listener = require("../lib/listener");
 
 var server;
@@ -37,6 +38,24 @@ module.exports.setup = function(){
 
   });
 
+  test("create admin store", function(t){
+    var listener = "http://"+config.LocalListenerIP+":"+config.LocalListenerPort
+    var adminPort = config.LocalListenerPort + 1
+    coax.post([url,"start","embeddedclient"], {port : adminPort}, function(err, json){
+      t.false(err, "can create admin store")
+      var adminUrl = "http://"+config.LocalListenerIP+":"+adminPort
+
+      /* create config and stat stores */
+      async.mapSeries(["admin", "stats"], function(db, callback){
+        coax.put([adminUrl, db], callback)
+        }, function(err, oks){
+        t.equals(null,err,"can create all store databases")
+        t.end()
+      })
+
+    })
+
+  });
 
   test("start liteservs",{timeout : 300000},  function(t){
 

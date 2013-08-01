@@ -182,9 +182,25 @@ function statCheckPointer(gateway, pull_client){
         stat_checkpoint.elapsed_time = ts
         stat_checkpoint.total_reads = total_reads
         stat_checkpoint.docs_written = total_writes
+        saveStats(stat_checkpoint)
         console.log(stat_checkpoint)
       })
     setTimeout(function(){ statCheckPointer(server, pull_client) },30000 )
   }
+
+}
+
+function saveStats(stat_checkpoint){
+
+  var port = config.LocalListenerPort + 1
+  var adminUrl = "http://"+config.LocalListenerIP+":"+port
+  var statdb = coax([adminUrl,"stats"]).pax.toString()
+  var id = stat_checkpoint.elapsed_time
+  coax.put([adminUrl, "stats", id], stat_checkpoint, function(err, json){
+    if(err){
+      console.log("Warning! Failed to save stats from checkpoint: "+id)
+      console.log(err)
+    }
+  })
 
 }
