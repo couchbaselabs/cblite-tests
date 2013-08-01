@@ -20,7 +20,10 @@ function verifyDb(db, count, done) {
   }, done)
 }
 
-module.exports = function(t, dbs, done) {
+module.exports = function(t, dbs, done, opts) {
+  if (!opts){
+    opts = { http : true }
+  }
   t.equals(3, dbs.length, "requires 3 dbs to replicate a > b > c")
   t.ok(dbs[0].pax.toString(), "dbs are coax instances")
 
@@ -58,8 +61,14 @@ module.exports = function(t, dbs, done) {
     var dbName = segs.pop()
     var server = segs.join('/')
 
+    var target = dbs[1].pax.toString()
+    if (!opts.http){
+      target = target.split('/').pop()
+      console.log(dbName+"->"+target)
+    }
+
     coax([server, "_replicate"]).post({
-      target : dbs[1].pax.toString(),
+      target : target,
       source : dbName
     }, function(err, ok){
       t.equals(err, null, "replicating")
@@ -80,9 +89,15 @@ module.exports = function(t, dbs, done) {
     var dbName = segs.pop()
     var server = segs.join('/')
 
+    var source = dbs[1].pax.toString()
+    if (!opts.http){
+      source = source.split('/').pop()
+      console.log(source+"->"+dbName)
+    }
+
     coax([server,"_replicate"]).post({
       target : dbName,
-      source : dbs[1].pax.toString()
+      source : source
     }, function(err, ok){
       t.equals(err, null, "replicating")
       t.end()

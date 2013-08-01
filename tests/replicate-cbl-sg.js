@@ -48,23 +48,11 @@ test("launch a Sync Gateway", function(t) {
 });
 
 test("create test databases", function(t) {
-  async.map(ph.servers, function(url, cb){
-    /* check if db exists */
-    coax([url,"test-repl"], function(err, json){
-        if(!err){
-            /* delete db */
-            coax.del([url, "test-repl"], function(err, json){
-                t.false(err, "deleted existing db")
-                coax.put([url, "test-repl"], cb)
-            });
-        } else {
-            coax.put([url, "test-repl"], cb)
-        }
-    });
-    }, function(err, oks){
-        t.false(err,"all dbs created")
-        t.end()
-        })
+  createDbs(["test-repl","test-http1","test-http2","test-http3",
+             "test-local1","test-local2","test-local3"], function(err, oks){
+    t.false(err,"all dbs created")
+    t.end()
+  })
 })
 
 test("replicate between all 3 servers", function(t){
@@ -77,9 +65,53 @@ test("replicate between all 3 servers", function(t){
 })
 
 
+test("_local to _local over http", function(t){
+
+  var dbs = [
+  coax([ph.servers[0], "test-http1"]),
+  coax([ph.servers[0], "test-http3"]),
+  coax([ph.servers[0], "test-http2"])];
+  replicateClientServerClient(t, dbs, t.end.bind(t))
+})
+
+test("_local to _local over native", function(t){
+
+  var dbs = [
+  coax([ph.servers[0], "test-local1"]),
+  coax([ph.servers[0], "test-local3"]),
+  coax([ph.servers[0], "test-local2"])];
+  replicateClientServerClient(t, dbs, t.end.bind(t), { http : false })
+})
+
 test("exit", function(t){
   sg.kill()
   ph.kill()
   t.end()
 })
+
+
+function  createDbs(dbs, done){
+
+  async.mapSeries(dbs, function(db, next){
+    async.map(ph.servers, function(url, cb){
+      /* check if db exists */
+      coax([url,db], function(err, json){
+          if(!err){
+              /* delete db */
+              coax.del([url, db], function(err, json){
+                  if(err){
+                    cb(err, json)
+                  } else {
+                    coax.put([url, db], cb)
+                  }
+              });
+          } else {
+              coax.put([url, db], cb)
+          }
+      });
+      }, next)
+    }, function(err, oks){
+          done(err, oks)
+    })
+}
 
