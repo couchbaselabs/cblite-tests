@@ -15,7 +15,6 @@ module.exports = function(clients, server, perf, done) {
   var delay = perf.clientWriteDelay
   var RUNSECONDS = perf.runSeconds
   var changes, writers, pull_client = clients[0]
-  statCheckPointer(server)
 
 
 
@@ -31,6 +30,7 @@ module.exports = function(clients, server, perf, done) {
   }, function(res){
 
     console.log("Monitoring client = "+pull_client)
+    statCheckPointer(server, pull_client)
 
 
     changes = coax(pull_client).changes({feed : "continuous"}, function(){})
@@ -174,17 +174,27 @@ function startReaderWriter(client, server, perf){
 }
 
 
-function statCheckPointer(gateway){
+function statCheckPointer(gateway, pull_client){
 
   if(perf_running){
-      console.log("collect stats: "+perf_running)
       var stat_checkpoint = mystatr.summary()
-      var ts = process.hrtime(start_time)[0]
-      stat_checkpoint.total_changes = total_changes
-      stat_checkpoint.elapsed_time = ts
-      stat_checkpoint.total_reads = total_reads
-      stat_checkpoint.total_writes = total_writes
-      console.log(stat_checkpoint)
-      setTimeout(function(){statCheckPointer(gateway)}, 30000)
+      console.log("collect stats: "+perf_running)
+      coax(pull_client, function (err, json){
+        if(!err){
+          stat_checkpoint.docs_relayed = json.doc_count
+        }
+
+        var ts = process.hrtime(start_time)[0]
+        stat_checkpoint.total_changes = total_changes
+        stat_checkpoint.elapsed_time = ts
+        stat_checkpoint.total_reads = total_reads
+        stat_checkpoint.docs_written = total_writes
+        console.log(stat_checkpoint)
+      })
+    setTimeout(function(){
+       statCheckPointer(server, pull_client)
+       cb(null)
+     },30000 )
   }
+
 }
