@@ -5,6 +5,7 @@
 // verify the data
 
 var coax = require("coax"),
+  util = require('util')
   async = require("async")
 
 
@@ -64,14 +65,14 @@ module.exports = function(t, dbs, done, opts) {
     var target = dbs[1].pax.toString()
     if (!opts.http){
       target = target.split('/').pop()
-      console.log(dbName+"->"+target)
     }
 
+    console.log("#source: "+dbName+"-> target -> "+target)
     coax([server, "_replicate"]).post({
       target : target,
       source : dbName
     }, function(err, ok){
-      t.equals(err, null, "replicating")
+      t.equals(err, null, util.inspect({_replicate : {error : err}})  )
       t.end()
     })
   })
@@ -92,14 +93,14 @@ module.exports = function(t, dbs, done, opts) {
     var source = dbs[1].pax.toString()
     if (!opts.http){
       source = source.split('/').pop()
-      console.log(source+"->"+dbName)
     }
 
+    console.log("#source: "+source+"-> target -> "+dbName)
     coax([server,"_replicate"]).post({
       target : dbName,
       source : source
     }, function(err, ok){
-      t.equals(err, null, "replicating")
+      t.equals(err, null, util.inspect({_replicate : {error : err}})  )
       t.end()
     })
   })
