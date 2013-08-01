@@ -48,7 +48,7 @@ module.exports.setup = function(){
              },
              callback)
           }, function( err, results){
-             t.false(err, " setup "+results.length+" liteserv providers")
+             t.false(err, " started "+results.length+" liteserv providers")
              t.end()
       })
    } else { t.end() }
@@ -65,7 +65,7 @@ module.exports.setup = function(){
              },
              callback)
           }, function( err, results){
-             t.false(err, " setup "+results.length+" embedded providers")
+             t.false(err, " started "+results.length+" embedded providers")
              t.end()
       })
    } else { t.end() }
