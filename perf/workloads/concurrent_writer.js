@@ -8,15 +8,14 @@ var coax = require("coax"),
   mystatr = statr(),
   doc_map = {},
   start_time = process.hrtime(),
-  total_reads = total_writes = total_changes = 0
-
+  est_writes = total_reads = total_writes = total_changes = 0
 
 module.exports = function(clients, server, perf, done) {
 
   var delay = perf.clientWriteDelay
   var RUNSECONDS = perf.runSeconds
   var changes, writers, pull_client = clients[0]
-
+  est_writes = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.runSeconds
 
 
   /* look for a liteServ to use as pull client */
@@ -182,6 +181,8 @@ function statCheckPointer(gateway, pull_client){
         stat_checkpoint.elapsed_time = ts
         stat_checkpoint.total_reads = total_reads
         stat_checkpoint.docs_written = total_writes
+        stat_checkpoint.testid = "perf_"+start_time[0]
+        stat_checkpoint.est_writes = est_writes
         saveStats(stat_checkpoint)
         console.log(stat_checkpoint)
       })
@@ -194,6 +195,7 @@ function saveStats(stat_checkpoint){
 
   var port = config.LocalListenerPort + 1
   var adminUrl = "http://"+config.LocalListenerIP+":"+port
+  var id = stat_checkpoint.testid+"_"+stat_checkpoint.elapsed_time
   var statdb = coax([adminUrl,"stats"]).pax.toString()
   var id = stat_checkpoint.elapsed_time
   coax.put([adminUrl, "stats", id], stat_checkpoint, function(err, json){
