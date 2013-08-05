@@ -4,12 +4,11 @@ var coax = require("coax"),
   loop = require("nodeload/lib/loop"),
   statr = require("../../lib/statr"),
   writer_index = 0,
-  perf_running = true,
   mystatr = statr(),
   doc_map = {},
   perfdb = null,
   start_time = process.hrtime(),
-  est_writes_interval = est_writes = total_reads = total_writes = total_changes = 0
+  est_writes_interval = est_writes = total_relayed = total_reads = total_writes = total_changes = 0
 
 module.exports = function(clients, server, perf, done) {
 
@@ -131,13 +130,11 @@ function statCheckPointer(gateway, pull_client, statInterval, done){
 
   setTimeout(function(){
     var stat_checkpoint = mystatr.summary()
-    console.log("collect stats")
+    console.log("collect stats: ")
     coax(pull_client, function (err, json){
       if(!err){
-        stat_checkpoint.docs_relayed = json.doc_count
-
-        if(stat_checkpoint.docs_relayed >= Math.floor(est_writes)){
-          perf_running = false
+        if('doc_count' in json){
+          total_relayed = json.doc_count
         }
       }
 
@@ -149,13 +146,15 @@ function statCheckPointer(gateway, pull_client, statInterval, done){
       stat_checkpoint.testid = "perf_"+start_time[0]
       stat_checkpoint.est_writes = est_writes
       stat_checkpoint.est_writes_interval = est_writes_interval
+      stat_checkpoint.docs_relayed = total_relayed
       saveStats(stat_checkpoint)
       console.log(stat_checkpoint)
     })
-    if(perf_running){
-      statCheckPointer(server, pull_client, statInterval, done)
+
+    if(total_relayed >= Math.floor(est_writes)){
+        done()
     } else {
-      done()
+      statCheckPointer(server, pull_client, statInterval, done)
     }
   }, statInterval*1000)
 
