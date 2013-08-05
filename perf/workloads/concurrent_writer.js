@@ -83,24 +83,22 @@ function startReaderWriter(client, server, perf){
               var d = new Date()
               var ts = String(d.getHours())+d.getMinutes()+d.getSeconds()+d.getMilliseconds()
               var id = "perf"+doc_map[client]+"_"+ip+"_"+ts
-              //console.log(id)
-              setTimeout(function(){
-                coax.put([url,id],
-                  {at : new Date(), on : url}, function(err, json){
-                    if (err != null){
-                      console.log("ERROR Pushing doc to: "+url+" "+id)
-                      console.log(err)
-                    } else {
-                        if ('id' in json){
-                         if (recent_docs.length > 10){
-                           recent_docs.shift()
-                          }
-                          recent_docs.push(json.id)
+              coax.put([url,id],
+                {at : new Date(), on : url}, function(err, json){
+                  if (err != null){
+                    console.log("ERROR Pushing doc to: "+url+" "+id)
+                    console.log(err)
+                  } else {
+                      if ('id' in json){
+                       if (recent_docs.length > 10){
+                         recent_docs.shift()
                         }
-                        doc_map[client] = doc_map[client] + 1
-                        total_writes++
+                        recent_docs.push(json.id)
                       }
-                 })},  Math.random()*delay)
+                      doc_map[client] = doc_map[client] + 1
+                      total_writes++
+                    }
+               })
             }else {
               if ((loop_counter%10) < (perf.readRatio/10)){
                 if(recent_docs.length > 0){
