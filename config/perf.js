@@ -10,4 +10,5 @@ var perf = module.exports = {
   readRatio: 90,
   writeRatio: 10,
   statInterval: 30,
+  //PerfDB : "http://console.couchbasecloud.com/perfdash",  ## use for cblite-dashboard integration
 }

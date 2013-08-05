@@ -7,6 +7,7 @@ var coax = require("coax"),
   perf_running = true,
   mystatr = statr(),
   doc_map = {},
+  perfdb = null,
   start_time = process.hrtime(),
   est_writes_interval = est_writes = total_reads = total_writes = total_changes = 0
 
@@ -18,6 +19,14 @@ module.exports = function(clients, server, perf, done) {
   est_writes = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.runSeconds
   est_writes_interval = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.statInterval
 
+  if ('PerfDB' in perf){
+    perfdb = perf.PerfDB
+  } else {
+    /* use local stat db */
+    var port = config.LocalListenerPort + 1
+    var adminUrl = "http://"+config.LocalListenerIP+":"+port
+    perfdb = coax([adminUrl,"stats"]).pax.toString()
+  }
 
   /* look for a liteServ to use as pull client */
   async.map(clients, function(url, cb){
@@ -156,12 +165,8 @@ function statCheckPointer(gateway, pull_client, statInterval, done){
 
 function saveStats(stat_checkpoint){
 
-  var port = config.LocalListenerPort + 1
-  var adminUrl = "http://"+config.LocalListenerIP+":"+port
   var id = stat_checkpoint.testid+"_"+stat_checkpoint.elapsed_time
-  var statdb = coax([adminUrl,"stats"]).pax.toString()
-  var id = stat_checkpoint.elapsed_time
-  coax.put([adminUrl, "stats", id], stat_checkpoint, function(err, json){
+  coax.put([perfdb, id], stat_checkpoint, function(err, json){
     if(err){
       console.log("Warning! Failed to save stats from checkpoint: "+id)
       console.log(err)
