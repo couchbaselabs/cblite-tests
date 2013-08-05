@@ -8,7 +8,7 @@ var coax = require("coax"),
   mystatr = statr(),
   doc_map = {},
   start_time = process.hrtime(),
-  est_writes = total_reads = total_writes = total_changes = 0
+  est_writes_interval = est_writes = total_reads = total_writes = total_changes = 0
 
 module.exports = function(clients, server, perf, done) {
 
@@ -16,6 +16,7 @@ module.exports = function(clients, server, perf, done) {
   var RUNSECONDS = perf.runSeconds
   var changes, writers, pull_client = clients[0]
   est_writes = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.runSeconds
+  est_writes_interval = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.statInterval
 
 
   /* look for a liteServ to use as pull client */
@@ -30,7 +31,6 @@ module.exports = function(clients, server, perf, done) {
   }, function(res){
 
     console.log("Monitoring client = "+pull_client)
-    statCheckPointer(server, pull_client)
 
     follow(pull_client, function(err, json){
       if(!err){
@@ -52,60 +52,10 @@ module.exports = function(clients, server, perf, done) {
     writer = startReaderWriter(client, server, perf)
     cb(null, writer)
   }, function(err, result){
-
-    writers = result
-
-    /* wait for all writers to finish */
-    async.map(writers, function(writer, cb){
-      writer.on('end', function(){
-          cb(null, {ok : "done"})
-      })
-    }, function(err, result)
-      {
-        console.log("writers done")
-        /* verify every client has total # of docs written */
-        var total_docs = 0
-        for (var key in doc_map){
-          total_docs = total_docs + doc_map[key]
-        }
-        //console.log("total docs ->"+total_docs)
-
-          async.map(clients, function(client, cb){
-            var retry = 0
-            async.whilst(
-              function() {
-                if (retry < 300){
-                  return doc_map[client]< total_docs
-                } else {
-                  console.log(client+" timed out")
-                  return false
-                }
-               },
-              function(err_cb) {
-                /* query doc count every second */
-                setTimeout( function(){
-                              coax([client], function(err, doc) {
-                                        doc_map[client] = doc.doc_count
-                                        retry = retry + 1
-                                        err_cb(null)
-                              })
-                }, 1000)
-               },
-              function(err){
-                  //console.log( client +" finished with "+ doc_map[client]+"/"+total_docs+" total docs")
-                  cb(null, 'ok')
-              })
-          }, function(err, result){
-            console.log("stats", mystatr.summary())
-            console.log("pull client: "+clients[0]+" has "+doc_map[clients[0]]+' of total_docs='+total_docs+' docs pulled')
-            perf_running = false
-            console.log("total reads: "+total_reads+" total_writes: "+total_writes)
-            done()
-          });
-    })
-
+    // start stat checkpointer when all writers started
+    statCheckPointer(server, pull_client, perf.statInterval, done)
+    console.log("started "+result.length+" writers")
   })
-
 
 }
 
@@ -162,32 +112,45 @@ function startReaderWriter(client, server, perf){
       duration: perf.runSeconds,
   }).start();
 
+  writer.on('end', function(){
+    console.log("writer finished: "+client)
+  })
+
   return writer
 }
 
 
-function statCheckPointer(gateway, pull_client){
+function statCheckPointer(gateway, pull_client, statInterval, done){
 
-  if(perf_running){
-      var stat_checkpoint = mystatr.summary()
-      console.log("collect stats: "+perf_running)
-      coax(pull_client, function (err, json){
-        if(!err){
-          stat_checkpoint.docs_relayed = json.doc_count
+  setTimeout(function(){
+    var stat_checkpoint = mystatr.summary()
+    console.log("collect stats")
+    coax(pull_client, function (err, json){
+      if(!err){
+        stat_checkpoint.docs_relayed = json.doc_count
+
+        if(stat_checkpoint.docs_relayed >= Math.floor(est_writes)){
+          perf_running = false
         }
+      }
 
-        var ts = process.hrtime(start_time)[0]
-        stat_checkpoint.total_changes = total_changes
-        stat_checkpoint.elapsed_time = ts
-        stat_checkpoint.total_reads = total_reads
-        stat_checkpoint.docs_written = total_writes
-        stat_checkpoint.testid = "perf_"+start_time[0]
-        stat_checkpoint.est_writes = est_writes
-        saveStats(stat_checkpoint)
-        console.log(stat_checkpoint)
-      })
-    setTimeout(function(){ statCheckPointer(server, pull_client) },30000 )
-  }
+      var ts = process.hrtime(start_time)[0]
+      stat_checkpoint.total_changes = total_changes
+      stat_checkpoint.elapsed_time = ts
+      stat_checkpoint.total_reads = total_reads
+      stat_checkpoint.docs_written = total_writes
+      stat_checkpoint.testid = "perf_"+start_time[0]
+      stat_checkpoint.est_writes = est_writes
+      stat_checkpoint.est_writes_interval = est_writes_interval
+      saveStats(stat_checkpoint)
+      console.log(stat_checkpoint)
+    })
+    if(perf_running){
+      statCheckPointer(server, pull_client, statInterval, done)
+    } else {
+      done()
+    }
+  }, statInterval*1000)
 
 }
 

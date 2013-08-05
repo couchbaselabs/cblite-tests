@@ -108,7 +108,7 @@ test("get all clients pushing with the Sync Gateway", { timeout : 300000 }, func
 
 })
 
-test("start N client perf test", {timeout : 3600000}, function(t){
+test("start N client perf test", {timeout : perf.runSeconds*2000}, function(t){
   writeConcurrentLoader(clients.map(function(url){return coax([url,"test-perf"]).pax.toString()}),
   		      coax([gateways[0],"db"]).pax.toString(),
             perf,
