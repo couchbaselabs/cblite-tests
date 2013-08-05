@@ -20,6 +20,23 @@ module.exports = function(clients, server, perf, done) {
 
   if ('PerfDB' in perf){
     perfdb = perf.PerfDB
+    /* send initial test info */
+    var doc = {
+      testid : "perf_"+start_time[0],
+      numClients : clients.length,
+      numGateways : perf.numGateways,
+      readRatio : perf.readRatio,
+      writeRatio : perf.writeRatio,
+      est_writes : est_writes,
+      backend : "1 couchbase"  //TODO: get this from gateway?
+    }
+
+    var id = doc.testid+"_info"
+    coax.put([perfdb, id], doc, function(err, json){
+      console.log("Error saving test meta data")
+      console.log(err)
+    })
+
   } else {
     /* use local stat db */
     var port = config.LocalListenerPort + 1
