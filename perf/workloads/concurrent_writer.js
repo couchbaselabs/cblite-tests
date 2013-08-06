@@ -73,6 +73,21 @@ module.exports = function(clients, server, perf, done) {
 
     })
 
+    // follow gateway changes feed
+    follow(server, function(err, json){
+      if(!err){
+        var gotch = new Date()
+        coax([server, json.id], function(err, doc) {
+          // record how long it took to receive doc from pull_client //
+          if(doc && doc.on == pull_client){
+            mystatr.stat("sg-change", (gotch-new Date(doc.at)))
+            mystatr.stat("sg-doc", (new Date()-new Date(doc.at)))
+          }
+        })
+      }
+
+    })
+
   })
 
   async.map(clients, function(client, cb){
