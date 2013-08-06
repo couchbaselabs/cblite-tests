@@ -20,7 +20,7 @@ test("init", function(t){
   var i, len;
   for (i = 0, len = resources.PouchDBProviders.length; i < len; ++i) {
     var pdb = resources.PouchDBProviders[i]
-    if (!(pdb  in providers)){
+    if (providers.indexOf(pdb) == -1 ){
       providers.push(pdb)
     }
   }
@@ -54,6 +54,7 @@ test("init", function(t){
       t.end()
   })
 })
+
 
 test("create test-perf dbs on each client", function(t){
   async.map(clients, function(url, cb){
