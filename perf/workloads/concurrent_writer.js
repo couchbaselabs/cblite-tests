@@ -17,6 +17,8 @@ module.exports = function(clients, server, perf, done) {
   var changes, writers, pull_client = clients[0]
   est_writes = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.runSeconds
   est_writes_interval = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.statInterval
+  // start writing docs to the gateway
+  gatewayWriter(server)
 
   if ('PerfDB' in perf){
     perfdb = perf.PerfDB
@@ -77,7 +79,7 @@ module.exports = function(clients, server, perf, done) {
     var sgfeed = new follow.Feed({
       db : server,
       filter : function(doc, req){
-        if(doc.on == pull_client){
+        if((doc.on == pull_client) || (doc.on == server)){
             return true
         }
         return false
@@ -88,8 +90,13 @@ module.exports = function(clients, server, perf, done) {
       var gotch = new Date()
       coax([server, change.id], function(err, doc){
         if(!err){
-          mystatr.stat("sg-change", (gotch-new Date(doc.at)))
-          mystatr.stat("sg-doc", (new Date()-new Date(doc.at)))
+          if(doc.on == pull_client){
+            mystatr.stat("clientsg-change", (gotch-new Date(doc.at)))
+            mystatr.stat("clientsg-doc", (new Date()-new Date(doc.at)))
+          } else {
+            mystatr.stat("directsg-change", (gotch-new Date(doc.at)))
+            mystatr.stat("directsg-doc", (new Date()-new Date(doc.at)))
+          }
         }
       })
     })
@@ -166,6 +173,24 @@ function startReaderWriter(client, server, perf){
   return writer
 }
 
+
+// every 10s write a doc to gateway
+function gatewayWriter(gateway){
+  setTimeout(function(){
+    var ip = gateway.replace(/[\.,\:,\/]/g,"")
+    var id = "perf_"+ip+"_"+process.hrtime(start_time)[0]
+    coax.put([gateway,id],
+              {at : new Date(), on : gateway}, function(err, json){
+              if( err != null){
+                console.log("Error: unable to push doc to gateway")
+                console.log(err)
+              }
+     })
+
+     gatewayWriter(gateway)
+  }, 10000)
+
+}
 
 function statCheckPointer(gateway, pull_client, statInterval, done){
 
