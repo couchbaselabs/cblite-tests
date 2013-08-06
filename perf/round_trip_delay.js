@@ -20,16 +20,14 @@ test("init", function(t){
   var i, len;
   for (i = 0, len = resources.PouchDBProviders.length; i < len; ++i) {
     var pdb = resources.PouchDBProviders[i]
-    providers.concat(resources.PouchDBProviders[i])
-    if (!pdb  in providers ){
-      providers.concat(pdb)
+    if (!(pdb  in providers)){
+      providers.push(pdb)
     }
   }
 
-  clientProviders = resources.LiteServProviders
   async.series({
     set_clients: function(cb){
-      async.map(clientProviders, function(url, _cb){
+      async.map(providers, function(url, _cb){
         coax([url,"clients"],
           function(err, json){
             if(!err){
