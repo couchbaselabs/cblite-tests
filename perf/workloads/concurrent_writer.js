@@ -173,7 +173,7 @@ function statCheckPointer(gateway, pull_client, statInterval, done){
     if(total_relayed >= Math.floor(est_writes)){
         done()
     } else {
-      statCheckPointer(server, pull_client, statInterval, done)
+      statCheckPointer(gateway, pull_client, statInterval, done)
     }
   }, statInterval*1000)
 
