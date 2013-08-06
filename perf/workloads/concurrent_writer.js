@@ -33,8 +33,10 @@ module.exports = function(clients, server, perf, done) {
 
     var id = doc.testid+"_info"
     coax.put([perfdb, id], doc, function(err, json){
-      console.log("Error saving test meta data")
-      console.log(err)
+      if(err){
+        console.log("Error saving test meta data")
+        console.log(err)
+      }
     })
 
   } else {
