@@ -73,20 +73,27 @@ module.exports = function(clients, server, perf, done) {
 
     })
 
-    // follow gateway changes feed
-    follow(server, function(err, json){
-      if(!err){
-        var gotch = new Date()
-        coax([server, json.id], function(err, doc) {
-          // record how long it took to receive doc from pull_client //
-          if(doc && doc.on == pull_client){
-            mystatr.stat("sg-change", (gotch-new Date(doc.at)))
-            mystatr.stat("sg-doc", (new Date()-new Date(doc.at)))
-          }
-        })
+    // follow gateway changes feed and filter out non pull_client docs
+    var sgfeed = new follow.Feed({
+      db : server,
+      filter : function(doc, req){
+        if(doc.on == pull_client){
+            return true
+        }
+        return false
       }
-
     })
+    sgfeed.follow()
+    sgfeed.on('change', function(change){
+      var gotch = new Date()
+      coax([server, change.id], function(err, doc){
+        if(!err){
+          mystatr.stat("sg-change", (gotch-new Date(doc.at)))
+          mystatr.stat("sg-doc", (new Date()-new Date(doc.at)))
+        }
+      })
+    })
+
 
   })
 
