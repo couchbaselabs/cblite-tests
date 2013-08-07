@@ -107,10 +107,21 @@ module.exports = function(clients, server, perf, done) {
   async.map(clients, function(client, cb){
     writer = startReaderWriter(client, server, perf)
     cb(null, writer)
-  }, function(err, result){
+  }, function(err, writers){
     // start stat checkpointer when all writers started
-    statCheckPointer(server, pull_client, perf.statInterval, done)
-    console.log("started "+result.length+" writers")
+    statCheckPointer(server, pull_client, perf.statInterval)
+    console.log("started "+writers.length+" writers")
+
+    // test is done when all writers complete
+    async.map(writers, function(writer, cb){
+      writer.on('end', function(){
+        cb(null, { ok : 'done' })
+      })
+    }, function(err, result){
+      setTimeout(function(){
+        done()
+      }, perf.statInterval*1000)
+    })
   })
 
 }
@@ -166,10 +177,6 @@ function startReaderWriter(client, server, perf){
       duration: perf.runSeconds,
   }).start();
 
-  writer.on('end', function(){
-    console.log("writer finished: "+client)
-  })
-
   return writer
 }
 
@@ -192,7 +199,7 @@ function gatewayWriter(gateway){
 
 }
 
-function statCheckPointer(gateway, pull_client, statInterval, done){
+function statCheckPointer(gateway, pull_client, statInterval){
 
   setTimeout(function(){
     var stat_checkpoint = mystatr.summary()
@@ -217,10 +224,8 @@ function statCheckPointer(gateway, pull_client, statInterval, done){
       console.log(stat_checkpoint)
     })
 
-    if(total_relayed >= Math.floor(est_writes)){
-        done()
-    } else {
-      statCheckPointer(gateway, pull_client, statInterval, done)
+    if(total_relayed < Math.floor(est_writes)){
+      statCheckPointer(gateway, pull_client, statInterval)
     }
   }, statInterval*1000)
 
