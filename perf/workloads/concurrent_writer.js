@@ -4,7 +4,7 @@ var coax = require("coax"),
   loop = require("nodeload/lib/loop"),
   statr = require("../../lib/statr"),
   writer_index = 0,
-  mystatr = statr(),
+  mystatr = null,
   doc_map = {},
   perfdb = null,
   start_time = process.hrtime(),
@@ -17,6 +17,8 @@ module.exports = function(clients, server, perf, done) {
   var changes, writers, pull_client = clients[0]
   est_writes = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.runSeconds
   est_writes_interval = clients.length*(perf.writeRatio/100)*perf.requestsPerSec*perf.statInterval
+  mystatr = statr(clients.length)
+
   // start writing docs to the gateway
   gatewayWriter(server)
 
