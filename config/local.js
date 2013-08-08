@@ -1,8 +1,8 @@
 var path = require("path");
 
 var config = module.exports = {
-  LiteServPath : "/Users/couchbase/couchbase-lite-ios/build/Release/LiteServ",
-  SyncGatewayPath : "/Users/couchbase/sync_gateway/bin/sync_gateway",
+  LiteServPath : "/Users/couchbase/buildbox/couchbase-lite-ios/build/Release/LiteServ",
+  SyncGatewayPath : "/Users/couchbase/buildbox/sync_gateway/bin/sync_gateway",
   LocalListenerIP : "127.0.0.1",
   LocalListenerPort : 8189,
   DbUrl : "walrus:",
