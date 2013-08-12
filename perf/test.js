@@ -1,5 +1,4 @@
-var rtdelay = require('../perf/round_trip_delay'),
-  resources = require("../config/local").resources,
+var resources = require("../config/local").resources,
   async = require("async"),
   workloads = require("../perf/workloads"),
   perf = require("../config/perf"),
