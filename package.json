@@ -11,7 +11,7 @@
   ],
   "dependencies" : ["tap", "coax", "fast-stats", "async", "nodeload","restify","pouchdb-server","follow","request-json"],
   "scripts": {
-    "test": "TAP_TIMEOUT=20 tap ./tests",
+    "test": "TAP_TIMEOUT=500 tap ./tests",
     "perf": "TAP_TIMEOUT=60 tap ./perf --tap"
   },
   "author": "Couchbase, Inc.",
