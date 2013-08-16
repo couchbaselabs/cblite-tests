@@ -55,6 +55,10 @@ test("create test databases", function(t) {
   })
 })
 
+
+/*  TODO: http://www.couchbase.com/issues/browse/CBLT-26
+         problem with dbs being coax instances
+
 test("replicate between all 3 servers", function(t){
   var dbs = [
   coax([ph.servers[0], "test-repl"]),
@@ -82,7 +86,7 @@ test("_local to _local over native", function(t){
   coax([ph.servers[0], "test-local2"])];
   replicateClientServerClient(t, dbs, t.end.bind(t), { http : false })
 })
-
+*/
 test("exit", function(t){
   sg.kill()
   ph.kill()
