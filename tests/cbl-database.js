@@ -101,6 +101,7 @@ test("verify db loaded", function(t){
 
 })
 
+
 test("compact db", function(t){
   coax.post([server,dbs[0], "_compact"], function(err, json){
     console.log(json)
@@ -164,6 +165,54 @@ test("compact during multi-db update", {timeout : 300000}, function(t){
   compactDuringUpdate(t, dbs, numrevs, numdocs, t.end.bind(t))
 })
 
+
+// expecting compacted revs to be 'missing'
+test("verify compaction", function(t){
+
+  var numdocs = 100
+
+  async.map(dbs, function(db, done){
+
+    async.times(numdocs, function(i, cb){
+
+      // get doc revs info
+      var docid = "i"+i
+      var url = coax([server,db, docid]).pax().toString()
+      url = url+"?revs_info=true"
+      coax(url, function(err, json){
+
+        if(err){
+          t.fail("unable to get doc rev_info")
+        }
+
+        // expect only 1 available rev
+        var revs_info = json._revs_info
+        var num_avail = revs_info.filter(function(rev,i){
+          if(rev.status == "available"){
+            return true
+          }}).length
+
+        if(num_avail > 1){
+            t.fail('uncompacted docs remain')
+        }
+
+        if(num_avail < 1){
+            t.fail('no doc revisions available')
+        }
+
+        cb(err, json)
+      })
+    }, done)
+
+  }, function(err, oks){
+    // verify
+    t.equals(err, null, "verify db compaction")
+    t.end()
+  })
+
+})
+
+
 test("done", function(t){
   serve.kill()
   gateway.kill()
@@ -212,49 +261,55 @@ function loadDBs(t, numdocs, dbs, done){
 
 function compactDuringUpdate(t, dbs, numrevs, numdocs, done){
 
-  async.timesSeries(numrevs, function(revid, done){
-    async.times(numdocs, function(i, cb){
+  async.map(dbs, function(db, dbdone){
 
-      var docid = "i"+i
-      var url = coax([server,dbs[0], docid]).pax().toString()
+    async.timesSeries(numrevs, function(revid, nextrev){
 
-      // get document rev
-      coax(url, function(err, json){
-        if(err){
-          t.fail("unable to get doc rev")
+      async.times(numdocs, function(i, cb){
+
+        var docid = "i"+i
+        var url = coax([server,db, docid]).pax().toString()
+
+        // get document rev
+        coax(url, function(err, json){
+          if(err || (!json)){
+            t.fail("unable to get doc rev")
+          }
+          var doc = {_id : docid,
+                     _rev : json._rev,
+                     hello : 'world'}
+
+          // put updated doc
+          coax.put([url], doc, cb)
+        })
+
+        // start compaction halfway though
+        if (i == Math.floor(numdocs/2)){
+          eventEmitter.emit('docompaction', db)
         }
-        var doc = {_id : docid,
-                   _rev : json._rev,
-                   hello : 'world'}
 
-        // put updated doc
-        coax.put([url], doc, cb)
+      }, function(err, results){
+        if(results.length !=  numdocs){
+          t.fail("did not compact all docs")
+        }
+        nextrev(err, results)
       })
-
-      // start compaction halfway though
-      if (i == Math.floor(numdocs/2)){
-        eventEmitter.emit('docompaction')
-      }
-
     }, function(err, results){
-      if(results.length !=  numdocs){
-        t.fail("did not compact all docs")
-      }
-
-      done(err, results)
+      // final db compaction
+      eventEmitter.emit('docompaction', db)
+      dbdone(err, results)
     })
   }, function(err, results){
-    t.equals(err, null, "docs updated during compaction")
-    done()
+      t.equals(err, null, " updated and compacted "+results.length+" dbs")
+      done()
   })
 
 
-  eventEmitter.on('docompaction', function(){
-    coax.post([server,dbs[0], "_compact"], function(err, json){
-      t.equals(err, null, "db compacted")
+  eventEmitter.on('docompaction', function(db){
+    coax.post([server, db, "_compact"], function(err, json){
+      t.equals(err, null, "compacted "+db)
     })
   });
-
 
 
 }
