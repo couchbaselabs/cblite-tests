@@ -154,13 +154,13 @@ test("compact during doc delete", function(t){
 })
 
 test("load multiple databases", function(t){
-  var numdocs = 1000
+  var numdocs = 100
   loadDBs(t, numdocs, dbs, t.end.bind(t))
 })
 
 test("compact during multi-db update", {timeout : 300000}, function(t){
-  var numrevs = 10
-  var numdocs = 1000
+  var numrevs = 5
+  var numdocs = 100
   compactDuringUpdate(t, dbs, numrevs, numdocs, t.end.bind(t))
 })
 
@@ -232,7 +232,7 @@ function compactDuringUpdate(t, dbs, numrevs, numdocs, done){
       })
 
       // start compaction halfway though
-      if (i == 50){
+      if (i == Math.floor(numdocs/2)){
         eventEmitter.emit('docompaction')
       }
 
