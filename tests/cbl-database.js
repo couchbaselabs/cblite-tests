@@ -5,7 +5,7 @@ var launcher = require("../lib/launcher"),
   config = require("../config/local"),
   test = require("tap").test;
 
-var serve, port = 59850,
+var serve, gateway, port = 59850,
  dbs = ["api-test1", "api-test2", "api-test3"],
  server = "http://localhost:"+port+"/"
 
@@ -31,6 +31,23 @@ test("can launch a LiteServ", function(t) {
   });
 });
 
+test("launch a Sync Gateway", function(t) {
+  gateway = launcher.launchSyncGateway({
+    port : 9888,
+    dir : __dirname+"/../tmp/sg",
+    path : config.SyncGatewayPath,
+    configPath : config.SyncGatewayAdminParty
+  })
+  gateway.once("ready", function(err){
+    t.false(err, "no error, Sync Gateway running on our port")
+    gateway.db = coax([gateway.url,"db"])
+    gateway.db(function(err, ok){
+      t.false(err, "no error, Sync Gateway reachable")
+      t.end()
+    })
+  });
+});
+
 
 test("session api", function(t){
 
@@ -46,6 +63,7 @@ test("create test databases", function(t){
     t.end()
   })
 })
+
 
 test("create duplicate db", function(t){
   coax.put([server, dbs[0]], function(err, json){
@@ -148,6 +166,7 @@ test("compact during multi-db update", {timeout : 300000}, function(t){
 
 test("done", function(t){
   serve.kill()
+  gateway.kill()
   t.end()
 })
 
