@@ -95,8 +95,13 @@ test("db bad name", function(t){
 
 test("load a test database", function(t){
   var numdocs = 100
-  createDBDocs(t, numdocs, [dbs[0]], t.end.bind(t))
+  createDBDocs(numdocs, [dbs[0]])
+  eventEmitter.once('createdbdocs', check_createdbdocs.bind(t))
+
 })
+
+
+
 
 test("verify db loaded", function(t){
   coax([server,dbs[0]], function(err, json){
@@ -161,7 +166,8 @@ test("compact during doc delete", function(t){
 
 test("load multiple databases", function(t){
   var numdocs = 100
-  createDBDocs(t, numdocs, dbs, t.end.bind(t))
+  createDBDocs(numdocs, dbs)
+  eventEmitter.once('createdbdocs', check_createdbdocs.bind(t))
 })
 
 test("compact during multi-db update", {timeout : 300000}, function(t){
@@ -245,7 +251,8 @@ test("verify db purge doc_count", function(t){
 
 test("load databases", function(t){
   var numdocs = 100
-  createDBDocs(t, numdocs, dbs, t.end.bind(t))
+  createDBDocs(numdocs, dbs)
+  eventEmitter.once('createdbdocs', check_createdbdocs.bind(t))
 })
 
 // rev history should restart
@@ -301,7 +308,12 @@ function createDBs(dbs){
   })
 }
 
-function createDBDocs(t, numdocs, dbs, done){
+function check_createdbdocs(err, json){
+  this.equals(err, null, "loaded "+json.length+" dbs")
+  this.end()
+}
+
+function createDBDocs(numdocs, dbs){
 
   async.map(dbs, function(db, next){
 
@@ -310,8 +322,7 @@ function createDBDocs(t, numdocs, dbs, done){
     }, next)
 
     }, function(err, json){
-      t.equals(err, null, "loaded "+json.length+" dbs")
-      done()
+      eventEmitter.emit("createdbdocs", err, json)
     })
 }
 
