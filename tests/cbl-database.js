@@ -8,7 +8,6 @@ var launcher = require("../lib/launcher"),
 var serve, port = 59850,
  dbs = ["api-test1", "api-test2", "api-test3"],
  server = "http://localhost:"+port+"/"
-// server = "http://localhost:59820/"
 
 var eventEmitter = new events.EventEmitter();
 
@@ -49,10 +48,38 @@ test("create test databases", function(t){
   })
 })
 
+test("try to create a database with caps", function(t){
+    coax.put([server, "dbwithCAPS"], function(e, js){
+      t.equals(e.status, 400, "db with caps not allowed")
+      t.end()
+    })
+})
+
+test("longdbname", function(t){
+
+  // try to exceed max db length of  240
+  var db = "asfasdfasfasdfasdfasdfasfasjkfhslfkjhalkjfhajkflhskjdfhlkfhajkfheajfkaheflwkjhfawekfhelakjwehflawefhawklejfewhakjfhwaeflakwejfhwaelfhwejflawefhawelfjkhawelfjaeelkfhjaewkfhwaelfhkjwefhawlkejfwaflhewfafjekhwaelfkjahejklfakfdsldlflsldlfkdfszdkf"
+  coax.put([server, db], function(e, js){
+    t.equals(e.status, 400, "dbname "+db.length+" is > 240 chars (not allowed)")
+    t.end()
+  })
+
+})
+
+
+test("create special char dbs", function(t){
+
+  var specialdbs = ["un_derscore", "dollar$ign","left(paren", "right)paren", "c+plus+plus+", "t-minus1", "foward/slash"]
+  createDBs(specialdbs, function(err, oks){
+    t.false(err, "special char dbs created")
+    t.end()
+  })
+
+})
 
 test("create duplicate db", function(t){
-  coax.put([server, dbs[0]], function(err, json){
-    t.equals(err.error,"file_exists", "db exists")
+  coax.put([server, dbs[0]], function(e, js){
+    t.equals(e.status, 412, "db exists")
     t.end()
   })
 })
@@ -63,15 +90,6 @@ test("db bad name", function(t){
     t.end()
   })
 })
-
-test("longdbname", function(t){
-  var db = "asfasdfasfasdfasdfasdfasfasjkfhslfkjhalkjfhajkflhskjdfhlkfhajkfheajfkaheflwkjhfawekfhelakjwehflawefhawklejfewhakjfhwaeflakwejfhwaelfhwejflawefhawelfjkhawelfjaeelkfhjaewkfhwaelfhkjwefhawlkejfwaflhewfafjekhwaelfkjahejklf"
-  createDBs([db], function(err, oks){
-    t.equals(err, null, "db with long name")
-    t.end()
-  })
-})
-
 
 test("load a test database", function(t){
   var numdocs = 100
@@ -274,7 +292,10 @@ function createDBs(dbs, done){
         }
     });
   }, function(err, oks){
-        done(err, oks)
+    if(err){
+      console.log(err)
+    }
+    done(err, oks)
   })
 }
 
