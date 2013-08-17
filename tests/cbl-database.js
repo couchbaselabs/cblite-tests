@@ -205,6 +205,23 @@ test("test purge", function(t){
 
 })
 
+
+// verify db purge
+test("verify db purge doc_count", function(t){
+
+  // expecting all documents deleted
+  async.map(dbs, function(db, cb){
+    coax([server,db], cb)
+  }, function(e, responses){
+    var numPurged = responses.filter(function(dbinfo){
+      return dbinfo.doc_count == 0
+      }).length
+    t.equals(numPurged, dbs.length, "doc_count=0 on all dbs")
+    t.end()
+  })
+
+})
+
 test("done", function(t){
   serve.kill()
   t.end()
