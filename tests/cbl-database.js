@@ -10,6 +10,7 @@ var serve, port = 59850,
  server = "http://localhost:"+port+"/"
 
 var eventEmitter = new events.EventEmitter();
+var emitsdefault = "default";
 
 test("can launch a LiteServ", function(t) {
   serve = launcher.launchLiteServ({
@@ -32,6 +33,7 @@ test("can launch a LiteServ", function(t) {
 });
 
 
+// _session api
 test("session api", function(t){
 
   coax([server, "_session"] , function(err, ok){
@@ -42,11 +44,9 @@ test("session api", function(t){
 
 
 test("create test databases", function(t){
+
   createDBs(dbs)
-  eventEmitter.once("createdbs", function(err, oks){
-    t.false(err,"all dbs created")
-    t.end()
-  })
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
 test("try to create a database with caps", function(t){
@@ -72,10 +72,7 @@ test("create special char dbs", function(t){
 
   var specialdbs = ["un_derscore", "dollar$ign","left(paren", "right)paren", "c+plus+plus+", "t-minus1", "foward/slash"]
   createDBs(specialdbs)
-  eventEmitter.once("createdbs", function(err, oks){
-    t.false(err, "special char dbs created")
-    t.end()
-  })
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 
 })
 
@@ -96,11 +93,8 @@ test("db bad name", function(t){
 test("load a test database", function(t){
   var numdocs = 100
   createDBDocs(numdocs, [dbs[0]])
-  eventEmitter.once('createdbdocs', check_createdbdocs.bind(t))
-
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
-
-
 
 
 test("verify db loaded", function(t){
@@ -113,166 +107,113 @@ test("verify db loaded", function(t){
 
 
 test("compact db", function(t){
-  coax.post([server,dbs[0], "_compact"], function(err, json){
-    console.log(json)
-    t.equals(err, null, "db compacted")
-    t.end()
-  })
+  compactDBs([dbs[0]])
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
+
 test("compact during doc update", function(t){
-
-  var numrevs = 1
+  var numrevs = 5
   var numdocs = 100
-  compactDuringUpdate(t, [dbs[0]], numrevs, numdocs, t.end.bind(t))
+  var dbsToUpdate = [dbs[0]]
+  updateDBDocs(t, dbsToUpdate, numrevs, numdocs)
 
+  // run compaction while documents are updating
+  eventEmitter.once("docsUpdating", function(){
+    compactDBs(dbsToUpdate, 'compactDBs')
+  })
+
+  // handle update completes
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
 
 
 test("compact during doc delete", function(t){
+  var numdocs = 100
+  deleteDBDocs(t, [dbs[0]], numdocs)
 
-  async.times(100, function(i, cb){
+  // run compaction while documents are being deleted
+  compactDBs([dbs[0]], 'compactDBs')
 
-    var docid = "i"+i
-    var url = coax([server,dbs[0], docid]).pax().toString()
-
-    // get document rev
-    coax(url, function(err, json){
-
-      // delete doc
-      coax.del([url+"?rev="+json._rev], cb)
-    })
-
-    // start compaction
-    if (i == 20){
-      eventEmitter.emit('docompaction')
-    }
-
-  }, function(err, results){
-    t.equals(err, null, "docs deleted during compaction")
-    t.equals(results.length, 100, "all docs compacted")
-    t.end()
-  })
-
-
-  eventEmitter.on('docompaction', function(){
-    coax.post([server,dbs[0], "_compact"], function(err, json){
-      t.equals(err, null, "db compacted")
-    })
-  });
+  // handle update completes
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 
 })
+
 
 test("load multiple databases", function(t){
   var numdocs = 100
   createDBDocs(numdocs, dbs)
-  eventEmitter.once('createdbdocs', check_createdbdocs.bind(t))
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
+
 
 test("compact during multi-db update", {timeout : 300000}, function(t){
   var numrevs = 5
   var numdocs = 100
-  compactDuringUpdate(t, dbs, numrevs, numdocs, t.end.bind(t))
+  updateDBDocs(t, dbs, numrevs, numdocs)
+
+  // run compaction while documents are updating
+  eventEmitter.once("docsUpdating", function(){
+    compactDBs(dbs, 'compactDBs')
+  })
+
+  // handle update completes
+  eventEmitter.once(emitsdefault, function(err, json){
+    if(err){
+      console.log(err)
+      t.fail("errors occured updating docs during compaction")
+    }
+
+    // final compaction
+    compactDBs(dbs)
+    eventEmitter.once(emitsdefault, emitHandler.bind(t))
+  })
+
 })
 
 
 // expecting compacted revs to be 'missing'
 test("verify compaction", function(t){
-
   var numdocs = 100
-
-  async.map(dbs, function(db, done){
-
-    async.times(numdocs, function(i, cb){
-
-      // get doc revs info
-      var docid = "i"+i
-      var url = coax([server,db, docid]).pax().toString()
-      url = url+"?revs_info=true"
-      coax(url, function(err, json){
-
-        if(err){
-          t.fail("unable to get doc rev_info")
-        }
-
-        // expect only 1 available rev
-        var revs_info = json._revs_info
-        var num_avail = revs_info.filter(function(rev,i){
-          if(rev.status == "available"){
-            return true
-          }}).length
-
-        if(num_avail > 1){
-            t.fail('uncompacted docs remain')
-        }
-
-        if(num_avail < 1){
-            t.fail('no doc revisions available')
-        }
-
-        cb(err, json)
-      })
-    }, done)
-
-  }, function(err, oks){
-    // verify
-    t.equals(err, null, "verify db compaction")
-    t.end()
-  })
+  verifyCompactDBs(t, dbs, numdocs)
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 
 })
 
+
 // purge all dbs
 test("test purge", function(t){
-
   var numDocsToPurge = 100
-  purgeDBDocs(t, dbs, numDocsToPurge, t.end.bind(t))
+  purgeDBDocs(t, dbs, numDocsToPurge)
+  eventEmitter.once(emitsdefault,  emitHandler.bind(t))
 
 })
 
 
 // verify db purge
 test("verify db purge doc_count", function(t){
-
-  // expecting all documents deleted
-  async.map(dbs, function(db, cb){
-    coax([server,db], cb)
-  }, function(e, responses){
-    var numPurged = responses.filter(function(dbinfo){
-      return dbinfo.doc_count == 0
-      }).length
-    t.equals(numPurged, dbs.length, "doc_count=0 on all dbs")
-    t.end()
-  })
+  verifyPurgeDocCount(t, dbs)
+  eventEmitter.once(emitsdefault,  emitHandler.bind(t))
 
 })
 
 
-test("load databases", function(t){
+// reload some more docs
+test("reload databases", function(t){
   var numdocs = 100
   createDBDocs(numdocs, dbs)
-  eventEmitter.once('createdbdocs', check_createdbdocs.bind(t))
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
+
 })
 
 // rev history should restart
 test("verify revids after purge", function(t){
-
-  // get 1 doc from each db
-  async.map(dbs, function(db, cb){
-    coax([server,db,"i1"], function(e, js){
-      if(e){
-        t.fail("unable to retrieve db doc")
-      }
-      var revid = js._rev.replace(/-.*/,"")
-      t.equals(revid, "1", db+" revids reset")
-      cb(e, revid)
-    })
-  }, function(e, revids){
-    t.end()
-  })
-
+  verifyPurgeRevIDs(t, dbs)
+  eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
+
 
 test("done", function(t){
   serve.kill()
@@ -281,7 +222,12 @@ test("done", function(t){
 
 
 
-function createDBs(dbs){
+//########## helper methods ################
+
+
+function createDBs(dbs, emits){
+
+  emits = emits || emitsdefault
 
   async.map(dbs, function(db, cb){
 
@@ -300,36 +246,30 @@ function createDBs(dbs){
             coax.put([server, db], cb)
         }
     });
-  }, function(err, oks){
-    if(err){
-      console.log(err)
-    }
-    eventEmitter.emit("createdbs", err, oks)
-  })
+  }, notifycaller(emits))
 }
 
-function check_createdbdocs(err, json){
-  this.equals(err, null, "loaded "+json.length+" dbs")
-  this.end()
-}
 
-function createDBDocs(numdocs, dbs){
+function createDBDocs(numdocs, dbs, emits){
 
-  async.map(dbs, function(db, next){
+  emits = emits || emitsdefault
+
+  async.map(dbs, function(db, nextdb){
 
     async.times(numdocs, function(i, cb){
       coax.post([server,db], {_id : "i"+i}, cb)
-    }, next)
+    }, nextdb)
 
-    }, function(err, json){
-      eventEmitter.emit("createdbdocs", err, json)
-    })
+  }, notifycaller(emits))
+
 }
 
 
-function compactDuringUpdate(t, dbs, numrevs, numdocs, done){
+function updateDBDocs(t, dbs, numrevs, numdocs, emits){
 
-  async.map(dbs, function(db, dbdone){
+  emits = emits || emitsdefault
+
+  async.map(dbs, function(db, nextdb){
 
     async.timesSeries(numrevs, function(revid, nextrev){
 
@@ -351,38 +291,101 @@ function compactDuringUpdate(t, dbs, numrevs, numdocs, done){
           coax.put([url], doc, cb)
         })
 
-        // start compaction halfway though
-        if (i == Math.floor(numdocs/2)){
-          eventEmitter.emit('docompaction', db)
-        }
+      },
+      notifycaller({emits : "docsUpdating" , cb : nextrev}))
 
-      }, function(err, results){
-        if(results.length !=  numdocs){
-          t.fail("did not compact all docs")
-        }
-        nextrev(err, results)
-      })
-    }, function(err, results){
-      // final db compaction
-      eventEmitter.emit('docompaction', db)
-      dbdone(err, results)
-    })
-  }, function(err, results){
-      t.equals(err, null, " updated and compacted "+results.length+" dbs")
-      done()
-  })
+    }, nextdb)
 
-
-  eventEmitter.on('docompaction', function(db){
-    coax.post([server, db, "_compact"], function(err, json){
-      t.equals(err, null, "compacted "+db)
-    })
-  });
-
+  }, notifycaller(emits))
 
 }
 
-function purgeDBDocs(t, dbs, numdocs, done){
+function deleteDBDocs(t, dbs, numdocs, emits){
+
+  emits = emits || emitsdefault
+
+  async.map(dbs, function(db, nextdb) {
+
+    async.times(numdocs, function(i, cb){
+
+      var docid = "i"+i
+      var url = coax([server,db, docid]).pax().toString()
+
+      // get document rev
+      coax(url, function(err, json){
+
+        if(err){
+          t.fail("unable to get doc to delete")
+        }
+
+        // delete doc
+        coax.del([url+"?rev="+json._rev], cb)
+      })
+
+    }, function(err, json){
+      t.equals(json.length, 100, "all docs deleted")
+      nextdb(err, json)
+    })
+
+  }, notifycaller(emits))
+
+}
+
+
+function compactDBs(dbs, emits){
+
+  emits = emits || emitsdefault
+
+  async.map(dbs, function(db, nextdb){
+    coax.post([server, db, "_compact"], nextdb)
+  }, notifycaller(emits))
+
+}
+
+function verifyCompactDBs(t, dbs, numdocs, emits){
+
+  emits = emits || emitsdefault
+
+  async.map(dbs, function(db, nextdb){
+
+    async.times(numdocs, function(i, cb){
+
+      // get doc revs info
+      var docid = "i"+i
+      var url = coax([server,db, docid]).pax().toString()
+      url = url+"?revs_info=true"
+      coax(url, function(err, json){
+
+        if(err){
+          t.fail("unable to get doc rev_info")
+        }
+
+        // expect only 1 available rev
+        var revs_info = json._revs_info
+        var num_avail = revs_info.filter(function(rev,i){
+          if(rev.status == "available"){
+            return true
+          }}).length
+
+        if(num_avail > 1){
+            t.fail(num_avail+' uncompacted revision(s) remain')
+        }
+
+        if(num_avail < 1){
+            t.fail('no doc revisions available')
+        }
+
+        cb(err, json)
+      })
+    }, nextdb)
+
+  }, notifycaller(emits))
+
+}
+
+function purgeDBDocs(t, dbs, numdocs, emits){
+
+  emits = emits || emitsdefault
 
   async.map(dbs, function(db, dbdone){
 
@@ -408,8 +411,87 @@ function purgeDBDocs(t, dbs, numdocs, done){
       })
     }, dbdone)
 
-  }, function(err, oks){
-    t.equals(err, null, "all doc history purged purged")
-    done()
+  }, notifycaller(emits))
+}
+
+// runs after purge to verify all doc_count=0 on all dbs
+function verifyPurgeDocCount(t, dbs){
+
+  // expecting all documents deleted
+  async.map(dbs, function(db, cb){
+    coax([server,db], cb)
+  }, function(e, responses){
+    var numPurged = responses.filter(function(dbinfo){
+      return dbinfo.doc_count == 0
+      }).length
+    t.equals(numPurged, dbs.length, "doc_count=0 on all dbs")
+
+    // emits default
+    notifycaller(emitsdefault)(e, responses)
+
   })
+
+}
+
+// runs after purge to verify all doc ids=1 on new creates
+function verifyPurgeRevIDs(t, dbs){
+
+  // get 1 doc from each db
+  async.map(dbs, function(db, cb){
+    coax([server,db,"i1"], function(e, js){
+      if(e){
+        t.fail("unable to retrieve db doc")
+      }
+      var revid = js._rev.replace(/-.*/,"")
+      t.equals(revid, "1", db+" revids reset")
+      cb(e, revid)
+    })
+  }, notifycaller(emitsdefault))
+
+}
+
+// emitHandler: does final test verification
+//
+// this method helps to finish a test in an async way
+// by running in the context of the test when called
+// properly via bind. custom handlers can be written for
+// special use cases if needed
+//
+// * make sure no errors encountered
+// * prints errors if any
+function emitHandler(err, oks){
+  if(err){
+    t.fail("errors occured during test case")
+    console.log(err)
+  }
+
+  this.end()
+}
+
+
+// multi-purpose helper for async methods
+//
+// primary purpose is to return a callback which complies with completion of async loops
+// * can emit an event on completion
+// * can emit an event during innter loop completion and call it's callback
+function notifycaller(args){
+
+  if(args && typeof(args) == 'string'){
+    args = {emits : args}
+  }
+
+  return function(err, json){
+
+
+    if(args){
+      if(args.emits){
+        eventEmitter.emit(args.emits, err, json)
+      }
+
+      if(args.cb){
+        args.cb(err, json)
+      }
+    }
+  }
+
 }
