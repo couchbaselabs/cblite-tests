@@ -95,7 +95,7 @@ test("db bad name", function(t){
 
 test("load a test database", function(t){
   var numdocs = 100
-  loadDBs(t, numdocs, [dbs[0]], t.end.bind(t))
+  createDBDocs(t, numdocs, [dbs[0]], t.end.bind(t))
 })
 
 test("verify db loaded", function(t){
@@ -161,7 +161,7 @@ test("compact during doc delete", function(t){
 
 test("load multiple databases", function(t){
   var numdocs = 100
-  loadDBs(t, numdocs, dbs, t.end.bind(t))
+  createDBDocs(t, numdocs, dbs, t.end.bind(t))
 })
 
 test("compact during multi-db update", {timeout : 300000}, function(t){
@@ -245,7 +245,7 @@ test("verify db purge doc_count", function(t){
 
 test("load databases", function(t){
   var numdocs = 100
-  loadDBs(t, numdocs, dbs, t.end.bind(t))
+  createDBDocs(t, numdocs, dbs, t.end.bind(t))
 })
 
 // rev history should restart
@@ -301,7 +301,7 @@ function createDBs(dbs){
   })
 }
 
-function loadDBs(t, numdocs, dbs, done){
+function createDBDocs(t, numdocs, dbs, done){
 
   async.map(dbs, function(db, next){
 
@@ -313,8 +313,8 @@ function loadDBs(t, numdocs, dbs, done){
       t.equals(err, null, "loaded "+json.length+" dbs")
       done()
     })
-
 }
+
 
 function compactDuringUpdate(t, dbs, numrevs, numdocs, done){
 
