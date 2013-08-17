@@ -42,7 +42,8 @@ test("session api", function(t){
 
 
 test("create test databases", function(t){
-  createDBs(dbs, function(err, oks){
+  createDBs(dbs)
+  eventEmitter.once("createdbs", function(err, oks){
     t.false(err,"all dbs created")
     t.end()
   })
@@ -70,7 +71,8 @@ test("longdbname", function(t){
 test("create special char dbs", function(t){
 
   var specialdbs = ["un_derscore", "dollar$ign","left(paren", "right)paren", "c+plus+plus+", "t-minus1", "foward/slash"]
-  createDBs(specialdbs, function(err, oks){
+  createDBs(specialdbs)
+  eventEmitter.once("createdbs", function(err, oks){
     t.false(err, "special char dbs created")
     t.end()
   })
@@ -272,7 +274,7 @@ test("done", function(t){
 
 
 
-function createDBs(dbs, done){
+function createDBs(dbs){
 
   async.map(dbs, function(db, cb){
 
@@ -295,7 +297,7 @@ function createDBs(dbs, done){
     if(err){
       console.log(err)
     }
-    done(err, oks)
+    eventEmitter.emit("createdbs", err, oks)
   })
 }
 
