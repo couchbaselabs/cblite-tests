@@ -26,13 +26,36 @@ test("can launch a LiteServ", function(t) {
 });
 
 test("can create a database", function(t){
-  coax([server, "testdb"]).put(function(err, ok){
-    if (err) {
-      t.equals(412, err.status, "database exists")
-    } else {
-      t.ok(ok, "created database")
-    }
-    serve.kill()
+  coax([server, "testdb"]).del(function(err, ok) {
+    coax([server, "testdb"]).put(function(err, ok){
+      if (err) {
+        t.equals(412, err.status, "database exists")
+      } else {
+        t.ok(ok, "created database")
+      }
+      t.end()
+    })
+  })
+})
+
+
+test("changes only show up once in longpoll", function(t) {
+  var db = coax([server, "testdb"]);
+  var count = 0;
+  db.changes(function(err, change){
+    if (err) return; // sometimes get an error on disconnect
+    count++
+    // console.log("change",err,change)
+    t.equals(1, change.seq)
+    t.equals(1, count, "each change should happen once")
     t.end()
   })
+  db.post({"foo":"bar"}, function(err, ok){
+    t.false(err, "saved ok")
+  })
+})
+
+test("done", function(t) {
+  serve.kill()
+  t.end()
 })
