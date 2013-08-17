@@ -5,9 +5,10 @@ var launcher = require("../lib/launcher"),
   config = require("../config/local"),
   test = require("tap").test;
 
-var serve, gateway, port = 59850,
+var serve, port = 59850,
  dbs = ["api-test1", "api-test2", "api-test3"],
  server = "http://localhost:"+port+"/"
+// server = "http://localhost:59820/"
 
 var eventEmitter = new events.EventEmitter();
 
@@ -31,23 +32,6 @@ test("can launch a LiteServ", function(t) {
   });
 });
 
-test("launch a Sync Gateway", function(t) {
-  gateway = launcher.launchSyncGateway({
-    port : 9888,
-    dir : __dirname+"/../tmp/sg",
-    path : config.SyncGatewayPath,
-    configPath : config.SyncGatewayAdminParty
-  })
-  gateway.once("ready", function(err){
-    t.false(err, "no error, Sync Gateway running on our port")
-    gateway.db = coax([gateway.url,"db"])
-    gateway.db(function(err, ok){
-      t.false(err, "no error, Sync Gateway reachable")
-      t.end()
-    })
-  });
-});
-
 
 test("session api", function(t){
 
@@ -56,6 +40,7 @@ test("session api", function(t){
     t.end()
   })
 })
+
 
 test("create test databases", function(t){
   createDBs(dbs, function(err, oks){
@@ -212,12 +197,19 @@ test("verify compaction", function(t){
 
 })
 
+// purge all dbs
+test("test purge", function(t){
+
+  var numDocsToPurge = 100
+  purgeDBDocs(t, dbs, numDocsToPurge, t.end.bind(t))
+
+})
 
 test("done", function(t){
   serve.kill()
-  gateway.kill()
   t.end()
 })
+
 
 
 function createDBs(dbs, done){
@@ -312,4 +304,36 @@ function compactDuringUpdate(t, dbs, numrevs, numdocs, done){
   });
 
 
+}
+
+function purgeDBDocs(t, dbs, numdocs, done){
+
+  async.map(dbs, function(db, dbdone){
+
+    async.times(numdocs, function(i, cb){
+      // get last rev
+      var docid = "i"+i
+      var url = coax([server,db, docid]).pax().toString()
+      coax(url, function(err, json){
+        if(err){
+          t.fail("unable to retrieve doc ids")
+        }
+
+        // purge doc history
+        var doc = {}
+        doc[docid] = [json._rev]
+        coax.post([server, db, "_purge"], doc, function(e, js){
+          if(e){
+            console.log(e)
+            t.fail("unable to purge doc history")
+          }
+          cb(e,js)
+        })
+      })
+    }, dbdone)
+
+  }, function(err, oks){
+    t.equals(err, null, "all doc history purged purged")
+    done()
+  })
 }
