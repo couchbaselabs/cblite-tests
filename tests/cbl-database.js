@@ -96,13 +96,50 @@ test("load a test database", function(t){
   eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
-
 test("verify db loaded", function(t){
   coax([server,dbs[0]], function(err, json){
     t.equals(json.doc_count, 100, "verify db loaded")
     t.end()
   })
 
+})
+
+test("all docs", function(t){
+
+  var db = dbs[0]
+  coax([server, db, "_all_docs"], function(e, js){
+    t.equals(js.rows.length, 100, "verify _all_docs")
+    t.end()
+  })
+})
+
+test("all docs with keys", function(t){
+
+  var db = dbs[0]
+  coax([server, db, "_all_docs"], function(e, js){
+
+    // get a subset of all docs
+    var keys = js.rows.map(function(row){
+      return row.key
+    }).slice(0,20)
+
+    var params = {keys : keys}
+    coax.post([server, db, "_all_docs"], params, function (e, js){
+
+      var resultkeys = js.rows.map(function(row){
+        return row.key
+      })
+
+      t.equals(resultkeys.length, 20, "verify _all_docs")
+
+      for(var i in keys){
+        if(resultkeys.indexOf(keys[i]) == -1){
+          t.fail("expected key ("+keys[i]+") not found in _all_docs")
+        }
+      }
+      t.end()
+    })
+  })
 })
 
 
@@ -126,7 +163,6 @@ test("compact during doc update", function(t){
   // handle update completes
   eventEmitter.once("done", emitHandler.bind(t))
 })
-
 
 
 test("compact during doc delete", function(t){
