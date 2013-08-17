@@ -222,6 +222,31 @@ test("verify db purge doc_count", function(t){
 
 })
 
+
+test("load databases", function(t){
+  var numdocs = 100
+  loadDBs(t, numdocs, dbs, t.end.bind(t))
+})
+
+// rev history should restart
+test("verify revids after purge", function(t){
+
+  // get 1 doc from each db
+  async.map(dbs, function(db, cb){
+    coax([server,db,"i1"], function(e, js){
+      if(e){
+        t.fail("unable to retrieve db doc")
+      }
+      var revid = js._rev.replace(/-.*/,"")
+      t.equals(revid, "1", db+" revids reset")
+      cb(e, revid)
+    })
+  }, function(e, revids){
+    t.end()
+  })
+
+})
+
 test("done", function(t){
   serve.kill()
   t.end()
