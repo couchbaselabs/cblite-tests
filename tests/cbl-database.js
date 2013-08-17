@@ -116,15 +116,15 @@ test("compact during doc update", function(t){
   var numrevs = 5
   var numdocs = 100
   var dbsToUpdate = [dbs[0]]
-  updateDBDocs(t, dbsToUpdate, numrevs, numdocs)
+  updateDBDocs(t, dbsToUpdate, numrevs, numdocs, "done")
 
   // run compaction while documents are updating
   eventEmitter.once("docsUpdating", function(){
-    compactDBs(dbsToUpdate, 'compactDBs')
+    compactDBs(dbsToUpdate)
   })
 
   // handle update completes
-  eventEmitter.once(emitsdefault, emitHandler.bind(t))
+  eventEmitter.once("done", emitHandler.bind(t))
 })
 
 
@@ -214,11 +214,6 @@ test("verify revids after purge", function(t){
   eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
-
-test("done", function(t){
-  serve.kill()
-  t.end()
-})
 
 
 
@@ -433,7 +428,8 @@ function verifyPurgeDocCount(t, dbs){
 
 }
 
-// runs after purge to verify all doc ids=1 on new creates
+// runs after purge to verify all doc ids=1 on any existing doc
+// TODO: use _all_docs?
 function verifyPurgeRevIDs(t, dbs){
 
   // get 1 doc from each db
@@ -461,7 +457,7 @@ function verifyPurgeRevIDs(t, dbs){
 // * prints errors if any
 function emitHandler(err, oks){
   if(err){
-    t.fail("errors occured during test case")
+    this.fail("errors occured during test case")
     console.log(err)
   }
 
