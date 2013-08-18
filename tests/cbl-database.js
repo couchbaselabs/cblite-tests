@@ -3,6 +3,7 @@ var launcher = require("../lib/launcher"),
   async = require("async"),
   events = require('events'),
   config = require("../config/local"),
+  tstart = process.hrtime(),
   test = require("tap").test;
 
 var serve, port = 59850,
@@ -47,7 +48,9 @@ test("create test databases", function(t){
 
   createDBs(dbs)
   eventEmitter.once(emitsdefault, emitHandler.bind(t))
+
 })
+
 
 test("try to create a database with caps", function(t){
     coax.put([server, "dbwithCAPS"], function(e, js){
@@ -90,24 +93,31 @@ test("db bad name", function(t){
   })
 })
 
+
 test("load a test database", function(t){
   var numdocs = 100
   createDBDocs(numdocs, [dbs[0]])
   eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
+
+
 test("verify db loaded", function(t){
   coax([server,dbs[0]], function(err, json){
     t.equals(json.doc_count, 100, "verify db loaded")
     t.end()
   })
-
 })
+
 
 test("all docs", function(t){
 
   var db = dbs[0]
   coax([server, db, "_all_docs"], function(e, js){
+    if(e){
+      console.log(e)
+      t.fail("error calling _all_docs")
+    }
     t.equals(js.rows.length, 100, "verify _all_docs")
     t.end()
   })
@@ -229,29 +239,114 @@ test("test purge", function(t){
 
 
 // verify db purge
-test("verify db purge doc_count", function(t){
-  verifyPurgeDocCount(t, dbs)
-  eventEmitter.once(emitsdefault,  emitHandler.bind(t))
-
+test("verify db purge", function(t){
+  verifyDBPurge(t, dbs)
 })
 
-
-// reload some more docs
-test("reload databases", function(t){
-  var numdocs = 100
-  createDBDocs(numdocs, dbs)
-  eventEmitter.once(emitsdefault, emitHandler.bind(t))
-
-})
-
-// rev history should restart
-test("verify revids after purge", function(t){
-  verifyPurgeRevIDs(t, dbs)
+test("can load using bulk docs", function(t){
+  var numdocs = 10000
+  createDBBulkDocs(t, numdocs, 100, dbs)
   eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
+// update bulk docs
+test("can update bulk docs", function(t){
+
+    var size = 20
+    var db = dbs[0]
+    var url = coax([server,db,"_all_docs"]).pax().toString()
+    url = url+"?limit="+size+"&include_docs=true"
+    coax(url, function(e, js){
+      if(e){
+        t.fail("unable to get _all_docs")
+      }
+
+      var docs = { docs : js.rows.map(function(row){ return row.doc }),
+                   all_or_nothing : true}
+
+      coax.post([server,db, "_bulk_docs"], docs, function(err, results){
+        if(err){
+          console.log(err)
+          t.fail("error occurred updating bulk docs")
+        }
+
+        t.equals(results.length, size, "updated "+size+" docs")
+        t.end()
+      })
+
+    })
+})
 
 
+// delete bulk docs
+test("can delete bulk docs", function(t){
+
+    var size = 20
+    var db = dbs[0]
+
+    // get doc_count
+    coax([server, dbs[0]], function(e, js){
+
+      var orig_num_docs = js.doc_count
+
+      // get some docs to delete
+      var url = coax([server,db,"_all_docs"]).pax().toString()
+      url = url+"?limit="+size+"&include_docs=true"
+
+      coax(url, function(e, js){
+        if(e){
+          t.fail("unable to get _all_docs")
+        }
+
+        var docs = { docs : js.rows.map(function(row){ row.doc._deleted = true
+                                                       return row.doc }),
+                     all_or_nothing : true}
+
+        coax.post([server,db, "_bulk_docs"], docs, function(err, results){
+          if(err){
+            console.log(err)
+            t.fail("error occurred updating bulk docs")
+          }
+
+          t.equals(results.length, size, "deleted"+size+" docs")
+
+          // get num_docs again
+          coax([server, dbs[0]], function(e, js){
+
+            t.equals(orig_num_docs - size, js.doc_count, "verified "+size+" docs deleted")
+            t.end()
+          })
+        })
+
+      })
+
+    })
+})
+
+
+// bulk docs dupe id's
+test("can load using bulk docs", function(t){
+  var docs = bulkDocGen(2)
+  docs[0] = docs[1]
+
+  coax.post([server, dbs[0], "_bulk_docs"],
+            { docs : docs,
+              all_or_nothing : true},
+  function(err, json){
+    console.log(err)
+    t.equals(err.status, 409, "cannot post duplicate bulk doc entries")
+    t.end()
+  })
+
+})
+
+
+test("done", function(t){
+
+  serve.kill()
+  t.end()
+
+})
 
 //########## helper methods ################
 
@@ -288,10 +383,81 @@ function createDBDocs(numdocs, dbs, emits){
   async.map(dbs, function(db, nextdb){
 
     async.times(numdocs, function(i, cb){
-      coax.post([server,db], {_id : "i"+i}, cb)
+      coax.put([server,db, "i"+i], docGen(), cb)
     }, nextdb)
 
   }, notifycaller(emits))
+
+}
+
+
+function createDBBulkDocs(t, numdocs, size, dbs, docGen, emits){
+
+  emits = emits || emitsdefault
+
+  var numinserts = numdocs/size
+
+  async.map(dbs, function(db, nextdb){
+
+    async.times(numinserts, function(i, cb){
+      var docs = { docs : bulkDocGen(size)}
+
+      coax.post([server,db, "_bulk_docs"], docs, function(err, json){
+
+        if(err){
+          console.log(err)
+          t.fail("error occurred loading batch")
+        }
+
+        // check for oks
+        var numOks = json.filter(function(doc) { return doc.ok } )
+
+        if(numOks.length != size){
+          t.fail("bulk_docs loaded: "+numOks.length+" expected "+size)
+        }
+
+        cb(err, json)
+      })
+
+    }, nextdb)
+
+  }, notifycaller(emits))
+
+}
+
+
+
+function docGen(){
+
+  var suffix = Math.random().toString(26).substring(7)
+  var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+  return { _id : id,
+           data : Math.random().toString(5).substring(4),
+             at : new Date()}
+
+}
+
+function bulkDocGen(size){
+
+  var docs = []
+  for (i = 0; i < size; i++){
+    docs.push(docGen())
+  }
+  return docs
+}
+
+function bulkDocUpdateGen(size, db){
+
+  var docs = []
+  var url = coax([server,db,"_all_docs"]).pax().toString()+"?limit="+size
+  coax(url, function(e, js){
+    if(!e){
+      docs = js.rows
+
+    }
+  })
+
+  return docs
 
 }
 
@@ -314,9 +480,10 @@ function updateDBDocs(t, dbs, numrevs, numdocs, emits){
           if(err || (!json)){
             t.fail("unable to get doc rev")
           }
-          var doc = {_id : docid,
-                     _rev : json._rev,
-                     hello : 'world'}
+
+          var doc = json
+          doc['data'] =  Math.random().toString(26).substring(7)
+          doc['at'] = new Date()
 
           // put updated doc
           coax.put([url], doc, cb)
@@ -330,6 +497,43 @@ function updateDBDocs(t, dbs, numrevs, numdocs, emits){
   }, notifycaller(emits))
 
 }
+
+function updateDBDocs(t, dbs, numrevs, numdocs, emits){
+
+  emits = emits || emitsdefault
+
+  async.map(dbs, function(db, nextdb){
+
+    async.timesSeries(numrevs, function(revid, nextrev){
+
+      async.times(numdocs, function(i, cb){
+
+        var docid = "i"+i
+        var url = coax([server,db, docid]).pax().toString()
+
+        // get document rev
+        coax(url, function(err, json){
+          if(err || (!json)){
+            t.fail("unable to get doc rev")
+          }
+
+          var doc = json
+          doc['data'] =  Math.random().toString(26).substring(7)
+          doc['at'] = new Date()
+
+          // put updated doc
+          coax.put([url], doc, cb)
+        })
+
+      },
+      notifycaller({emits : "docsUpdating" , cb : nextrev}))
+
+    }, nextdb)
+
+  }, notifycaller(emits))
+
+}
+
 
 function deleteDBDocs(t, dbs, numdocs, emits){
 
@@ -445,6 +649,22 @@ function purgeDBDocs(t, dbs, numdocs, emits){
   }, notifycaller(emits))
 }
 
+function verifyDBPurge(t, dbs, emits){
+
+  verifyPurgeDocCount(t, dbs)
+  eventEmitter.once(emitsdefault,  function(err, json){
+    // errs already checked, create some more docs
+    createDBDocs(10, dbs)
+    eventEmitter.once(emitsdefault, function(err, json){
+        // verify ids
+        verifyPurgeRevIDs(t, dbs)
+        eventEmitter.once(emitsdefault, emitHandler.bind(t))
+    })
+
+  })
+
+}
+
 // runs after purge to verify all doc_count=0 on all dbs
 function verifyPurgeDocCount(t, dbs){
 
@@ -465,16 +685,16 @@ function verifyPurgeDocCount(t, dbs){
 }
 
 // runs after purge to verify all doc ids=1 on any existing doc
-// TODO: use _all_docs?
 function verifyPurgeRevIDs(t, dbs){
 
   // get 1 doc from each db
   async.map(dbs, function(db, cb){
-    coax([server,db,"i1"], function(e, js){
+    var url = coax([server,db,"_all_docs"]).pax().toString()+"?limit=1"
+    coax(url, function(e, js){
       if(e){
         t.fail("unable to retrieve db doc")
       }
-      var revid = js._rev.replace(/-.*/,"")
+      var revid = js.rows[0].value.rev.replace(/-.*/,"")
       t.equals(revid, "1", db+" revids reset")
       cb(e, revid)
     })
@@ -492,6 +712,7 @@ function verifyPurgeRevIDs(t, dbs){
 // * make sure no errors encountered
 // * prints errors if any
 function emitHandler(err, oks){
+
   if(err){
     this.fail("errors occured during test case")
     console.log(err)
