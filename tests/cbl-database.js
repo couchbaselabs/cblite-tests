@@ -99,7 +99,6 @@ test("load a test database", function(t){
   eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
 
-
 test("verify db loaded", function(t){
   coax([server,dbs[0]], function(err, json){
     t.equals(json.doc_count, 100, "verify db loaded")
@@ -355,6 +354,42 @@ test("can run temp view", function(t){
     var viewDocs = js.rows.length
     t.equals(viewDocs, limit, "temp view returned "+limit+" docs")
     t.end()
+  })
+
+})
+
+
+// test _revs_diff
+test("verify missing revs", function(t){
+
+  var db = dbs[0]
+
+  // get a document
+  var url = coax([server,db,"_all_docs"]).pax().toString()+"?limit=1"
+  coax(url, function(e, js){
+    t.false(e, "retrieved doc")
+
+    var rev = js.rows[0].value.rev
+    var id = js.rows[0].id
+    var params = {}
+    params[id] = [rev]
+
+    coax.post([server, dbs[0], "_revs_diff"], params, function(e, js){
+      t.false(e, "able to query _revs_diff")
+      // expect no missing items
+      if('missing' in js){
+        t.fail("existing rev marked as missing")
+      }
+
+      // query with missing rev
+      var mrev = "99-missingrev"
+      params[id].push(mrev)
+      coax.post([server, dbs[0], "_revs_diff"], params, function(e, js){
+        t.equals(js[id].missing[0], mrev, "verify missing rev does not exist")
+        t.end()
+      })
+    })
+
   })
 
 })
