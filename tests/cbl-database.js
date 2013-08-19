@@ -51,7 +51,6 @@ test("create test databases", function(t){
 
 })
 
-
 test("try to create a database with caps", function(t){
     coax.put([server, "dbwithCAPS"], function(e, js){
       t.equals(e.status, 400, "db with caps not allowed")
@@ -99,7 +98,6 @@ test("load a test database", function(t){
   createDBDocs(numdocs, [dbs[0]])
   eventEmitter.once(emitsdefault, emitHandler.bind(t))
 })
-
 
 
 test("verify db loaded", function(t){
@@ -340,6 +338,26 @@ test("can load using bulk docs", function(t){
 
 })
 
+
+// temp views
+test("can run temp view", function(t){
+
+  var limit = 100
+  var view = {
+     map : 'function(doc) { if (doc) { emit(null, doc); } }'
+  }
+
+  var url = coax([server, dbs[0], "_temp_view"]).pax().toString()
+  url = url+"?reduce=false&limit="+limit
+
+  coax.post(url, view, function(e, js){
+    t.false(e, "created tmp view")
+    var viewDocs = js.rows.length
+    t.equals(viewDocs, limit, "temp view returned "+limit+" docs")
+    t.end()
+  })
+
+})
 
 test("done", function(t){
 
