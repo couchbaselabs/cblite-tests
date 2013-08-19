@@ -472,7 +472,14 @@ function createDBBulkDocs(t, numdocs, size, dbs, docGen, emits){
         cb(err, json)
       })
 
-    }, nextdb)
+    }, function(err, json){
+      coax.post([server, db, "_ensure_full_commit"], function(_err, json){
+        if(_err){
+          t.fail("error committing docs to db"+_err)
+        }
+        nextdb(err, json)
+      })
+    })
 
   }, notifycaller(emits))
 
