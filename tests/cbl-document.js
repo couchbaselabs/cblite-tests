@@ -30,7 +30,7 @@ test("create docs with inline text attachments", function(t){
                           dbs : dbs,
                           docgen : 'inlineTextAtt'}, 'emits-created')
 
-  ee.on('emits-created', function(e, js){
+  ee.once('emits-created', function(e, js){
     t.false(e, "created docs with attachment")
 
     // get doc
@@ -78,7 +78,7 @@ test("create docs with image attachements", function(t){
                           dbs : dbs,
                           docgen : 'inlinePngtAtt'}, 'emits-created')
 
-  ee.on('emits-created', function(e, js){
+  ee.once('emits-created', function(e, js){
 
     t.false(e, "created docs with attachment")
 
@@ -115,6 +115,67 @@ test("create docs with image attachements", function(t){
   })
 
 })
+
+test("multi inline attachements", function(t){
+
+ common.updateDBDocs(t, {numdocs : 100,
+                         numrevs : 3,
+                         dbs : dbs,
+                         docgen : 'inlineTextAtt'}, 'emits-updated')
+
+  ee.once('emits-updated', function(e, js){
+
+    t.false(e, "added attachment to docs")
+
+    // get doc
+    coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
+
+      if(e){
+        console.log(e)
+        t.fail("unable to retrieve doc from all_docs")
+      }
+
+      // get doc with attachement info
+      var docid = js.rows[0].id
+      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+
+        if(e){
+          console.log(e)
+          t.fail("read doc failed")
+        }
+
+        // verify text attachement
+        var doctext = js.text
+        var attchid = Object.keys(js._attachments)[1]
+
+        coax([server, dbs[0], docid, attchid], function(e, response){
+
+          // search for cblite string
+          t.false(e, "retrieved doc with attachement")
+          t.ok(doctext == response, "verify attachment data")
+          t.end()
+        })
+      })
+    })
+
+  })
+})
+
+
+
+// compact db
+test("compact db", function(t){
+  common.compactDBs(t, dbs)
+
+})
+
+// expecting compacted revs to be 'missing'
+test("verify compaction", function(t){
+  var numdocs = 100
+  common.verifyCompactDBs(t, dbs, numdocs)
+})
+
+
 
 
 // multi attachements (inline | external)
