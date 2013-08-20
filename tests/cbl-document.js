@@ -162,7 +162,6 @@ test("multi inline attachements", function(t){
 })
 
 
-
 // compact db
 test("compact db", function(t){
   common.compactDBs(t, dbs)
@@ -171,18 +170,20 @@ test("compact db", function(t){
 
 // expecting compacted revs to be 'missing'
 test("verify compaction", function(t){
-  var numdocs = 100
-  common.verifyCompactDBs(t, dbs, numdocs)
+  common.verifyCompactDBs(t, dbs, 100)
+})
+
+test("delete doc attachments", function(t){
+  common.deleteDBDocAttachments(t, dbs, 100)
 })
 
 
 
+// X multi attachements (inline | external)
 
-// multi attachements (inline | external)
+// X update attachements (inline | external)
 
-// update attachements (inline | external)
-
-// delete attachements (inline | external)
+// X delete attachements (inline | external)
 
 // bulkdoc attachments (inline | external)
 
@@ -192,7 +193,7 @@ test("verify compaction", function(t){
 
 // get changed attachments
 
-// compact (inline | external)
+// X compact (inline | external)
 
 // save local docs (inline | external)
 

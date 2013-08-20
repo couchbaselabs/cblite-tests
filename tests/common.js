@@ -30,7 +30,7 @@ var common = module.exports = {
       t.false(err, "no error, LiteServe running on our port")
       coax(serve.url, function(err, ok){
         t.false(err, "no error, LiteServe reachable")
-
+        // serve.url = "http://localhost:5984" // couchdb endpoint
         this.server = serve.url
 
         done(serve)
@@ -197,11 +197,66 @@ var common = module.exports = {
           }
 
           // delete doc
-          coax.del([url+"?rev="+json._rev], cb)
+          coax.del([url, {rev : json._rev}], cb)
         })
 
       }, function(err, json){
-        t.equals(json.length, 100, "all docs deleted")
+        t.equals(json.length, numdocs, "all docs deleted")
+        nextdb(err, json)
+      })
+
+    }, notifycaller.call(t, emits))
+
+  },
+
+  deleteDBDocAttachments : function(t, dbs, numdocs, emits){
+
+    async.map(dbs, function(db, nextdb) {
+
+      async.times(numdocs, function(i, cb){
+
+        var docid = "i"+i  //TODO: all docs
+        var url = coax([server,db, docid]).pax().toString()
+
+        coax(url, function(err, json){
+
+          if(err){
+            t.fail("unable to get doc to delete")
+          }
+
+          // get attachment ids
+          var revid = json._rev
+
+          var attchids = Object.keys(json._attachments)
+          async.mapSeries(attchids, function(attid, _cb){
+
+            // delete attachement
+            var rmurl = coax([url, attid, {rev : revid}]).pax().toString()
+
+            coax.del(rmurl, function(err, json){
+              if(err){
+                t.fail("unable to delete attachements")
+              }
+
+              // get updated revid
+              revid = json.rev
+              _cb(err, json)
+            })
+
+          }, function(err, json){
+
+            // check if doc exists without attchement
+            coax([url], function(err, json){
+              if('_attachments' in json){
+                t.fail("unable to remove all attachements")
+              }
+              cb(err, json)
+            })
+          })
+        })
+
+      }, function(err, json){
+        t.equals(json.length, numdocs, "all doc attachements deleted")
         nextdb(err, json)
       })
 
