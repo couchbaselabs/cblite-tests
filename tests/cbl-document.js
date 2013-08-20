@@ -45,19 +45,19 @@ test("create docs with inline text attachments", function(t){
       var docid = js.rows[0].id
       coax([server, dbs[0], docid, { attachements : true }], function(e, js){
 
-        console.log(js)
         if(e){
           console.log(e)
           t.fail("read doc failed")
         }
 
         // get just attachement
+        var doctext = js.text
         var attchid = Object.keys(js._attachments)[0]
-        coax([server, dbs[0], docid, attchid], function(e, js){
+        coax([server, dbs[0], docid, attchid], function(e, response){
 
           // search for cblite string
           t.false(e, "retrieved doc with attachement")
-          t.notOk(js.indexOf("cblite") == -1, "verify attachment data")
+          t.ok(doctext == response, "verify attachment data")
           t.end()
         })
       })

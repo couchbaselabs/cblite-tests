@@ -406,10 +406,11 @@ var generators = module.exports.generators = {
 
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
-    var data = new Buffer("Inline text string created by cblite functional test").toString('base64');
+    var text = "Inline text string created by cblite functional test"
+    var data = new Buffer(text).toString('base64');
 
     return { _id : id,
-             data : Math.random().toString(5).substring(4),
+             text: text,
              at : new Date(),
              _attachments :
               {
