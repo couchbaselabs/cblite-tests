@@ -29,7 +29,9 @@ var common = module.exports = {
       t.false(err, "no error, LiteServe running on our port")
       coax(serve.url, function(err, ok){
         t.false(err, "no error, LiteServe reachable")
+        serve.url = "http://localhost:5984"
         this.server = serve.url
+
         done(serve)
       })
     });
@@ -57,17 +59,22 @@ var common = module.exports = {
     }, notifycaller.call(t, emits))
   },
 
-  createDBDocs : function(t, numdocs, dbs, emits){
+  createDBDocs : function(t, params, emits){
+
+    var docgen = params.docgen || 'basic'
+    var dbs = params.dbs
+    var numdocs = params.numdocs
 
     async.map(dbs, function(db, nextdb){
 
       async.times(numdocs, function(i, cb){
-        coax.put([server,db, "i"+i], docGen(), cb)
+        coax.put([server,db, "i"+i], generators[docgen](), cb)
       }, nextdb)
 
     }, notifycaller.call(t, emits))
 
   },
+
 
   compactDBs : function(t, dbs, emits){
 
@@ -77,14 +84,23 @@ var common = module.exports = {
 
   },
 
-  createDBBulkDocs : function(t, numdocs, size, dbs, emits){
+  createDBBulkDocs : function(t, params, emits){
+
+    var docgen = params.docgen || 'bulk'
+    var dbs = params.dbs
+    var numdocs = params.numdocs
+    var size = params.size || generators.bsize
+
+    if(size > numdocs){
+      size = numdocs
+    }
 
     var numinserts = numdocs/size
 
     async.map(dbs, function(db, nextdb){
 
       async.times(numinserts, function(i, cb){
-        var docs = { docs : bulkDocGen(size)}
+        var docs = { docs : generators[docgen](size)}
 
         coax.post([server,db, "_bulk_docs"], docs, function(err, json){
 
@@ -258,7 +274,7 @@ var common = module.exports = {
     this.ee.once('verify-purged',  function(err, json){
 
       // errs already checked, create some more docs
-      ctx.createDBDocs(t, 10, dbs, 'created-docs')
+      ctx.createDBDocs(t, {numdocs : 10 , dbs : dbs}, 'created-docs')
 
       this.once('created-docs', function(err, json){
           // verify ids
@@ -361,7 +377,11 @@ function notifycaller(args){
 }
 
 //########## doc generators #########
-var docGen = module.exports.docGen = function(){
+var generators = module.exports.generators = {
+
+  bsize : 100,
+
+  basic :  function(){
 
   var suffix = Math.random().toString(26).substring(7)
   var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
@@ -369,14 +389,37 @@ var docGen = module.exports.docGen = function(){
            data : Math.random().toString(5).substring(4),
              at : new Date()}
 
-}
+  },
 
-var bulkDocGen = module.exports.bulkDocGen = function(size){
+  bulk : function(size){
 
-  var docs = []
-  for (i = 0; i < size; i++){
-    docs.push(docGen())
+    var size = size || this.bsize
+    var docs = []
+
+    for (i = 0; i < size; i++){
+      docs.push(this.basic())
+    }
+    return docs
+  },
+
+  inlineAtt : function(){
+
+    var suffix = Math.random().toString(26).substring(7)
+    var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    var data = new Buffer("Inline text string created by cblite functional test").toString('base64');
+
+    return { _id : id,
+             data : Math.random().toString(5).substring(4),
+             at : new Date(),
+             _attachments :
+              {
+                "inline.txt" :
+                {
+                  "content-type" : "text\/plain",
+                  "data" : data
+                }
+              }
+      }
   }
-  return docs
-}
 
+}

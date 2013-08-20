@@ -35,7 +35,6 @@ test("create test databases", function(t){
   common.createDBs(t, dbs)
 })
 
-
 test("try to create a database with caps", function(t){
     coax.put([server, "dbwithCAPS"], function(e, js){
       t.equals(e.status, 400, "db with caps not allowed")
@@ -77,8 +76,7 @@ test("db bad name", function(t){
 
 
 test("load a test database", function(t){
-  var numdocs = 100
-  common.createDBDocs(t, numdocs, [dbs[0]])
+  common.createDBDocs(t, {numdocs : 100, dbs : [dbs[0]]})
 })
 
 
@@ -168,8 +166,7 @@ test("compact during doc delete", function(t){
 })
 
 test("load multiple databases", function(t){
-  var numdocs = 100
-  common.createDBDocs(t, numdocs, dbs)
+  common.createDBDocs(t, {numdocs : 100, dbs : dbs})
 })
 
 
@@ -220,9 +217,9 @@ test("verify db purge", function(t){
 
 
 test("can load using bulk docs", function(t){
-  var numdocs = 10000
-  common.createDBBulkDocs(t, numdocs, 100, dbs)
+  common.createDBBulkDocs(t, {numdocs : 1000, dbs : dbs})
 })
+
 
 // update bulk docs
 test("can update bulk docs", function(t){
@@ -301,7 +298,8 @@ test("can delete bulk docs", function(t){
 
 // bulk docs dupe id's
 test("can load using bulk docs", function(t){
-  var docs = common.bulkDocGen(2)
+  var docs = common.generators.bulk(2)
+
   docs[0] = docs[1]
 
   coax.post([server, dbs[0], "_bulk_docs"],
