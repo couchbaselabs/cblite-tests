@@ -3,6 +3,7 @@ var launcher = require("../lib/launcher"),
   async = require("async"),
   tstart = process.hrtime(),
   events = require('events'),
+  fs = require('fs'),
   config = require("../config/local"),
   port = 59850;
 
@@ -29,7 +30,7 @@ var common = module.exports = {
       t.false(err, "no error, LiteServe running on our port")
       coax(serve.url, function(err, ok){
         t.false(err, "no error, LiteServe reachable")
-        serve.url = "http://localhost:5984"
+
         this.server = serve.url
 
         done(serve)
@@ -402,7 +403,7 @@ var generators = module.exports.generators = {
     return docs
   },
 
-  inlineAtt : function(){
+  inlineTextAtt : function(){
 
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
@@ -418,6 +419,28 @@ var generators = module.exports.generators = {
                 {
                   "content-type" : "text\/plain",
                   "data" : data
+                }
+              }
+      }
+  },
+
+  inlinePngtAtt : function(){
+
+    var suffix = Math.random().toString(26).substring(7)
+    var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    var data_binary = fs.readFileSync('tests/data/ggate.png', {encoding : 'base64'})
+
+    var img = "tests/data/ggate.png"
+
+    return { _id : id,
+             img : img,
+             at : new Date(),
+             _attachments :
+              {
+                "ggate.png" :
+                {
+                  "content-type" : "image\/png",
+                  "data" : data_binary
                 }
               }
       }

@@ -28,7 +28,7 @@ test("create test databases", function(t){
 test("create docs with inline text attachments", function(t){
   common.createDBDocs(t, {numdocs : 100,
                           dbs : dbs,
-                          docgen : 'inlineAtt'}, 'emits-created')
+                          docgen : 'inlineTextAtt'}, 'emits-created')
 
   ee.on('emits-created', function(e, js){
     t.false(e, "created docs with attachment")
@@ -65,6 +65,56 @@ test("create docs with inline text attachments", function(t){
   })
 })
 
+// purge all dbs
+test("test purge", function(t){
+  var numDocsToPurge = 100
+  common.purgeDBDocs(t, dbs, numDocsToPurge)
+
+})
+
+test("create docs with image attachements", function(t){
+
+ common.createDBDocs(t, {numdocs : 100,
+                          dbs : dbs,
+                          docgen : 'inlinePngtAtt'}, 'emits-created')
+
+  ee.on('emits-created', function(e, js){
+
+    t.false(e, "created docs with attachment")
+
+    // get doc
+    coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
+
+      if(e){
+        console.log(e)
+        t.fail("unable to retrieve doc from all_docs")
+      }
+
+      // get doc with attachement info
+      var docid = js.rows[0].id
+      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+
+        if(e){
+          console.log(e)
+          t.fail("read doc failed")
+        }
+
+        // get just attachement
+        var doctext = js.text
+        var attchid = Object.keys(js._attachments)[0]
+        coax([server, dbs[0], docid, attchid], function(e, response){
+
+          // search for cblite string
+          t.false(e, "retrieved doc with attachement")
+            t.ok(response.slice(1,4) == "PNG", "verify img attachement")
+            t.end()
+        })
+      })
+    })
+
+  })
+
+})
 
 
 // multi attachements (inline | external)
