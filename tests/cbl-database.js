@@ -138,16 +138,15 @@ test("compact db", function(t){
 
 
 test("compact during doc update", function(t){
-  var numrevs = 5
-  var numdocs = 100
-  var dbsToUpdate = [dbs[0]]
 
   // start updating docs
-  common.updateDBDocs(t, dbsToUpdate, numrevs, numdocs)
+  common.updateDBDocs(t, {dbs : [dbs[0]],
+                          numrevs : 5,
+                          numdocs : 100})
 
   // run compaction while documents are updating
   eventEmitter.once("docsUpdating", function(){
-    common.compactDBs(t, dbsToUpdate, emitsdefault)
+    common.compactDBs(t, [dbs[0]], emitsdefault)
   })
 
 })
@@ -171,10 +170,10 @@ test("load multiple databases", function(t){
 
 
 test("compact during multi-db update", {timeout : 300000}, function(t){
-  var numrevs = 5
-  var numdocs = 100
 
-  common.updateDBDocs(t, dbs, numrevs, numdocs, "emit-updated")
+  common.updateDBDocs(t, {dbs : dbs,
+                          numrevs : 5,
+                          numdocs : 100}, "emit-updated")
 
   // run compaction while documents are updating
   eventEmitter.once("docsUpdating", function(){

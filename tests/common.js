@@ -133,7 +133,12 @@ var common = module.exports = {
 
   },
 
-  updateDBDocs : function(t, dbs, numrevs, numdocs, emits){
+  updateDBDocs : function(t, params, emits){
+
+    var docgen = params.docgen || 'basic'
+    var dbs = params.dbs
+    var numdocs = params.numdocs
+    var numrevs = params.numrevs
 
     async.map(dbs, function(db, nextdb){
 
@@ -150,9 +155,8 @@ var common = module.exports = {
               t.fail("unable to get doc rev")
             }
 
-            var doc = json
-            doc['data'] =  Math.random().toString(26).substring(7)
-            doc['at'] = new Date()
+            var doc = generators[docgen]()
+            doc._rev = json._rev
 
             // put updated doc
             coax.put([url], doc, cb)
