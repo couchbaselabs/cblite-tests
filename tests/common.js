@@ -156,6 +156,15 @@ var common = module.exports = {
             }
 
             var doc = generators[docgen]()
+
+            // preserve other attachments
+            if(json._attachments && doc._attachments){
+              for(var id in json._attachments){
+                if(!(id in doc._attachments)){
+                  doc._attachments[id] = json._attachments[id]
+                }
+              }
+            }
             doc._rev = json._rev
 
             // put updated doc
