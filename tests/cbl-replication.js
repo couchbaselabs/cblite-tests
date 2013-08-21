@@ -115,17 +115,70 @@ test("load databases", function(t){
   common.createDBDocs(t, {numdocs : 100, dbs : dbs})
 })
 
-test("verify local-replicated dbs changefeed", function(t){
-
-  common.verifyNumChanges(t, 100, repdbs)
-
+test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
+  common.compareDBSeqNums(t, {sourcedbs : dbs,
+                              targetdbs : repdbs})
 })
 
-test("verify sg-replicated dbs loaded", function(t){
-
-  common.verifyNumChanges(t, 100, sgdbs)
-
+test("verify local-replicated num-docs", function(t){
+  common.verifyNumDocs(t, dbs, 100)
 })
+
+test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
+  common.compareDBSeqNums(t, {sourcedbs : dbs,
+                              targetdbs : sgdbs,
+                              replfactor : 3})
+})
+
+test("verify local-replicated num-docs", function(t){
+  common.verifyNumDocs(t, sgdbs, 100)
+})
+
+
+test("delete db docs",  function(t){
+  common.deleteDBDocs(t, dbs, 100)
+})
+
+test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
+  common.compareDBSeqNums(t, {sourcedbs : dbs,
+                              targetdbs : repdbs})
+})
+
+
+test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
+  common.compareDBSeqNums(t, {sourcedbs : dbs,
+                              targetdbs : sgdbs,
+                              replfactor : 3})
+})
+
+// load databaes
+test("load databases", function(t){
+  common.createDBDocs(t, {numdocs : 100, dbs : dbs})
+})
+
+
+
+// purge all dbs
+test("purge dbs", function(t){
+  common.purgeDBDocs(t, dbs, 100)
+})
+
+test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
+  common.compareDBSeqNums(t, {sourcedbs : dbs,
+                              targetdbs : repdbs})
+})
+
+test("verify local-replicated num-docs", function(t){
+  common.verifyNumDocs(t, repdbs, 0)
+})
+
+
+test("verify sg-replicated dbs loaded", {timeout : 25000}, function(t){
+  common.compareDBSeqNums(t, {sourcedbs : dbs,
+                              targetdbs : sgdbs,
+                              replfactor : 3})
+})
+
 
 
 test("done", function(t){
@@ -135,5 +188,3 @@ test("done", function(t){
   t.end()
 
 })
-
-

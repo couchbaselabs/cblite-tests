@@ -2,6 +2,7 @@ var launcher = require("../lib/launcher"),
   coax = require("coax"),
   async = require("async"),
   tstart = process.hrtime(),
+  follow = require("follow"),
   events = require('events'),
   fs = require('fs'),
   config = require("../config/local"),
@@ -408,23 +409,69 @@ var common = module.exports = {
 
   },
 
-  verifyNumChanges : function(t, numchanges, dbs, emits){
+  compareDBSeqNums : function(t, params, emits){
 
-    async.map(dbs, function(db, cb){
+    var sourcedbs = params.sourcedbs
+    var targetdbs = params.targetdbs
+    var replfactor = params.replfactor || 1
 
-      console.log(db)
-      db = coax([server, db])
-      var count = 0
+    var i = 0
+    async.mapSeries(sourcedbs, function(src, cb){
 
-      db.changes(function(err, change){
+      var src = coax([server, src]).pax().toString()
+      coax(src, function(e, js){
+        if(e){
+          t.fail("unable to get db info")
+        }
+        var srcseq = js.update_seq * replfactor
+        var tseq = -1
+
+        // follow change feed for update seq
+        var tdb = coax([server, targetdbs[i++]]).pax().toString()
+        feed = new follow.Feed(tdb)
+        feed.follow()
+        feed.once('error', function(er){
+          console.log(er)
+          t.fail("got error on changes feed")
+        })
+
+        feed.on('change', function(js){
+          tseq = js.seq
+          if(tseq > srcseq){
+            t.fail("target db has higher seqnum than source")
+          }
+
+          if(tseq == srcseq){
+            // make sure no new changes incomming
+            setTimeout(function(){
+              t.equals(tseq, srcseq,
+                "verify target "+tdb+" seq "+tseq+" == "+srcseq)
+              cb(null, feed)
+            }, 2000)
+          }
+        })
+
+      })
+
+    }, function(err, feeds){
+      feeds.map(function(feed){ feed.stop() } )
+      notifycaller.call(t, emits)(err, {ok : 'verifyNumDocs'})
+    })
+
+  },
+
+  verifyNumDocs : function(t, dbs, numexpected, emits){
+
+    async.mapSeries(dbs, function(db, cb){
+
+      var dburl = coax([server, db]).pax().toString()
+      coax(dburl, function(err, json){
         if(err){
-          t.fail("error reading change")
+          t.fail("failed to get db info")
         }
-
-        count++
-        if(count == numchanges){
-          cb(err, change)
-        }
+        t.equals(numexpected, json.doc_count,
+          "verified "+db+" numdocs "+numexpected+" == "+json.doc_count)
+        cb(err, json)
       })
 
     }, notifycaller.call(t, emits))
