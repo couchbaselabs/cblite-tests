@@ -178,6 +178,55 @@ test("delete doc attachments", function(t){
 })
 
 
+test("delete db docs", function(t){
+  common.deleteDBDocs(t, dbs, 100)
+})
+
+test("create attachments using bulk docs", function(t){
+  common.createDBBulkDocs(t, {numdocs : 1000,
+                              docgen : 'bulkInlineTextAtt',
+                              dbs : dbs})
+})
+
+
+test("verify db loaded", function(t){
+  coax([server, dbs[0]], function(err, json){
+    t.equals(json.doc_count, 1000, "verify db loaded")
+
+    // get doc
+    coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
+
+      if(e){
+        console.log(e)
+        t.fail("unable to retrieve doc from all_docs")
+      }
+
+      // get doc with attachement info
+      var docid = js.rows[0].id
+      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+
+        if(e){
+          console.log(e)
+          t.fail("read doc failed")
+        }
+
+        // get just attachement
+        var doctext = js.text
+        var attchid = Object.keys(js._attachments)[0]
+        coax([server, dbs[0], docid, attchid], function(e, response){
+
+          // search for cblite string
+          t.false(e, "retrieved doc with attachement")
+          t.ok(doctext == response, "verify attachment data")
+          t.end()
+        })
+      })
+    })
+
+  })
+})
+
+
 
 // X multi attachements (inline | external)
 
@@ -185,7 +234,7 @@ test("delete doc attachments", function(t){
 
 // X delete attachements (inline | external)
 
-// bulkdoc attachments (inline | external)
+// X bulkdoc attachments (inline | external)
 
 // bulkdoc multi attachements (inline | external)
 

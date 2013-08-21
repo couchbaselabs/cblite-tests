@@ -512,6 +512,17 @@ var generators = module.exports.generators = {
                 }
               }
       }
+  },
+
+  bulkInlineTextAtt : function(size){
+
+    var size = size || this.bsize
+    var docs = []
+
+    for (i = 0; i < size; i++){
+      docs.push(this.inlineTextAtt())
+    }
+    return docs
   }
 
 }
