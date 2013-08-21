@@ -121,7 +121,7 @@ test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
 })
 
 test("verify local-replicated num-docs", function(t){
-  common.verifyNumDocs(t, dbs, 100)
+  common.verifyNumDocs(t, repdbs, 100)
 })
 
 test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
@@ -130,8 +130,8 @@ test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
                               replfactor : 3})
 })
 
-test("verify local-replicated num-docs", function(t){
-  common.verifyNumDocs(t, sgdbs, 100)
+test("verify sg-replicated num-docs", function(t){
+  common.verifyNumDocs(t, sgdbs, 300)
 })
 
 
@@ -139,11 +139,16 @@ test("delete db docs",  function(t){
   common.deleteDBDocs(t, dbs, 100)
 })
 
+
 test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
   common.compareDBSeqNums(t, {sourcedbs : dbs,
                               targetdbs : repdbs})
 })
 
+
+test("verify local-replicated num-docs", function(t){
+  common.verifyNumDocs(t, repdbs, 0)
+})
 
 test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
   common.compareDBSeqNums(t, {sourcedbs : dbs,
@@ -151,32 +156,33 @@ test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
                               replfactor : 3})
 })
 
+test("verify sg-replicated num-docs", function(t){
+  common.verifyNumDocs(t, sgdbs, 0)
+})
+
+
 // load databaes
 test("load databases", function(t){
   common.createDBDocs(t, {numdocs : 100, dbs : dbs})
 })
 
-
+test("verify local-replicated num-docs", { timeout : 15000}, function(t){
+  common.verifyNumDocs(t, repdbs, 100)
+})
 
 // purge all dbs
 test("purge dbs", function(t){
   common.purgeDBDocs(t, dbs, 100)
 })
 
-test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
-  common.compareDBSeqNums(t, {sourcedbs : dbs,
-                              targetdbs : repdbs})
-})
-
-test("verify local-replicated num-docs", function(t){
+// check dbs
+test("verify local-replicated num-docs", { timeout : 15000}, function(t){
   common.verifyNumDocs(t, repdbs, 0)
 })
 
-
-test("verify sg-replicated dbs loaded", {timeout : 25000}, function(t){
+test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
   common.compareDBSeqNums(t, {sourcedbs : dbs,
-                              targetdbs : sgdbs,
-                              replfactor : 3})
+                              targetdbs : repdbs})
 })
 
 

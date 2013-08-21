@@ -89,7 +89,8 @@ var common = module.exports = {
     async.map(dbs, function(db, nextdb){
 
       async.times(numdocs, function(i, cb){
-        coax.put([server,db, "i"+i], generators[docgen](), cb)
+        var docid = db+"_"+i
+        coax.put([server,db, docid], generators[docgen](), cb)
       }, nextdb)
 
     }, notifycaller.call(t, emits))
@@ -166,7 +167,7 @@ var common = module.exports = {
 
         async.times(numdocs, function(i, cb){
 
-          var docid = "i"+i
+          var docid = db+"_"+i
           var url = coax([server,db, docid]).pax().toString()
 
           // get document rev
@@ -206,7 +207,7 @@ var common = module.exports = {
 
       async.times(numdocs, function(i, cb){
 
-        var docid = "i"+i
+        var docid = db+"_"+i
         var url = coax([server,db, docid]).pax().toString()
 
         // get document rev
@@ -235,7 +236,7 @@ var common = module.exports = {
 
       async.times(numdocs, function(i, cb){
 
-        var docid = "i"+i  //TODO: all docs
+        var docid = db+"_"+i
         var url = coax([server,db, docid]).pax().toString()
 
         coax(url, function(err, json){
@@ -292,7 +293,7 @@ var common = module.exports = {
       async.times(numdocs, function(i, cb){
 
         // get doc revs info
-        var docid = "i"+i
+        var docid = db+"_"+i
         var url = coax([server,db, docid]).pax().toString()
         url = url+"?revs_info=true"
         coax(url, function(err, json){
@@ -331,7 +332,7 @@ var common = module.exports = {
 
       async.times(numdocs, function(i, cb){
         // get last rev
-        var docid = "i"+i
+        var docid = db+"_"+i
         var url = coax([server,db, docid]).pax().toString()
         coax(url, function(err, json){
           if(err){
@@ -409,6 +410,7 @@ var common = module.exports = {
 
   },
 
+  // checks that the sequence_no's between two sets of dbs match
   compareDBSeqNums : function(t, params, emits){
 
     var sourcedbs = params.sourcedbs
@@ -416,9 +418,12 @@ var common = module.exports = {
     var replfactor = params.replfactor || 1
 
     var i = 0
+
     async.mapSeries(sourcedbs, function(src, cb){
 
+
       var src = coax([server, src]).pax().toString()
+
       coax(src, function(e, js){
         if(e){
           t.fail("unable to get db info")
@@ -427,52 +432,93 @@ var common = module.exports = {
         var tseq = -1
 
         // follow change feed for update seq
+        var seq_history= []
         var tdb = coax([server, targetdbs[i++]]).pax().toString()
-        feed = new follow.Feed(tdb)
+        var feed = new follow.Feed(tdb)
         feed.follow()
-        feed.once('error', function(er){
+        feed.on('error', function(er){
           console.log(er)
           t.fail("got error on changes feed")
         })
 
         feed.on('change', function(js){
+          // get seqno
           tseq = js.seq
-          if(tseq > srcseq){
-            t.fail("target db has higher seqnum than source")
-          }
 
-          if(tseq == srcseq){
+          // check for dupe seqno's
+          if(tseq in seq_history){
+            var err = "detected duplicate sequence_no "+tseq
+            console.log(err)
+            cb(err, feed)
+          }
+          // we don't expect target seqno to exceed source
+          else if (tseq > srcseq){
+            err = "target db seqnum is "+tseq+" expected "+srcseq
+            cb(err, feed)
+          } else if(tseq == srcseq){
             // make sure no new changes incomming
             setTimeout(function(){
               t.equals(tseq, srcseq,
                 "verify target "+tdb+" seq "+tseq+" == "+srcseq)
               cb(null, feed)
             }, 2000)
+          } else {
+            seq_history.push(tseq)
           }
         })
 
       })
 
     }, function(err, feeds){
-      feeds.map(function(feed){ feed.stop() } )
-      notifycaller.call(t, emits)(err, {ok : 'verifyNumDocs'})
+
+        // stop all feeds
+        async.map(feeds, function(feed, cb){
+          feed.stop()
+          cb(null, null)
+        }, function(_e, _j){
+          notifycaller.call(t, emits)(err, {ok : 'verifyNumDocs'})
+        })
     })
 
   },
 
+  // checks that doc_count == numexpected docs on db
+  // gives up after 10 seconds
   verifyNumDocs : function(t, dbs, numexpected, emits){
 
-    async.mapSeries(dbs, function(db, cb){
+
+    async.map(dbs, function(db, cb){
 
       var dburl = coax([server, db]).pax().toString()
-      coax(dburl, function(err, json){
-        if(err){
-          t.fail("failed to get db info")
-        }
-        t.equals(numexpected, json.doc_count,
-          "verified "+db+" numdocs "+numexpected+" == "+json.doc_count)
-        cb(err, json)
-      })
+      var doc_count = -1
+      var tries = 0
+
+      async.whilst(
+        function () {
+          if(tries >= 5){ return false}
+          return  numexpected != doc_count;
+        },
+        function (_cb) {
+
+          // get doc count every 3s
+          setTimeout(function(){
+            coax(dburl, function(err, json){
+              if(err){
+                t.fail("failed to get db info")
+              }
+              doc_count = json.doc_count
+              console.log(db +" has " +doc_count+" docs expecting "+numexpected)
+              _cb(err)
+            })
+            tries++
+          }, 2000)
+        },
+        function (err) {
+          cb(err, { ok : doc_count})
+          t.equals(numexpected, doc_count,
+                  "verified "+db+" numdocs "+numexpected+" == "+doc_count)
+      });
+
 
     }, notifycaller.call(t, emits))
 
@@ -527,6 +573,9 @@ function notifycaller(args){
       }
     } else {
       // nothing to do, end test
+      if(err){
+        tctx.fail(err)
+      }
       tctx.end()
     }
 
