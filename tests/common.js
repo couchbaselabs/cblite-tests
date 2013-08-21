@@ -38,6 +38,25 @@ var common = module.exports = {
     });
   },
 
+  launchSG : function(t, done){
+
+    sg = launcher.launchSyncGateway({
+      port : 9888,
+      dir : __dirname+"/../tmp/sg",
+      path : config.SyncGatewayPath,
+      configPath : config.SyncGatewayAdminParty
+    })
+    sg.once("ready", function(err){
+      t.false(err, "no error, Sync Gateway running on our port")
+      sg.db = coax([sg.url,"db"])
+      sg.db(function(err, ok){
+        t.false(err, "no error, Sync Gateway reachable")
+        done(sg)
+      })
+    });
+
+  },
+
   createDBs : function(t, dbs, emits){
 
     async.map(dbs, function(db, cb){
@@ -385,6 +404,29 @@ var common = module.exports = {
         t.equals(revid, "1", db+" revids reset")
         cb(e, revid)
       })
+    }, notifycaller.call(t, emits))
+
+  },
+
+  verifyNumChanges : function(t, numchanges, dbs, emits){
+
+    async.map(dbs, function(db, cb){
+
+      console.log(db)
+      db = coax([server, db])
+      var count = 0
+
+      db.changes(function(err, change){
+        if(err){
+          t.fail("error reading change")
+        }
+
+        count++
+        if(count == numchanges){
+          cb(err, change)
+        }
+      })
+
     }, notifycaller.call(t, emits))
 
   }
