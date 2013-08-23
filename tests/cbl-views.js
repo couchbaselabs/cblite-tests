@@ -5,6 +5,7 @@ var launcher = require("../lib/launcher"),
   common = require("../tests/common"),
   util =  require("util"),
   eventEmitter = common.ee,
+  docgens = common.generators,
   emitsdefault  = "default",
   test = require("tap").test;
 
@@ -58,11 +59,8 @@ test("simple map function", function(t){
       }
 
     // create 10 docs
-    var docgen = function(){
-      return { foo : "bar" }
-    }
     common.createDBDocs(t, {dbs : ["cbl_views"],
-                            docgen : docgen,
+                            docgen : 'foobar',
                             numdocs: 10}, 'docs_created')
 
     eventEmitter.on('docs_created', function(err, json){
@@ -75,7 +73,7 @@ test("simple map function", function(t){
         var view = db(['_design','test','_view','basic'])
         view(function(e, js){
           t.equals(js.rows.length, 10)
-          t.equals(js.rows[0].value, docgen().foo)
+          t.equals(js.rows[0].value, docgens.foobar().foo)
           t.end()
         })
 
