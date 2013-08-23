@@ -82,7 +82,7 @@ var common = module.exports = {
 
   createDBDocs : function(t, params, emits){
 
-    var docgen = params.docgen || 'basic'
+    var docgen = params.docgen || generators['basic']
     var dbs = params.dbs
     var numdocs = params.numdocs
 
@@ -90,7 +90,7 @@ var common = module.exports = {
 
       async.times(numdocs, function(i, cb){
         var docid = db+"_"+i
-        coax.put([server,db, docid], generators[docgen](), cb)
+        coax.put([server,db, docid], docgen(), cb)
       }, nextdb)
 
     }, notifycaller.call(t, emits))
