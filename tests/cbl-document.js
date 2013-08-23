@@ -226,7 +226,12 @@ test("verify db loaded", function(t){
   })
 })
 
-
+test("docs with bad fields", function(t) {
+  coax.post([server, dbs[0]], {"_foo" : "not cool"}, function(err, ok){
+    t.ok(err, "_underscore fields should not be allowed")
+    t.end()
+  })
+})
 
 // X multi attachements (inline | external)
 
