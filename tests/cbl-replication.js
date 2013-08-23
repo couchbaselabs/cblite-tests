@@ -177,7 +177,7 @@ test("purge dbs", function(t){
 
 // check dbs
 test("verify local-replicated num-docs", { timeout : 15000}, function(t){
-  common.verifyNumDocs(t, repdbs, 0)
+  common.verifyNumDocs(t, dbs, 0)
 })
 
 test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
