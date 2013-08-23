@@ -131,7 +131,23 @@ test("test query filters", function(t){
     t.equals(oks.length, 5, "limit")
   })
 
+  // include_docs
+  view({ include_docs : true }, function(e, js){
+    var oks = js.rows.filter(function(row, i){
+      return (row.doc.foo == docgens.foobar().foo &&
+                row.doc._id == "cbl_views_"+i)
+    })
+    t.equals(oks.length, 10, "include_docs")
+  })
+
+  // update_seq
+  view({ update_seq : true}, function(e, js){
+    t.equals(js.update_seq, 11, "update_seq")
+  })
+
   // skip
+  // https://github.com/couchbase/couchbase-lite-ios/issues/109
+  // will cause internal error for all tests
   view({ skip: "5" }, function(e, js){
     if(!e){
       var oks = js.rows.filter(function(row, i){
@@ -143,7 +159,6 @@ test("test query filters", function(t){
     }
     t.end()
   })
-  
 })
 
 test("done", function(t){
