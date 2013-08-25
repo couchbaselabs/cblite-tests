@@ -142,7 +142,6 @@ test("test query filters", function(t){
   // update_seq
   view({ update_seq : true}, function(e, js){
     t.equals(js.update_seq, 11, "update_seq")
-    t.end()
   })
 
   // skip
@@ -157,6 +156,8 @@ test("test query filters", function(t){
     }
     t.end()
   })
+
+
 })
 
 
@@ -177,8 +178,9 @@ test("update ddoc with player view", function(t){
   ddoc(function(err, js){
     js.views['player'] = {
         map: "function(doc) { emit(doc.joined, doc.points) }",
-          // manual sum reduce due to https://github.com/couchbase/couchbase-lite-ios/issues/76
-        reduce : "function(keys, values, rereduce) { return values.reduce(function(a,b){ return a+b }) }"
+        // https://github.com/couchbase/couchbase-lite-ios/issues/76
+        // reduce : "function(keys, values, rereduce) { return sum(values)  }"
+        reduce : "function(keys, values, rereduce) { return values.reduce(function(a, b) { return a + b })  }"
       }
     db.post(js, function(e, js){
       t.false(e, "can update design doc")
@@ -201,6 +203,16 @@ test("test array keys", function(t){
     t.equals(oks.length, 8, "startkey array")
   })
 
+  view({ startkey : [2013, 7, 2], startkey_docid : "cbl_views_8", reduce : false},
+    function(e, js){
+      var oks = js.rows.filter(function(row, i){
+        console.log(row)
+        return row.key[2] == (i+4)
+      })
+      t.equals(oks.length, 8, "startkey array")
+  })
+
+
   view({ group : true}, function(e, js){
     var oks = js.rows.filter(function(row, i){
         return row.value == (i)
@@ -218,6 +230,7 @@ test("test array keys", function(t){
     t.equals(js.rows[0].value, 45, "group_level=1 value")
     t.end()
   })
+
 })
 
 
