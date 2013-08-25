@@ -47,7 +47,6 @@ test("create test database", function(t){
 
 test("simple map function", function(t){
 
-
     // ddoc spec
     var designDoc = {
       _id:"_design/test",
@@ -143,11 +142,10 @@ test("test query filters", function(t){
   // update_seq
   view({ update_seq : true}, function(e, js){
     t.equals(js.update_seq, 11, "update_seq")
+    t.end()
   })
 
   // skip
-  // https://github.com/couchbase/couchbase-lite-ios/issues/109
-  // will cause internal error for all tests
   view({ skip: "5" }, function(e, js){
     if(!e){
       var oks = js.rows.filter(function(row, i){
@@ -160,6 +158,68 @@ test("test query filters", function(t){
     t.end()
   })
 })
+
+
+test("delete db docs",  function(t){
+  common.deleteDBDocs(t, ["cbl_views"], 10)
+})
+
+test("create player docs", function(t){
+    common.createDBDocs(t, {dbs : ["cbl_views"],
+                            docgen : 'player',
+                            numdocs: 10})
+})
+
+
+test("update ddoc with player view", function(t){
+
+  var ddoc = db(['_design','test'])
+  ddoc(function(err, js){
+    js.views['player'] = {
+        map: "function(doc) { emit(doc.joined, doc.points) }",
+          // manual sum reduce due to https://github.com/couchbase/couchbase-lite-ios/issues/76
+        reduce : "function(keys, values, rereduce) { return values.reduce(function(a,b){ return a+b }) }"
+      }
+    db.post(js, function(e, js){
+      t.false(e, "can update design doc")
+      t.end()
+    })
+  })
+
+})
+
+
+// group queries
+test("test array keys", function(t){
+
+  var view = db(['_design','test','_view','player'])
+
+  view({ startkey : [2013, 7, 2], reduce : false }, function(e, js){
+    var oks = js.rows.filter(function(row, i){
+      return row.key[2] == (i+2)
+    })
+    t.equals(oks.length, 8, "startkey array")
+  })
+
+  view({ group : true}, function(e, js){
+    var oks = js.rows.filter(function(row, i){
+        return row.value == (i)
+    })
+    t.equals(oks.length, 10, "group true")
+  })
+
+  view({ group : true, group_level : 2}, function(e, js){
+    t.equals(js.rows[0].key.length, 2, "group level=2 keys length")
+    t.equals(js.rows[0].value, 45, "group_level=2 value")
+  })
+
+  view({ group : true, group_level : 1}, function(e, js){
+    t.equals(js.rows[0].key.length, 1, "group level=1 keys length")
+    t.equals(js.rows[0].value, 45, "group_level=1 value")
+    t.end()
+  })
+})
+
 
 test("done", function(t){
 

@@ -4,6 +4,7 @@ var launcher = require("../lib/launcher"),
   tstart = process.hrtime(),
   follow = require("follow"),
   events = require('events'),
+  util =  require("util"),
   fs = require('fs'),
   config = require("../config/local"),
   port = 59850;
@@ -90,7 +91,7 @@ var common = module.exports = {
 
       async.times(numdocs, function(i, cb){
         var docid = db+"_"+i
-        coax.put([server,db, docid], generators[docgen](), cb)
+        coax.put([server,db, docid], generators[docgen](i), cb)
       }, nextdb)
 
     }, notifycaller.call(t, emits))
@@ -122,7 +123,7 @@ var common = module.exports = {
     async.map(dbs, function(db, nextdb){
 
       async.times(numinserts, function(i, cb){
-        var docs = { docs : generators[docgen](size)}
+        var docs = { docs : generators[docgen](size, i)}
 
         coax.post([server,db, "_bulk_docs"], docs, function(err, json){
 
@@ -176,7 +177,7 @@ var common = module.exports = {
               t.fail("unable to get doc rev")
             }
 
-            var doc = generators[docgen]()
+            var doc = generators[docgen](i)
 
             // preserve other attachments
             if(json._attachments && doc._attachments){
@@ -665,6 +666,33 @@ var generators = module.exports.generators = {
 
   foobar : function(){
     return { foo : "bar" }
+  },
+
+  player : function(i){
+    var photo = fs.readFileSync('tests/data/cblogo.png', {encoding : 'base64'})
+    var profile = "cblite functional test, player"
+    profile = new Buffer(profile).toString('base64');
+
+    return  {  joined : [2013,
+                         7,
+                         i],
+                points : i,
+                _attachments :
+                 {
+                   "photo.png" :
+                   {
+                     "content-type" : "image\/png",
+                     "data" : photo
+                   },
+
+                   "profile.txt" :
+                   {
+                     "content-type" : "text\/plain",
+                     "data" : profile
+                    }
+                 }
+              }
+
   }
 
 }
