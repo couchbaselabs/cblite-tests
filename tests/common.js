@@ -635,9 +635,9 @@ var generators = module.exports.generators = {
 
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    var img = __dirname+"/../tests/data/ggate.png"
     var data_binary = fs.readFileSync('tests/data/ggate.png', {encoding : 'base64'})
 
-    var img = "tests/data/ggate.png"
 
     return { _id : id,
              img : img,
