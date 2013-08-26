@@ -636,7 +636,7 @@ var generators = module.exports.generators = {
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
     var img = __dirname+"/../tests/data/ggate.png"
-    var data_binary = fs.readFileSync('tests/data/ggate.png', {encoding : 'base64'})
+    var data_binary = fs.readFileSync(img, {encoding : 'base64'})
 
 
     return { _id : id,
@@ -669,7 +669,8 @@ var generators = module.exports.generators = {
   },
 
   player : function(i){
-    var photo = fs.readFileSync('tests/data/cblogo.png', {encoding : 'base64'})
+    var img = __dirname+'/../tests/data/cblogo.png'
+    var photo = fs.readFileSync(img, {encoding : 'base64'})
     var profile = "cblite functional test, player"
     profile = new Buffer(profile).toString('base64');
 
