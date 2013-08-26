@@ -233,6 +233,24 @@ test("docs with bad fields", function(t) {
   })
 })
 
+test("delete doc with _delete", function(t){
+
+  var doc = { _id : "hello" }
+  coax.post([server, dbs[0]], doc, function(err, js){
+    doc = js
+    doc._rev = js.rev
+    doc._id = js.id
+    doc._deleted = true
+    coax.post([server, dbs[0]], doc, function(err, _js){
+      t.false(err)
+      coax([server, dbs[0], "hello"], function(err, _js){
+        t.equals(err.status, 404, "doc missing")
+        t.end()
+      })
+    })
+  })
+})
+
 // X multi attachements (inline | external)
 
 // X update attachements (inline | external)
