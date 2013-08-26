@@ -42,7 +42,7 @@ module.exports = function(opts, done){
 // internalStores:
 //
 // Initialize internal database used to hold settings and stats
-//   when PerfDB is set the internal stat db is not used
+//   when perfdb is set the internal stat db is not used
 //
 function internalStores(cb){
 

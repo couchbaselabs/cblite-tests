@@ -17,7 +17,7 @@ run = module.exports.run = function(opts, done){
 
   // when ready start statcollector if perfdb set
   var ready = function(errors, ok){
-    if(params.PerfDB){
+    if(params.perfdb){
       pushTestInfo()
       runStatCollector()
     }
@@ -66,7 +66,7 @@ function pushTestInfo(){
     runtime : runtime
   }
 
-  coax.post([params.PerfDB], doc, function(err, json){
+  coax.post([params.perfdb], doc, function(err, json){
     console.log({ok : doc, err : err})
   })
 }

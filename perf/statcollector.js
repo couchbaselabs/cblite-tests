@@ -31,7 +31,7 @@ var start = module.exports.start = function(params, done) {
   startdt = new Date()
   var monitorClient = params.monitorClient
   var gateway = coax([params.gateway, params.gatewaydb]).pax().toString()
-  perfdb = params.PerfDB
+  perfdb = params.perfdb
   testid = params.testid
 
   cfeed = followMonitorClient(monitorClient, gateway)
