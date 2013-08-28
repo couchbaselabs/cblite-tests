@@ -6,6 +6,7 @@ var launcher = require("../lib/launcher"),
   events = require('events'),
   util =  require("util"),
   fs = require('fs'),
+  listener = require('../lib/listener'),
   config = require("../config/local"),
   port = 59850;
 
@@ -16,6 +17,7 @@ var common = module.exports = {
 
   ee : new events.EventEmitter(),
 
+  // DEPRECIATED: use launchClient
   launchLS : function(t, done){
 
     serve = launcher.launchLiteServ({
@@ -38,6 +40,46 @@ var common = module.exports = {
         done(serve)
       })
     });
+  },
+
+  launchClient : function(t, done){
+
+    listener = listener.start()
+
+    var url = "http://"+config.LocalListenerIP+":"+config.LocalListenerPort
+    listener.url = url
+    var testendpoint = config.TestEndpoint
+
+    if(testendpoint == "ios"){
+      coax.post([url, "start", "liteserv"], function(err, json){
+        t.false(json.error, "error launching LiteServe")
+        this.server = json.ok
+        done(this.server)
+      })
+    } else if(testendpoint == "pouchdb"){
+      coax.post([url, "start", "embeddedclient"], function(err, json){
+        t.false(json.error, "error launching pouchdb client")
+        this.server = json.ok
+        done(this.server)
+      })
+    } else if(testendpoint == "android"){
+      // TODO: requires manual launch
+      this.server = "http://localhost:8080"
+      done(this.server)
+    } else if(testendpoint == "couchdb"){
+      // TODO: requires manual launch
+      this.server = "http://localhost:5984"
+      done(this.server)
+    }
+  },
+
+  cleanup : function(t, done){
+
+    coax([listener.url, "cleanup"], function(err, json){
+         listener.close()
+         done(json)
+     })
+
   },
 
   launchSG : function(t, done){

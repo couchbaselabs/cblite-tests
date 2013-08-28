@@ -8,16 +8,15 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
-var serve, server, sg, gateway,
+var server, sg, gateway,
   // local dbs
  dbs = ["api-test-once-push"],
  pulldbs = ["api-test-once-pull"];
 
-// start liteserver endpoint
-test("start liteserv", function(t){
-  common.launchLS(t, function(_serve){
-    serve = _serve
-    server = serve.url
+// start client endpoint
+test("start test client", function(t){
+  common.launchClient(t, function(_server){
+    server = _server
     t.end()
   })
 })
@@ -77,9 +76,9 @@ test("push replication should close connection on completion", function(t) {
   })
 })
 
-
 test("done", function(t){
-  serve.kill()
-  sg.kill()
-  t.end()
+  common.cleanup(t, function(json){
+    sg.kill()
+    t.end()
+  })
 })

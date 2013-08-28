@@ -7,6 +7,7 @@ var config = module.exports = {
   LocalListenerPort : 8189,
   DbUrl : "walrus:",
   DbBucket : "db",
+  TestEndpoint : "ios"  // ios, android, pouchdb, couchdb
 }
 
 module.exports.resources = {

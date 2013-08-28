@@ -9,13 +9,12 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
-var serve, server, sg, gateway, db
+var server, sg, gateway, db
 
-// start liteserver endpoint
-test("start liteserv", function(t){
-  common.launchLS(t, function(_serve){
-    serve = _serve
-    server = serve.url
+// start client endpoint
+test("start test client", function(t){
+  common.launchClient(t, function(_server){
+    server = _server
     t.end()
   })
 })
@@ -235,9 +234,8 @@ test("test array keys", function(t){
 
 
 test("done", function(t){
-
-  serve.kill()
-  sg.kill()
-  t.end()
-
+  common.cleanup(t, function(json){
+    sg.kill()
+    t.end()
+  })
 })

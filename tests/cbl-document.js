@@ -8,18 +8,16 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
-var serve, server,
+var server,
  dbs = ["api-test1", "api-test2", "api-test3"];
 
-// start liteserver endpoint
-test("start liteserv", function(t){
-  common.launchLS(t, function(_serve){
-    serve = _serve
-    server = serve.url
+// start client endpoint
+test("start test client", function(t){
+  common.launchClient(t, function(_server){
+    server = _server
     t.end()
   })
 })
-
 
 test("create test databases", function(t){
   common.createDBs(t, dbs)
@@ -281,8 +279,9 @@ test("delete doc with _delete", function(t){
 
 test("done", function(t){
 
-  serve.kill()
-  t.end()
+  common.cleanup(t, function(json){
+    t.end()
+  })
 
 })
 
