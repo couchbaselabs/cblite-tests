@@ -9,7 +9,17 @@
     "mobile",
     "sync"
   ],
-  "dependencies" : ["tap", "coax", "fast-stats", "async", "nodeload","restify","pouchdb-server","follow","request-json"],
+  "dependencies" : {
+    "tap" : "0.4.x",
+    "coax" : "0.4.x",
+    "fast-stats" : "0.0.2",
+    "async" : "0.2.x",
+    "nodeload" : "0.4.x",
+    "restify" : "2.6.x",
+    "pouchdb-server" : "0.1.x",
+    "follow" : "0.9.x",
+    "request-json" : "0.4.x"
+  },
   "scripts": {
     "test": "TAP_TIMEOUT=500 tap ./tests",
     "perf": "TAP_TIMEOUT=60 tap ./perf --tap"
