@@ -58,7 +58,7 @@ test("push replication should close connection on completion", function(t) {
 })
 
 
-test("push replication should close connection on completion", function(t) {
+test("pull replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
   var lite = pulldbs[0]
 
