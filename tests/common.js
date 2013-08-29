@@ -13,6 +13,7 @@ var launcher = require("../lib/launcher"),
 
 var common = module.exports = {
 
+  listener : null,
   server : null,
 
   ee : new events.EventEmitter(),
@@ -44,10 +45,11 @@ var common = module.exports = {
 
   launchClient : function(t, done){
 
-    listener = listener.start()
-
+    if(!this.listener){
+      this.listener = listener.start()
+    }
     var url = "http://"+config.LocalListenerIP+":"+config.LocalListenerPort
-    listener.url = url
+    this.listener.url = url
     var testendpoint = config.TestEndpoint
 
     if(testendpoint == "ios"){
@@ -74,9 +76,10 @@ var common = module.exports = {
   },
 
   cleanup : function(t, done){
+    var ctx_listener = this.listener
 
-    coax([listener.url, "cleanup"], function(err, json){
-         listener.close()
+    coax([ctx_listener.url, "cleanup"], function(err, json){
+         ctx_listener.close()
          done(json)
      })
 
