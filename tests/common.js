@@ -106,7 +106,7 @@ var common = module.exports = {
 
   createDBs : function(t, dbs, emits){
 
-    async.map(dbs, function(db, cb){
+    async.mapSeries(dbs, function(db, cb){
 
       // check if db exists
       coax([this.server, db], function(err, json){
