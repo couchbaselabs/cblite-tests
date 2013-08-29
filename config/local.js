@@ -1,20 +1,20 @@
 var path = require("path");
 
 var config = module.exports = {
-  LiteServPath : "/Users/couchbase/buildbox/couchbase-lite-ios/build/Release/LiteServ",
-  SyncGatewayPath : "/Users/couchbase/buildbox/sync_gateway/bin/sync_gateway",
-  LocalListenerIP : "127.0.0.1",
+  LiteServPath      : process.env.LITESERV_PATH
+  SyncGatewayPath   : process.env.SYNCGATE_PATH
+  LocalListenerIP   : "127.0.0.1",
   LocalListenerPort : 8189,
-  DbUrl : "walrus:",
-  DbBucket : "db",
-  TestEndpoint : "ios"  // ios, android, pouchdb, couchdb
+  DbUrl             : "walrus:",
+  DbBucket          : "db",
+  TestEndpoint      : "ios"  // ios, android, pouchdb, couchdb
 }
 
 module.exports.resources = {
-  LiteServProviders : ["http://127.0.0.1:8189"],
-  PouchDBProviders : [],
+  LiteServProviders   : ["http://127.0.0.1:8189"],
+  PouchDBProviders    : [],
   SyncGatewayProvider : "http://127.0.0.1:8189",
-  Provision : false
+  Provision           : false
 }
 
 /*
