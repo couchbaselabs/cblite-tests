@@ -12,6 +12,7 @@ var coax = require("coax"),
   start_time = process.hrtime(),
   testid = null,
   startdt = null,
+  last_stat_seq = "stats:0",
   total_relayed =  total_writes =  0;
 
 var running = false,
@@ -102,34 +103,31 @@ function followMonitorClient(monitorClient, gateway){
 function followSyncGateway(gateway){
 
 
-  var feed = new follow.Feed({
-    db : gateway,
-    filter : function(doc, req){
-      if(doc.on == gateway){
-        /* allow docs since start of collector */
-        if(new Date(doc.at) > startdt){
-          return true
-        }
-      }
-      return false
-    }
-  })
+  coax([gateway,"_changes",
+        { filter : "sync_gateway/bychannel",
+          channels : "stats",
+          feed  : "longpoll",
+          since : last_stat_seq}],
 
-  feed.follow()
+            function(err, changes){
 
-  feed.on('change', function(change){
-    var gotch = new Date()
-    coax([gateway, change.id], function(err, doc){
-      if(!err){
-          mystatr.stat("directsg-change", (gotch-new Date(doc.at)))
-          mystatr.stat("directsg-doc", (new Date()-new Date(doc.at)))
-      }
-    })
-  })
+            // use latest change
+            var change = changes.results.slice(-1)[0]
+            var gotch = new Date()
 
-
-  return feed
+            // fetch doc
+            coax([gateway, change.id], function(err, doc){
+              if(!err){
+                mystatr.stat("directsg-change", (gotch-new Date(doc.at)))
+                mystatr.stat("directsg-doc", (new Date()-new Date(doc.at)))
+              } else { console.log(err) }
+                last_stat_seq = changes.last_seq
+                followSyncGateway(gateway)
+              })
+            })
 }
+
+
 
 // gatewayWriter:
 //
@@ -140,7 +138,7 @@ function gatewayWriter(gateway){
   var ip = gateway.replace(/[\.,\:,\/]/g,"")
   var id = "perf_"+ip+"_"+process.hrtime(start_time)[0]
   coax.put([gateway,id],
-            {at : new Date(), on : gateway}, function(err, json){
+            {at : new Date(), on : gateway, channels : "stats"}, function(err, json){
             if( err != null){
               console.log("Error: unable to push doc to gateway")
               console.log(err)
@@ -169,7 +167,7 @@ function statCheckPointer(monitorClient, gateway, perfdb){
   client = new Client(gateway)
   client.get(gateway, function (err, res, json) {
     if (!err) {
-      console.log(json) // Print the google web page.
+      console.log(json)
       if('doc_count' in json){
         total_writes = json.doc_count
       }
