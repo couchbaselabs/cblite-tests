@@ -620,7 +620,7 @@ function notifycaller(args){
     } else {
       // nothing to do, end test
       if(err){
-        tctx.fail(err)
+        tctx.fail(JSON.stringify(err))
       }
       tctx.end()
     }
