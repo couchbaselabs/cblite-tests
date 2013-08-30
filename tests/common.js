@@ -136,7 +136,9 @@ var common = module.exports = {
 
       async.times(numdocs, function(i, cb){
         var docid = db+"_"+i
-        coax.put([server,db, docid], generators[docgen](i), cb)
+        var madeDoc = generators[docgen](i)
+        madeDoc._id = docid
+        coax.put([server,db, docid], madeDoc, cb)
       }, nextdb)
 
     }, notifycaller.call(t, emits))
@@ -550,7 +552,7 @@ var common = module.exports = {
           setTimeout(function(){
             coax(dburl, function(err, json){
               if(err){
-                t.fail("failed to get db info")
+                t.fail("failed to get db info from "+dburl)
               }
               doc_count = json.doc_count
               console.log(db +" has " +doc_count+" docs expecting "+numexpected)
