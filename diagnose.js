@@ -2,7 +2,14 @@ var coax = require("coax")
 
 // var dbURL = "http://sync.couchbasecloud.com:4984/guestok67/"
 
-var dbURL = "http://localhost:4984/db/"
+
+if (!process.argv[2]) {
+  console.log("usage: node diagnose.js http://localhost:4984/my-database")
+  process.exit(1)
+}
+console.log(process.argv[2])
+
+var dbURL = process.argv[2]
 
 var db = coax(dbURL)
 
