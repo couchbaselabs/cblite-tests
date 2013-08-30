@@ -54,7 +54,7 @@ test("setup continuous push and pull from both client database", function(t) {
   sgdb = sg.db.pax().toString()
   var lite = dbs[0]
 
-  // sgdb = "http://sync.couchbasecloud.com:4984/guestok66"
+  // sgdb = "http://sync.couchbasecloud.com:4984/guestok64"
 
   setupPushAndPull(server, dbs[0], sgdb, function(err, ok){
     t.false(err, 'replication one ok')
@@ -87,10 +87,32 @@ test("verify sync gateway changes feed has all docs in it", function(t) {
           missing.push(d.id)
         }
       })
+
+      var changeIds = {}, dupIds = [];
+      var changeSeqs = {}, dupSeqs = [];
+
+      data.results.forEach(function(r){
+        if (changeIds[r.id]) {
+          dupIds.push(r.id)
+        }
+        changeIds[r.id] = true
+
+        if (changeSeqs[r.seq]) {
+          dupSeqs.push(r.seq)
+        }
+        changeSeqs[r.seq] = true
+      })
+
       t.equals(docs.length, 1000, "correct number of docs in _all_docs")
       t.equals(changes.length, 1000, "correct number of docs in _changes")
-      console.log("missing "+missing.length+", ids:", missing.join(', '))
+      t.equals(dupIds.length, 0, "duplicate ids in changes")
+      t.equals(dupSeqs.length, 0, "duplicate seqs in changes")
       t.equals(0, missing.length, "missing changes")
+
+      console.log("missing "+missing.length+", ids:", missing.join(', '))
+      console.log("duplicate change ids "+dupIds.length+", ids:", dupIds.join(', '))
+      console.log("duplicate change seqs "+dupSeqs.length+", seqs:", dupSeqs.join(', '))
+
       t.end()
     })
 
