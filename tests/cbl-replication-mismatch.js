@@ -49,11 +49,12 @@ function setupPushAndPull(server, dba, dbb, cb) {
   })
 }
 
+var sgdb;
 test("setup continuous push and pull from both client database", function(t) {
-  var sgdb = sg.db.pax().toString()
+  sgdb = sg.db.pax().toString()
   var lite = dbs[0]
 
-  // sgdb = "http://sync.couchbasecloud.com:4984/guestok92"
+  // sgdb = "http://sync.couchbasecloud.com:4984/guestok66"
 
   setupPushAndPull(server, dbs[0], sgdb, function(err, ok){
     t.false(err, 'replication one ok')
@@ -66,12 +67,37 @@ test("setup continuous push and pull from both client database", function(t) {
 
 
 test("load databases", function(t){
-  common.createDBDocs(t, {numdocs : 500, dbs : dbs})
+  common.createDBDocs(t, {numdocs : 500, dbs : dbs, docgen : "channels"})
 })
 
-test("verify dbs have same number of docs", function(t) {
+test("verify dbs have same number of docs", {timeout: 120 * 1000}, function(t) {
   common.verifyNumDocs(t, dbs, 1000)
 })
+
+test("verify sync gateway changes feed has all docs in it", function(t) {
+  var db = coax(sgdb)
+  db("_changes", function (err, data) {
+    var changes = data.results.map(function(r){return r.id});
+    db("_all_docs", function(err, view){
+      var docs = view.rows;
+      var missing = [];
+
+      docs.forEach(function(d){
+        if (changes.indexOf(d.id) == -1) {
+          missing.push(d.id)
+        }
+      })
+      t.equals(docs.length, 1000, "correct number of docs in _all_docs")
+      t.equals(changes.length, 1000, "correct number of docs in _changes")
+      console.log("missing "+missing.length+", ids:", missing.join(', '))
+      t.equals(0, missing.length, "missing changes")
+      t.end()
+    })
+
+  })
+
+})
+
 
 test("done", function(t){
   common.cleanup(t, function(json){
