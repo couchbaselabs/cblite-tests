@@ -54,7 +54,7 @@ var common = module.exports = {
 
     if(testendpoint == "ios"){
       coax.post([url, "start", "liteserv"], function(err, json){
-        t.false(json.error, "error launching LiteServe")
+        t.false(json.error, "error launching LiteServe "+JSON.stringify([err, json]))
         this.server = json.ok
         done(this.server)
       })
@@ -541,7 +541,7 @@ var common = module.exports = {
 
       async.whilst(
         function () {
-          if(tries >= 5){ return false}
+          if(tries >= 60){ return false}
           return  numexpected != doc_count;
         },
         function (_cb) {
@@ -642,6 +642,17 @@ var generators = module.exports.generators = {
            data : Math.random().toString(5).substring(4),
              at : new Date()}
 
+  },
+
+  channels : function(){
+    var suffix = Math.random().toString(26).substring(7)
+    var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    return { _id : id,
+             data : Math.random().toString(5).substring(4),
+             channels : [Math.random().toString(8).substring(2,3),
+                  Math.random().toString(8).substring(2,3),
+                  Math.random().toString(8).substring(2,3)],
+               at : new Date()}
   },
 
   bulk : function(size){
