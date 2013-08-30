@@ -234,6 +234,8 @@ var common = module.exports = {
                 }
               }
             }
+            // preserve id and rev
+            doc._id = json._id
             doc._rev = json._rev
 
             // put updated doc
