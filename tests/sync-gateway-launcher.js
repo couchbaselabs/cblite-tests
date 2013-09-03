@@ -40,7 +40,42 @@ test("can write and read", function(t) {
       t.end()
     })
   })
+})
 
+test("longpoll feed", function(t){
+  var docInterval, db = coax([server, "db"])
+  db.get(["_changes",{feed : "longpoll"}], function(err, changes) {
+    // console.log(changes)
+    t.false(err, "got changes")
+    t.ok(changes.results, "results array")
+    db.get(["_changes",{feed : "longpoll", since : changes.last_seq}], function(err, newchanges) {
+      // console.log(newchanges)
+      t.false(err, "got changes")
+      t.ok(newchanges.results, "results array")
+      console.log("last_seq", newchanges.last_seq)
+
+      db.get(["_changes",{feed : "longpoll", since : newchanges.last_seq}], function(err, newchanges2) {
+        // console.log(newchanges2)
+        t.false(err, "got changes")
+        t.ok(newchanges2.results, "results array")
+        console.log("last_seq", newchanges2.last_seq)
+        if (docInterval) {clearInterval(docInterval)}
+        t.end()
+      })
+
+    })
+
+  })
+  var docidCount = 0;
+  docInterval = setInterval(function(){
+    for (var i = 10 - 1; i >= 0; i--) {
+      db.put("newchange"+docidCount,{"ok":true}, function(err, ok){
+        t.false(err, "put doc")
+        // t.ok(ok.id, "newchange"+docidCount)
+      });
+      docidCount++
+    }
+  }, 100)
 })
 
 test("exit", function(t) {
