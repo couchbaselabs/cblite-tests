@@ -138,7 +138,11 @@ var common = module.exports = {
         var docid = db+"_"+i
         var madeDoc = generators[docgen](i)
         madeDoc._id = docid
-        coax.put([server,db, docid], madeDoc, cb)
+        coax.put([server,db, docid], madeDoc, function(err, ok){
+          t.false(err, "ok loading doc")
+          t.equals(docid, ok.id, "docid")
+          cb(err, ok)
+        })
       }, nextdb)
 
     }, notifycaller.call(t, emits))
