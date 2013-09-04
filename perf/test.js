@@ -78,9 +78,9 @@ function initialize(done){
   async.map(providers, function(url, cb){
 
     coax.post([url, "initialize"],
-              {numClients : params.numClients,
-               gateway : params.gateway},  cb)
+              params,  cb)
     }, function(err, ok){
+
       if(err){
         console.log("Error occured setup clients")
         console.log(err)

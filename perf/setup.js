@@ -23,13 +23,20 @@ module.exports = function(params, done){
   clients = []
 
   var finished = function(errs,oks){
-    done({error : errs, ok : oks})
+
+    if(params.enablepull){
+      setupPullReplication(function(err, result){
+        done({error : errs+err, ok : oks})
+      })
+    } else {
+      done({error : errs, ok : oks})
+    }
   }
+
 
   async.series([
     getEnvInfo,
     createDBs,
-    setupPullReplication,
     setupPushReplication,
   ], finished)
 
@@ -106,7 +113,9 @@ function setupPullReplication(done){
       }
     })
   }, function(err, oks){
-    done(err, { ok : "all clients pulling" })
+    setTimeout(function(){  //TODO: why does this help to wait during setup?
+      done(err, { ok : "all clients pulling" })
+    }, clients.length*2000)
   })
 
 }
@@ -152,7 +161,9 @@ function setupPushReplication(done){
         }
       })
     }
-    done(err, {ok : result})
+    setTimeout(function(){  //TODO: why does this help to wait during setup?
+      done(err, {ok : result})
+    }, clients.length*2000)
   })
 
 
