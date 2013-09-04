@@ -1,9 +1,10 @@
 var path = require("path");
 
+var localIP = process.env.LOCAL_IP || '127.0.0.1'
 var config = module.exports = {
   LiteServPath      : process.env.LITESERV_PATH,
   SyncGatewayPath   : process.env.SYNCGATE_PATH,
-  LocalListenerIP   : "127.0.0.1",
+  LocalListenerIP   : localIP,
   LocalListenerPort : 8189,
   DbUrl             : "walrus:",
   DbBucket          : "db",
@@ -11,7 +12,7 @@ var config = module.exports = {
 }
 
 module.exports.resources = {
-  LiteServProviders   : ["http://127.0.0.1:8189"],
+  LiteServProviders   : ['http://'+localIP],  // update to add other providers
   PouchDBProviders    : [],
   SyncGatewayProvider : "http://127.0.0.1:8189",
   Provision           : false
