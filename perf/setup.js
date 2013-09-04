@@ -113,9 +113,7 @@ function setupPullReplication(done){
       }
     })
   }, function(err, oks){
-    setTimeout(function(){  //TODO: why does this help to wait during setup?
       done(err, { ok : "all clients pulling" })
-    }, clients.length*2000)
   })
 
 }
@@ -161,9 +159,7 @@ function setupPushReplication(done){
         }
       })
     }
-    setTimeout(function(){  //TODO: why does this help to wait during setup?
       done(err, {ok : result})
-    }, clients.length*2000)
   })
 
 
