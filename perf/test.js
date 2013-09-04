@@ -3,6 +3,8 @@ var resources = require("../config/local").resources,
   workloads = require("../perf/workloads"),
   config = require("../config/local"),
   perf = require("../config/perf"),
+  initialize = require('../perf/initialize'),
+  setup = require('../perf/setup'),
   coax = require("coax");
 
 var params = {}
@@ -26,8 +28,8 @@ run = module.exports.run = function(opts, done){
     done({err: errors, ok : params})
   }
 
-  async.series([initialize,
-                setup,
+  async.series([_initialize,
+                _setup,
                 startload],
     ready)
 
@@ -73,34 +75,32 @@ function pushTestInfo(){
   })
 }
 
-function initialize(done){
+function _initialize(done){
 
   // do general init/set based on params
   // before running specific test
 
-  coax.post([localListener, "initialize"],
-            params,  function(err, ok){
-
-    if(err){
+    initialize(params,  function(err, ok){
+    if(err.error){
       console.log("Error occured setup clients")
-      console.log(err)
+      console.log(err.error)
     }
     setTimeout(function(){
-      done(err, {ok : 'client initialize'})
+      done(err.error, {ok : 'client initialize'})
     }, 2000)
 
   })
 
 }
 
-function setup(done){
+function _setup(done){
 
-  coax.post([localListener, "setup"],params, function(err, ok){
-    if(err){
+  setup(params, function(err, ok){
+    if(err.error){
       console.log("Error occured setup clients")
-      console.log(err)
+      console.log(err.error)
     }
-    done(err, {ok : 'clients setup'})
+    done(err.error, {ok : 'clients setup'})
   })
 
 }

@@ -1,7 +1,7 @@
 var async = require("async"),
   coax = require("coax"),
   resources = require("../config/local").resources,
-  clients = null,
+  clientList = [],
   providers = [],
   gatewaydb = null,
   gateway = null;
@@ -20,7 +20,7 @@ module.exports = function(params, done){
   gateway = params.gateway
   providers = params.providers
   gatewaydb = params.gatewaydb
-  clients = []
+  clients = {}
 
   var finished = function(errs,oks){
 
@@ -54,7 +54,7 @@ function getEnvInfo(done){
     coax([url,"clients"],
       function(err, json){
         if(!err){
-          clients = clients.concat(json['ok'])
+          clientList.push(json['ok'])
         }
         _cb(err,json)
     })
@@ -79,12 +79,14 @@ function createDBs(done){
   }
 
   var i = 0
-  async.mapSeries(clients, function(url, cb){
-    var db = "test-perf"+(i++)
-    console.log(url+db)
-    coax.put([url, db], cb)
-    }, function(err, oks){
-    done(err, {ok : "all dbs created"})
+  async.map(clientList, function(clients, cb){
+    async.mapSeries(clients, function(url, _cb){
+      var db = "test-perf"+(i++)
+      console.log(url+db)
+      coax.put([url, db], _cb)
+      }, cb)
+  }, function(err, oks){
+     done(err, {ok : "all dbs created"})
   })
 }
 
@@ -94,27 +96,29 @@ function createDBs(done){
 function setupPullReplication(done){
   console.log("get all the clients pulling from the Sync Gateway")
 
-  async.mapSeries(clients, function(url, cb){
+  async.map(clientList, function(clients, cb){
+    async.mapSeries(clients, function(url, _cb){
 
-    coax([url, '_all_dbs'], function(err, dbs){
+      coax([url, '_all_dbs'], function(err, dbs){
 
-      if(!err){
-        dbs.forEach(function(db){
-          db = db.replace(/.*:\/\//,"")
+        if(!err){
+          dbs.forEach(function(db){
+            db = db.replace(/.*:\/\//,"")
 
-          coax.post([url,"_replicate"], {
-            continuous : true,
-            target : db,
-            source : coax([gateway,gatewaydb]).pax.toString()
-          }, cb)
-        })
-      } else {
-        cb(err, null)
-      }
-    })
+            coax.post([url,"_replicate"], {
+              continuous : true,
+              target : db,
+              source : coax([gateway,gatewaydb]).pax.toString()
+            }, _cb)
+          })
+        } else {
+          cb(err, null)
+        }
+      })
+    }, cb)
   }, function(err, oks){
-      done(err, { ok : "all clients pulling" })
-  })
+        done(err, { ok : "all clients pulling" })
+ })
 
 }
 
@@ -125,7 +129,8 @@ function setupPushReplication(done){
 
   var i = 0
 
-  async.mapSeries(clients, function(url, cb){
+  async.map(clientList, function(clients, cb){
+    async.mapSeries(clients, function(url, _cb){
 
     coax([url, '_all_dbs'], function(err, dbs){
 
@@ -137,30 +142,33 @@ function setupPushReplication(done){
             continuous : true,
             source : db,
             target : coax([gateway, gatewaydb]).pax.toString()
-          }, cb)
+          }, _cb)
         })
       } else {
-        cb(err, null)
+        _cb(err, null)
       }
     })
-
   }, function(err, oks){
-    var result = null
-    if(!err){
-      oks.forEach(function (ok) {
-        if(!ok){
-          err = "no session"
-        } else if('session_id' in ok){
-          result = ok.session_id //liteserv
-        } else if ('ok' in ok){
-          result = ok.ok //pouch
-        } else {
-          err = "invalid session"
-        }
-      })
-    }
-      done(err, {ok : result})
-  })
+     var result = null
+     if(!err){
+       oks.forEach(function (ok) {
+         if(!ok){
+           err = "no session"
+         } else if('session_id' in ok){
+           result = ok.session_id //liteserv
+         } else if ('ok' in ok){
+           result = ok.ok //pouch
+         } else {
+           console.log(ok)
+           err = "invalid session"
+         }
+       })
+     }
+       cb(err, {ok : result})
+   })
+  }, function(err, oks){
+    done(err, oks)
+ })
 
 
 }
