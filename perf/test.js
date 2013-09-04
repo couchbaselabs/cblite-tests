@@ -1,6 +1,7 @@
 var resources = require("../config/local").resources,
   async = require("async"),
   workloads = require("../perf/workloads"),
+  config = require("../config/local"),
   perf = require("../config/perf"),
   coax = require("coax");
 
@@ -8,6 +9,7 @@ var params = {}
 var providers = []
 var gateway = null
 var runtime = 300
+var localListener = 'http://'+config.LocalListenerIP+':'+config.LocalListenerPort
 
 run = module.exports.run = function(opts, done){
 
@@ -75,35 +77,32 @@ function initialize(done){
 
   // do general init/set based on params
   // before running specific test
-  async.map(providers, function(url, cb){
 
-    coax.post([url, "initialize"],
-              params,  cb)
-    }, function(err, ok){
+  coax.post([localListener, "initialize"],
+            params,  function(err, ok){
 
-      if(err){
-        console.log("Error occured setup clients")
-        console.log(err)
-      }
-      setTimeout(function(){
-        done(err, {ok : 'client initialize'})
-      }, 2000)
- })
+    if(err){
+      console.log("Error occured setup clients")
+      console.log(err)
+    }
+    setTimeout(function(){
+      done(err, {ok : 'client initialize'})
+    }, 2000)
+
+  })
 
 }
 
 function setup(done){
 
-  async.map(providers, function(url, cb){
+  coax.post([localListener, "setup"],params, function(err, ok){
+    if(err){
+      console.log("Error occured setup clients")
+      console.log(err)
+    }
+    done(err, {ok : 'clients setup'})
+  })
 
-    coax.post([url, "setup"],params,  cb)
-    }, function(err, ok){
-      if(err){
-        console.log("Error occured setup clients")
-        console.log(err)
-      }
-      done(err, {ok : 'clients setup'})
- })
 }
 
 function runStatCollector(cb){
