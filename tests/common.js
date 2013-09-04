@@ -127,27 +127,31 @@ var common = module.exports = {
   },
 
   createDBDocs : function(t, params, emits){
-
     var docgen = params.docgen || 'basic'
     var dbs = params.dbs
     var numdocs = params.numdocs
+    var localdocs = params.localdocs || ''
+    //for local documents id formed as _local/ID
+    var docprefix = localdocs
+    if (localdocs != '') docprefix=localdocs + "/"
 
     async.map(dbs, function(db, nextdb){
+	async.times(numdocs, function(i, cb){
+		var docid = db+"_"+i
+	    var madeDoc = generators[docgen](i)
+	    madeDoc._id = docid
+	    coax.put([server,db, localdocs, docid], madeDoc, function(err, ok){
+	    t.false(err, "ok loading doc")
+	    t.equals(docprefix + docid, ok.id, "docid")
+	    cb(err, ok)
+	    })
 
-      async.times(numdocs, function(i, cb){
-        var docid = db+"_"+i
-        var madeDoc = generators[docgen](i)
-        madeDoc._id = docid
-        coax.put([server,db, docid], madeDoc, function(err, ok){
-          t.false(err, "ok loading doc")
-          t.equals(docid, ok.id, "docid")
-          cb(err, ok)
-        })
-      }, nextdb)
+	      }, nextdb)
 
-    }, notifycaller.call(t, emits))
+	    }, notifycaller.call(t, emits))
 
-  },
+	  },
+
 
 
   compactDBs : function(t, dbs, emits){
@@ -255,14 +259,14 @@ var common = module.exports = {
 
   },
 
-  deleteDBDocs : function(t, dbs, numdocs, emits){
-
+  deleteDBDocs : function(t, dbs, numdocs, localdocs, emits){
+    var localdocs = localdocs || ''
     async.map(dbs, function(db, nextdb) {
 
       async.times(numdocs, function(i, cb){
 
         var docid = db+"_"+i
-        var url = coax([server,db, docid]).pax().toString()
+        var url = coax([server, db, localdocs, docid]).pax().toString()
 
         // get document rev
         coax(url, function(err, json){
