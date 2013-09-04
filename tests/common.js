@@ -641,6 +641,12 @@ function notifycaller(args){
 
 }
 
+// the channel name function -- can be monkeypatched for advanced workloads
+
+module.exports.randomChannelName = function () {
+  return Math.random().toString(16).substring(2,4)
+}
+
 //########## doc generators #########
 var generators = module.exports.generators = {
 
@@ -659,11 +665,14 @@ var generators = module.exports.generators = {
   channels : function(){
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    var chans = [];
+    do {
+      chans.push(module.exports.randomChannelName())
+    } while (Math.random() > 0.9);
+
     return { _id : id,
              data : Math.random().toString(5).substring(4),
-             channels : [Math.random().toString(8).substring(2,3),
-                  Math.random().toString(8).substring(2,3),
-                  Math.random().toString(8).substring(2,3)],
+             channels : chans,
                at : new Date()}
   },
 
