@@ -71,8 +71,11 @@ function createDBs(done){
     done({err : 'no clients'}, null)
   }
 
-  async.map(clients, function(url, cb){
-    coax.put([url,"test-perf"], cb)
+  var i = 0
+  async.mapSeries(clients, function(url, cb){
+    var db = "test-perf"+(i++)
+    console.log(url+db)
+    coax.put([url, db], cb)
     }, function(err, oks){
     done(err, {ok : "all dbs created"})
   })
@@ -84,12 +87,24 @@ function createDBs(done){
 function setupPullReplication(done){
   console.log("get all the clients pulling from the Sync Gateway")
 
-  async.map(clients, function(url, cb){
-    coax.post([url,"_replicate"], {
-      continuous : true,
-      target : "test-perf",
-      source : coax([gateway,gatewaydb]).pax.toString()
-    }, cb)
+  async.mapSeries(clients, function(url, cb){
+
+    coax([url, '_all_dbs'], function(err, dbs){
+
+      if(!err){
+        dbs.forEach(function(db){
+          db = db.replace(/.*:\/\//,"")
+
+          coax.post([url,"_replicate"], {
+            continuous : true,
+            target : db,
+            source : coax([gateway,gatewaydb]).pax.toString()
+          }, cb)
+        })
+      } else {
+        cb(err, null)
+      }
+    })
   }, function(err, oks){
     done(err, { ok : "all clients pulling" })
   })
@@ -101,12 +116,27 @@ function setupPullReplication(done){
 function setupPushReplication(done){
   console.log("get all clients pushing with the Sync Gateway")
 
-  async.map(clients, function(url, cb){
-    coax.post([url,"_replicate"], {
-      continuous : true,
-      source : "test-perf",
-      target : coax([gateway,"db"]).pax.toString()
-    }, cb)
+  var i = 0
+
+  async.mapSeries(clients, function(url, cb){
+
+    coax([url, '_all_dbs'], function(err, dbs){
+
+      if(!err){
+        dbs.forEach(function(db){
+          db = db.replace(/.*:\/\//,"")
+
+          coax.post([url,"_replicate"], {
+            continuous : true,
+            source : db,
+            target : coax([gateway, gatewaydb]).pax.toString()
+          }, cb)
+        })
+      } else {
+        cb(err, null)
+      }
+    })
+
   }, function(err, oks){
     var result = null
     if(!err){

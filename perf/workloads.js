@@ -29,16 +29,30 @@ var Workloads = module.exports = {
 
     if (params.name in this){
 
-      for (var idx in clients){
-        url = clients[idx].url
-        var url = coax([url, params.db]).pax().toString()
-        Workloads[params.name](url, params)
-      }
+      async.map(clients, function(client, cb){
 
-      done({'started' : Workloads.numWriters()})
+        var url = client.url
+        coax([url, '_all_dbs'], function(err, dbs){
+
+          if(!err){
+            dbs.forEach(function(db){
+
+              db = db.replace(/.*:\/\//,"")
+              var dbUrl  = coax([url, db]).pax().toString()
+              Workloads[params.name](dbUrl, params)
+            })
+          }
+        })
+
+      }, function(err, oks){
+
+        done({'started' : Workloads.numWriters(), errors : err})
+
+      })
+
+    } else {
+      done({err : 'invalid workload method'})
     }
-
-    done({err : 'invalid workload method'})
   },
 
   // stop:

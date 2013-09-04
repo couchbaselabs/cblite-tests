@@ -27,9 +27,11 @@ module.exports = function(opts, done){
     done({error : errs, gateway : gateway})
   }
 
+  console.log(params.providers)
   if(params.providers.length > 0){
     clientsPerProvider = Math.floor(params.numClients/params.providers.length)
   }
+
 
   async.series([cleanup,
                 internalStores,
