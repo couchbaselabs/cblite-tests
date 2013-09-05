@@ -2,6 +2,7 @@ var coax = require("coax"),
   async = require("async"),
   follow = require("follow"),
   loop = require("nodeload/lib/loop"),
+  common = require("../tests/common")
   writer_index = 0,
   doc_map = {},
   perfdb = null,
@@ -90,6 +91,7 @@ var Workloads = module.exports = {
     var loop_counter = 0
     var recent_docs = [] /* keep last 10 known docs around */
     doc_map[client] = 0
+    var doc_gen = common.generators.channels
 
     var ip = url.replace(/[\.,\:,\/]/g,"")
     writer = new loop.Loop({
@@ -102,8 +104,11 @@ var Workloads = module.exports = {
                   var d = new Date()
                   var ts = String(d.getHours())+d.getMinutes()+d.getSeconds()+d.getMilliseconds()
                   var id = "perf"+doc_map[client]+"_"+ip+"_"+ts
+                  var doc = doc_gen()
+                  doc.id = id
+                  doc.on = url
                   coax.put([url,id],
-                    {at : new Date(), on : url}, function(err, json){
+                    doc, function(err, json){
                       if (err != null){
                         console.log("ERROR Pushing doc: "+url+"/"+id)
                         console.log(err)

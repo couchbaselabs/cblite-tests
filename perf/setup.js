@@ -1,6 +1,7 @@
 var async = require("async"),
   coax = require("coax"),
   resources = require("../config/local").resources,
+  common = require("../tests/common")
   clientList = [],
   providers = [],
   gatewaydb = null,
@@ -104,8 +105,10 @@ function setupPullReplication(done){
         if(!err){
           dbs.forEach(function(db){
             db = db.replace(/.*:\/\//,"")
-
+            var channel = common.randomChannelName()
             coax.post([url,"_replicate"], {
+              filter : "sync_gateway/bychannel",
+              query_params : {channels : channel},
               continuous : true,
               target : db,
               source : coax([gateway,gatewaydb]).pax.toString()
