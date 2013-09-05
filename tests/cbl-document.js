@@ -310,53 +310,7 @@ test("delete local db docs",  function(t){
   common.deleteDBDocs(t, dbs, 100, "_local")
 })
 
-test("create local docs with inline text attachments", function(t){
-
-  common.createDBDocs(t, {numdocs : 100,
-                          dbs : dbs,
-                          docgen : 'inlineTextAtt',
-                          localdocs : '_local'}, 'emits-created')
-
-  ee.once('emits-created', function(e, js){
-    t.false(e, "created local docs with inline attachment")
-
-    // get doc
-    coax([server, dbs[0], "_local", dbs[0]+"_0"], function(e, js){
-
-
-      if(e){
-        console.log(e)
-        t.fail("unable to retrieve local doc")
-      }
-
-      // get doc with attachement info if it exists
-      var docid = js._id
-      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
-
-        if(e){
-          console.log(e)
-          t.fail("read doc failed")
-        }
-       if (js._attachments === null || typeof js._attachments === 'undefined') {
-    	   t.fail("create local docs with inline text attachments: doc " + js._id + " doesn't store attachement")
-    	   t.end()
-    	   return
-       }
-        // get just attachement
-        var doctext = js.text
-        var attchid = Object.keys(js._attachments)[0]
-
-        coax([server, dbs[0], docid, attchid], function(e, response){
-
-          // search for cblite string
-          t.false(e, "retrieved local doc with attachement")
-          t.ok(doctext == response, "verify attachment data")
-          t.end()
-        })
-      })
-    })
-  })
-
+//local docs do not support attachments and an error needs to be thrown when try to store with attachments
 
 // big docs
 
