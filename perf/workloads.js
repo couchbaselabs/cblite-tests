@@ -40,7 +40,10 @@ var Workloads = module.exports = {
               db = db.replace(/.*:\/\//,"")
               var dbUrl  = coax([url, db]).pax().toString()
               Workloads[params.name](dbUrl, params)
+              cb(null, dbUrl)
             })
+          } else {
+            cb(err, null)
           }
         })
 
