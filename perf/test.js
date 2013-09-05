@@ -113,13 +113,19 @@ function runStatCollector(cb){
 
   coax([lsprovider, "clients"],  function(err, clients){
     if ((!err)){
-      monitorClient = clients.ok[0]
-      params.monitorClient = coax([monitorClient,params.db]).pax().toString()
-      console.log("MonitorClient: "+params.monitorClient)
-      coax.post([lsprovider,"start", "statcollector"], params, function(errors, res){
-        cb(res)
-        console.log({err : errors, ok : res})
-      })
+      var monitorClient = clients.ok[0]
+      coax([monitorClient, '_all_dbs'], function(err, dbs){
+
+        if(!err && (dbs.length > 0)){
+          var monitorClientDb = dbs[0].replace(/.*:\/\//,"")
+          params.monitorClient = coax([monitorClient,monitorClientDb]).pax().toString()
+          console.log("MonitorClient: "+params.monitorClient)
+          coax.post([lsprovider,"start", "statcollector"], params, function(errors, res){
+            cb(res)
+            console.log({err : errors, ok : res})
+          })
+       }
+     })
     } else{
       console.log(err)
       console.log("Unable to get a monitor client!")
@@ -135,7 +141,7 @@ function startload(done){
     coax.post([url, "start","workload",params.workload], params,  cb)
     }, function(err, ok){
       if(err){
-        console.log("Error occured setup clients")
+        console.log("Error occured starting workload clients")
         console.log(err)
       }
       done(err, {ok : 'workloads started'})

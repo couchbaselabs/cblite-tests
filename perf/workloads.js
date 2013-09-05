@@ -95,12 +95,13 @@ var Workloads = module.exports = {
     writer = new loop.Loop({
         fun: function(finished) {
               if ((loop_counter%10) < (params.writeRatio/10)){
-                // Do a write
-                var d = new Date()
-                var ts = String(d.getHours())+d.getMinutes()+d.getSeconds()+d.getMilliseconds()
-                var id = "perf"+doc_map[client]+"_"+ip+"_"+ts
+
                 // set at some random delay
                 setTimeout(function(){
+                  // Do a write
+                  var d = new Date()
+                  var ts = String(d.getHours())+d.getMinutes()+d.getSeconds()+d.getMilliseconds()
+                  var id = "perf"+doc_map[client]+"_"+ip+"_"+ts
                   coax.put([url,id],
                     {at : new Date(), on : url}, function(err, json){
                       if (err != null){
