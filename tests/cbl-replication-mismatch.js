@@ -8,6 +8,8 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
+var NUM_DOCS = 5000;
+
 var server, sg, gateway,
   // local dbs
  dbs = ["mismatch-test-one", "mismatch-test-two"];
@@ -67,15 +69,18 @@ test("setup continuous push and pull from both client database", function(t) {
 
 
 test("load databases", function(t){
-  common.createDBDocs(t, {numdocs : 500, dbs : dbs, docgen : "channels"})
+  t.equals(NUM_DOCS/2, Math.floor(NUM_DOCS/2), "NUM_DOCS must be an even number")
+  common.createDBDocs(t, {numdocs : NUM_DOCS/2, dbs : dbs, docgen : "channels"})
 })
 
-test("verify dbs have same number of docs", {timeout: 120 * 1000}, function(t) {
-  common.verifyNumDocs(t, dbs, 1000)
+test("verify dbs have same number of docs", {timeout: 210 * 1000}, function(t) {
+  common.verifyNumDocs(t, dbs, NUM_DOCS)
 })
 
-test("verify sync gateway changes feed has all docs in it", function(t) {
+var sg_doc_ids;
+test("verify sync gateway changes feed has all docs in it", {timeout: 120 * 1000}, function(t) {
   var db = coax(sgdb)
+
   db("_changes", function (err, data) {
     var changes = data.results.map(function(r){return r.id});
     db("_all_docs", function(err, view){
@@ -103,8 +108,8 @@ test("verify sync gateway changes feed has all docs in it", function(t) {
         changeSeqs[r.seq] = true
       })
 
-      t.equals(docs.length, 1000, "correct number of docs in _all_docs")
-      t.equals(changes.length, 1000, "correct number of docs in _changes")
+      t.equals(docs.length, NUM_DOCS, "correct number of docs in _all_docs")
+      t.equals(changes.length, NUM_DOCS, "correct number of docs in _changes")
       t.equals(dupIds.length, 0, "duplicate ids in changes")
       t.equals(dupSeqs.length, 0, "duplicate seqs in changes")
       t.equals(0, missing.length, "missing changes")
@@ -118,6 +123,62 @@ test("verify sync gateway changes feed has all docs in it", function(t) {
 
   })
 
+})
+
+function verifyChanges(db, cb) {
+  var db_one_ids = {}, db_one_dup_ids = [], db_one_seqs = {}, db_one_dup_seqs = [];
+
+  db("_changes", function(err, data) {
+    db("_all_docs", function(err, view){
+      data.results.forEach(function(r){
+        if (db_one_ids[r.id]) {
+          db_one_dup_ids.push(r.id)
+        }
+        db_one_ids[r.id] = true
+
+        if (db_one_seqs[r.seq]) {
+          db_one_dup_seqs.push(r.seq)
+        }
+        db_one_seqs[r.seq] = true
+      })
+      cb(db_one_ids, db_one_dup_ids, db_one_seqs, db_one_dup_seqs)
+    })
+  })
+}
+
+
+test("verify cbl changes", function(t){
+  verifyChanges(coax([server, dbs[0]]), function(db_one_ids, db_one_dup_ids, db_one_seqs,db_one_dup_seqs) {
+    var one_ids_list = Object.keys(db_one_ids), db_one_seqs_list = Object.keys(db_one_seqs)
+    t.equals(one_ids_list.length, NUM_DOCS, "correct number of docs in _all_docs")
+    t.equals(db_one_seqs_list.length, NUM_DOCS, "correct number of docs in _changes")
+    t.equals(db_one_dup_ids.length, 0, "duplicate ids in changes "+db_one_dup_ids)
+    t.equals(db_one_dup_seqs.length, 0, "duplicate seqs in changes")
+
+    verifyChanges(coax([server, dbs[0]]), function(db_two_ids, db_two_dup_ids, db_two_seqs,db_two_dup_seqs) {
+      var db_two_idslist = Object.keys(db_two_ids), db_two_seqs_list = Object.keys(db_two_seqs)
+
+      t.equals(db_two_idslist.length, NUM_DOCS, "correct number of docs in _all_docs")
+      t.equals(db_two_seqs_list.length, NUM_DOCS, "correct number of docs in _changes")
+      t.equals(db_two_dup_ids.length, 0, "duplicate ids in changes")
+      t.equals(db_two_dup_seqs.length, 0, "duplicate seqs in changes")
+
+      var missing_from_one =[], missing_from_two=[]
+      for (var i = db_two_idslist.length - 1; i >= 0; i--) {
+        if (!db_one_ids[db_two_idslist[i]]) {
+          missing_from_one.push(db_two_idslist[i])
+        }
+      };
+      for (var i = one_ids_list.length - 1; i >= 0; i--) {
+        if (!db_two_ids[one_ids_list[i]]) {
+          missing_from_two.push(one_ids_list[i])
+        }
+      };
+      t.equals(0, missing_from_one.length, "missing changes in one "+missing_from_one.join())
+      t.equals(0, missing_from_two.length, "missing changes in two"+missing_from_two.join())
+      t.end()
+    })
+  })
 })
 
 
