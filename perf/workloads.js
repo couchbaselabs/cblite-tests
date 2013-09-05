@@ -99,22 +99,25 @@ var Workloads = module.exports = {
                 var d = new Date()
                 var ts = String(d.getHours())+d.getMinutes()+d.getSeconds()+d.getMilliseconds()
                 var id = "perf"+doc_map[client]+"_"+ip+"_"+ts
-                coax.put([url,id],
-                  {at : new Date(), on : url}, function(err, json){
-                    if (err != null){
-                      console.log("ERROR Pushing doc: "+url+"/"+id)
-                      console.log(err)
-                    } else {
-                        if ('id' in json){
-                         if (recent_docs.length > 10){
-                           recent_docs.shift()
+                // set at some random delay
+                setTimeout(function(){
+                  coax.put([url,id],
+                    {at : new Date(), on : url}, function(err, json){
+                      if (err != null){
+                        console.log("ERROR Pushing doc: "+url+"/"+id)
+                        console.log(err)
+                      } else {
+                          if ('id' in json){
+                           if (recent_docs.length > 10){
+                             recent_docs.shift()
+                            }
+                            recent_docs.push(json.id)
                           }
-                          recent_docs.push(json.id)
+                          doc_map[client] = doc_map[client] + 1
+                          total_writes++
                         }
-                        doc_map[client] = doc_map[client] + 1
-                        total_writes++
-                      }
-                 })
+                   })
+               }, Math.floor(Math.random()*10000)) // within a 10s window
               }else {
                 if ((loop_counter%10) < (params.readRatio/10)){
                   // Do a read from recent_docs
