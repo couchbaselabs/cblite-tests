@@ -8,7 +8,7 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
-var NUM_DOCS = 5000;
+var NUM_DOCS = 500;
 
 var server, sg, gateway,
   // local dbs
