@@ -26,6 +26,7 @@ module.exports.resources = {
  * the default admin_party.json will use "walrus" on bucket "db"
  */
 module.exports.SyncGatewayAdminParty = __dirname+"/admin_party.json"
+module.exports.SyncGatewaySyncFunctionTest = __dirname+"/sync_function_test.json"
 
 
 /*
