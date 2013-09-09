@@ -4,6 +4,7 @@ var launcher = require("../lib/launcher"),
   test = require("tap").test;
 
 var serve, port = 8888, server = "http://localhost:"+port+"/"
+var admin_server = "http://localhost:"+(port+1)+"/"
 
 test("can launch a Sync Gateway", function(t) {
   serve = launcher.launchSyncGateway({
@@ -41,6 +42,21 @@ test("can write and read", function(t) {
     })
   })
 })
+
+test("can write and read in admin server", function(t) {
+  var doc = coax([admin_server, "db", "admin_docid"])
+  console.log(doc.pax.toString())
+  doc.put({"ok":true}, function(err, ok){
+    console.log(err, ok)
+    t.false(err, "saved")
+    t.equals(ok.id, "admin_docid")
+    doc.get(function(err, ok){
+      t.false(err, "loaded")
+      t.end()
+    })
+  })
+})
+
 
 test("longpoll feed", function(t){
   var docInterval, db = coax([server, "db"])
