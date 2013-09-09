@@ -22,7 +22,7 @@ You'll need a newish Node.js install (>0.8) with npm. We recommend `brew install
 
 # How to run these tests
 
-First edit `config/local.js` to point to your build of LiteServ (found via "Products" in Xcode). Also to your local bin/sync_gateway
+#First edit `config/local.js` to point to your build of LiteServ (found via "Products" in Xcode). Also to your local bin/sync_gateway
 
 Get the dependencies with `npm install`. (It reads `package.json` to know what to get.)
 
@@ -34,7 +34,15 @@ To run a particular test, try `node tests/liteserv-phalanx.js`
 
 ## How to run performance tests:
 
-Just like the above (for tests) but you run it with `npm run perf`
+The simplest way to run a perf test is to update config/perf.js to match your configuration and start the test using run.js:
+`node perf/run.js`
+
+You can also start tests over http by starting a listener and sending the request over http:
+`node lib/listener.js`
+`http POST http://127.0.0.1:8189/run/perf/readwrite db=test-perf workload=readwrite numClients=2 writeRatio=10 readRatio=0 requestsPerSec=1 runtime=60 providers:='["http://127.0.0.99:8189"]'` enablepull:=false
+Note: values in config/perf.js will be used by default for any specified arguments, otherwise http query params will override those variables
+
+Collected stats will be stored into perfdb specefied in `config/perf.js`.  This can be any endpoint that implements the couchdb api. 
 
 ## Troubleshooting
 
