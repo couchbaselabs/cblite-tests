@@ -21,8 +21,7 @@
     "request-json" : "0.4.x"
   },
   "scripts": {
-    "test": "TAP_TIMEOUT=500 tap --stderr --stdout ./tests",
-    "perf": "TAP_TIMEOUT=60 tap ./perf --tap"
+    "test": "TAP_TIMEOUT=500 tap --stderr --stdout ./tests"
   },
   "author": "Couchbase, Inc.",
   "license": "Apache 2.0"
