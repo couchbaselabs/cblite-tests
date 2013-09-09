@@ -2,7 +2,6 @@ var coax = require("coax"),
   async = require("async"),
   follow = require("follow"),
   loop = require("nodeload/lib/loop"),
-  common = require("../tests/common")
   writer_index = 0,
   doc_map = {},
   perfdb = null,
@@ -87,11 +86,12 @@ var Workloads = module.exports = {
   //
   readwrite : function(client, params){
 
+    var generators = require("../tests/common").generators
     var url = client
     var loop_counter = 0
     var recent_docs = [] /* keep last 10 known docs around */
     doc_map[client] = 0
-    var doc_gen = common.generators.channels
+    var doc_gen = generators.channels
 
     var ip = url.replace(/[\.,\:,\/]/g,"")
     writer = new loop.Loop({
