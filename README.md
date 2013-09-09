@@ -45,6 +45,52 @@ Note: values in config/perf.js will be used by default for any specified argumen
 
 Collected stats will be stored into perfdb specefied in `config/perf.js`.  This can be any endpoint that implements the couchdb api. 
 
+## Scaling Performance tests:
+Clients can be added to a test by setting up additional providers.  A provider is any host where `lib/listener.js` has been started.  This provider should have it's `config/local.js` updated to specify what kind of clients it provides.  You should also set the listener ip to the hosts public IP so that the provider can be reached remotely.  
+
+Currently the quickest way to scale up clients is to make lots of pouchdb providers. For example:
+
+1) pull repo to a new vm and edit `config/local.js`
+ * set => provides  : "pouchdb"
+ * set => LocalListenerIP : "172.x.x.x"    (or export LOCAL_IP="172.x.x.x")
+ * node lib/listener.js
+
+2) set up as many providers you want.  estimate a max of 200 clients can be started per pouchdb provider on average hardware.
+
+3) navigate to the repo where the test will be running from and edit it's `config/perf.js`:
+ * set => providers : ["172.x.x.1", "172.x.x.2", ...]
+ 
+4) `node perf/run.js`
+
+The numClients will be distributed across providers.  You can have a mix of ios/android/pouch providers all in the same array.  
+But this assumes you can start an equal amount of clients for each provider.  In most cases it's best to start 2 different perf tests.
+1 that runs against pouchdb providers with many clients/provider, and another that runs against ios with fewer clients.
+
+Also note statcollection will only work against perf tests where an ios provider can be detected so you should only specify perfdb
+in the enviornment where ios providers are specified.
+
+## Perf stat analysis
+During the test run, stats can be pushed to perfdb set in `config/perf.js`.  This can be any couchdb compliant endpoint.  By default there is an internal pouchdb instance started for storing stats, but this instance is stopped at the end of the run.  For persisted stat data, it's recommend you use a public couchdb our couchcloud.
+
+When the test is being run you will see the statcollector printing latency stats, as this is what's currently collected.  One possible way to do post-run analysis is to create a couchdb view on the data in perfdb using the testid that is printed out in the console when tests starts:
+
+* sample start log
+`{ err: null,
+  ok:
+   { testid: 'perf_1566814',
+     numClients: 100,
+`
+
+* view over test data for testid perf_1566814
+`function(doc) {
+   if(doc._id.indexOf("perf_1566814") != -1){
+  	emit(doc.elapsed_time, [ doc['directsg-change'].avg, doc.change.avg, (doc.docs_written - doc.docs_relayed)]);
+   }
+}`
+
+this will give key's that match elapsed_time of test and values that correspond to delay stats
+
+
 ## Troubleshooting
 
 `killall LiteServ` is your friend.
