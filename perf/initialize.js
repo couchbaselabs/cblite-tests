@@ -1,14 +1,14 @@
-var phalanx = require("../lib/phalanx"),
-  coax = require("coax"),
+var  coax = require("coax"),
   async = require("async"),
-  test = require("tap").test,
-  resources = require("../config/local").resources,
+  perfparams = require("../config/perf"),
   config = require('../config/local'),
-  listener = require("../lib/listener");
+  listener = require("../lib/listener"),
+  common = require("../tests/common");
 
 var params = {}
 var clientsPerProvider = 0
 var gateway = null
+var sginstance = null
 
 // init:
 //
@@ -27,7 +27,6 @@ module.exports = function(opts, done){
     done({error : errs, gateway : gateway})
   }
 
-  console.log(params.providers)
   if(params.providers.length > 0){
     clientsPerProvider = Math.floor(params.numClients/params.providers.length)
   }
@@ -35,8 +34,7 @@ module.exports = function(opts, done){
 
   async.series([cleanup,
                 internalStores,
-                startIOSClients,
-                startPDBClients,
+                startClients,
                 startSyncGateway],  provisioned)
 
 }
@@ -51,9 +49,9 @@ function internalStores(cb){
     console.log("#create internal stores")
     var listener = "http://"+config.LocalListenerIP+":"+config.LocalListenerPort
     var adminPort = config.LocalListenerPort + 1
-    coax.post([url,"start","embeddedclient"], {port : adminPort, internal : true}, function(err, json){
+    coax.post([listener,"start","pouchdb"], {port : adminPort, internal : true}, function(err, json){
       if(err){
-        cb({error : err}, "embeddedclient")
+        cb({error : err}, "pouchdb")
       } else {
 
         var adminUrl = "http://"+config.LocalListenerIP+":"+adminPort
@@ -70,58 +68,42 @@ function internalStores(cb){
 
 }
 
-// startIOSClients:
+// startClients:
 //
-function startIOSClients(cb){
+function startClients(cb){
 
-    console.log("#start ios clients")
 
-    if(resources.LiteServProviders.length == 0){
-      cb(null, {ok : "no ios client provider"})
+    if(params.providers == 0){
+      cb(null, {ok : "no providers"})
     } else {
 
-      async.map(resources.LiteServProviders, function(url, callback) {
+      async.map(params.providers, function(url, callback) {
 
-        async.timesSeries(clientsPerProvider, function(n, next){
-               coax.post([url,"start","liteserv",{}], next)
-             },
-             callback)
-          }, function( err, results){
-             cb(err, {ok : " started "+results.length+" liteserv providers"})
+        coax(url, function(e, js){
+          if(!e){
+            var type = js.provider
+            console.log("#starting "+clientsPerProvider+" "+type+" clients")
+
+            async.timesSeries(clientsPerProvider, function(n, next){
+                   coax.post([url,"start",type,{}], next)
+                 },
+                 callback)
+          } else {
+            callback(e, null)
+          }
+          })
+        }, function( err, results){
+           cb(err, {ok : " initialzed "+results.length+" providers"})
       })
     }
 
 }
 
-// startPDBClients:
-//
-function startPDBClients(cb){
-
-  console.log("#start embedded clients")
-
-  if(resources.PouchDBProviders.length == 0){
-    cb(null, {ok : "no embedded client provider"})
-  } else {
-
-    async.map(resources.PouchDBProviders, function(url, callback) {
-
-      async.timesSeries(clientsPerProvider, function(n, next){
-             coax.post([url,"start","embeddedclient",{}], next)
-           },
-           callback)
-        }, function( err, results){
-           cb(err, {ok : " started "+results.length+" embedded providers"})
-    })
-
-  }
-
-}
 
 // startSyncGateway:
 //
 function startSyncGateway(cb){
 
- 
   if(gateway){
 
     // attempt to reach gateway
@@ -136,17 +118,11 @@ function startSyncGateway(cb){
     })
   } else {
     // start gateway
-    coax.post([resources.SyncGatewayProvider,"start","syncgateway"], {},
-      function(err, json){
-
-          if ('error' in json){
-            err = json['error']
-          }
-          if(!err){
-            gateway = json.ok
-          }
-          cb(err, {gateway : gateway})
-      })
+    common.launchSG(null, function(sg){
+      sginstance = sg
+      gateway = sg.url
+      cb(null, {gateway : gateway})
+    })
   }
 
 }
@@ -162,6 +138,11 @@ var cleanup = module.exports.cleanup = function(cb){
   async.mapSeries(params.providers, function(url, _cb){
       coax([url,"cleanup"], _cb)
   }, function(err, result){
+
+    // kill sync gateway instance
+    if(sginstance)
+      sginstance.kill()
+
     setTimeout(function(){
       cb(err, {ok : "cleanup done"})
     }, 3000)

@@ -50,16 +50,16 @@ var common = module.exports = {
     }
     var url = "http://"+config.LocalListenerIP+":"+config.LocalListenerPort
     this.listener.url = url
-    var testendpoint = config.TestEndpoint
+    var testendpoint = config.provides
 
     if(testendpoint == "ios"){
-      coax.post([url, "start", "liteserv"], function(err, json){
+      coax.post([url, "start", "ios"], function(err, json){
         t.false(json.error, "error launching LiteServe "+JSON.stringify([err, json]))
         this.server = json.ok
         done(this.server)
       })
     } else if(testendpoint == "pouchdb"){
-      coax.post([url, "start", "embeddedclient"], function(err, json){
+      coax.post([url, "start", "pouchdb"], function(err, json){
         t.false(json.error, "error launching pouchdb client")
         this.server = json.ok
         done(this.server)
@@ -94,10 +94,12 @@ var common = module.exports = {
       configPath : config.SyncGatewayAdminParty
     })
     sg.once("ready", function(err){
-      t.false(err, "no error, Sync Gateway running on our port")
+      if(t)
+        t.false(err, "no error, Sync Gateway running on our port")
       sg.db = coax([sg.url,"db"])
       sg.db(function(err, ok){
-        t.false(err, "no error, Sync Gateway reachable")
+        if(t)
+          t.false(err, "no error, Sync Gateway reachable")
         done(sg)
       })
     });
