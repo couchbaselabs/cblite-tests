@@ -1,7 +1,7 @@
 var async = require("async"),
   coax = require("coax"),
   resources = require("../config/local").resources,
-  common = require("../tests/common")
+  common = require("../tests/common"),
   clientList = [],
   providers = [],
   gatewaydb = null,
