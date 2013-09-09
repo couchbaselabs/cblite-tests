@@ -3,7 +3,7 @@ var path = require("path");
 var config = module.exports = {
   LiteServPath      : process.env.LITESERV_PATH,
   SyncGatewayPath   : process.env.SYNCGATE_PATH,
-  LocalListenerIP   : "127.0.0.1",
+  LocalListenerIP   : process.env.LOCAL_IP || "127.0.0.1",
   LocalListenerPort : 8189,
   DbUrl             : "walrus:",
   DbBucket          : "db",
