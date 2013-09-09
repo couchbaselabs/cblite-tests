@@ -53,7 +53,6 @@ var stop = module.exports.stop = function(){
     running = false
     cfeed.stop()
     gfeed.stop()
-
 }
 
 
@@ -102,7 +101,6 @@ function followMonitorClient(monitorClient, gateway){
 //
 function followSyncGateway(gateway){
 
-
   coax([gateway,"_changes",
         { filter : "sync_gateway/bychannel",
           channels : "stats",
@@ -122,7 +120,8 @@ function followSyncGateway(gateway){
                 mystatr.stat("directsg-doc", (new Date()-new Date(doc.at)))
               } else { console.log(err) }
                 last_stat_seq = changes.last_seq
-                followSyncGateway(gateway)
+                if(running)
+                  followSyncGateway(gateway)
               })
             })
 }
@@ -159,7 +158,7 @@ function gatewayWriter(gateway){
 // and number of docs on the sync gateway
 function statCheckPointer(monitorClient, gateway, perfdb){
 
-  console.log("collect stats: ")
+  console.log("collect stats: "+running)
   var stat_checkpoint = mystatr.summary()
 
 
