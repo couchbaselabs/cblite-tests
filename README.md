@@ -22,7 +22,7 @@ You'll need a newish Node.js install (>0.8) with npm. We recommend `brew install
 
 # How to run these tests
 
-#First edit `config/local.js` to point to your build of LiteServ (found via "Products" in Xcode). Also to your local bin/sync_gateway
+First edit `config/local.js` to point to your build of LiteServ (found via "Products" in Xcode). Also to your local bin/sync_gateway
 
 Get the dependencies with `npm install`. (It reads `package.json` to know what to get.)
 
