@@ -39,7 +39,8 @@ The simplest way to run a perf test is to update config/perf.js to match your co
 
 You can also start tests over http by starting a listener and sending the request over http:
 `node lib/listener.js`
-`http POST http://127.0.0.1:8189/run/perf/readwrite db=test-perf workload=readwrite numClients=2 writeRatio=10 readRatio=0 requestsPerSec=1 runtime=60 providers:='["http://127.0.0.99:8189"]'` enablepull:=false
+`http POST http://127.0.0.1:8189/run/perf/readwrite db=test-perf workload=readwrite numClients=2 writeRatio=10 readRatio=0 requestsPerSec=1 runtime=60 providers:='["http://127.0.0.99:8189"]' enablepull:=false`
+
 Note: values in config/perf.js will be used by default for any specified arguments, otherwise http query params will override those variables
 
 Collected stats will be stored into perfdb specefied in `config/perf.js`.  This can be any endpoint that implements the couchdb api. 
