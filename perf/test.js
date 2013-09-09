@@ -2,7 +2,6 @@ var resources = require("../config/local").resources,
   async = require("async"),
   workloads = require("../perf/workloads"),
   config = require("../config/local"),
-  perf = require("../config/perf"),
   initialize = require('../perf/initialize'),
   setup = require('../perf/setup'),
   coax = require("coax");
@@ -13,7 +12,7 @@ var gateway = null
 var runtime = 300
 var localListener = 'http://'+config.LocalListenerIP+':'+config.LocalListenerPort
 
-run = module.exports.run = function(opts, done){
+run = module.exports.run = function(opts, started, complete){
 
   params = opts
   providers = params.providers
@@ -25,7 +24,7 @@ run = module.exports.run = function(opts, done){
       pushTestInfo()
       runStatCollector()
     }
-    done({err: errors, ok : params})
+    started({err: errors, ok : params})
   }
 
   async.series([_initialize,
@@ -34,27 +33,35 @@ run = module.exports.run = function(opts, done){
     ready)
 
   setTimeout(function(){
-    stop(params.listener, params.providers)
+    stop(params.providers, complete)
   }, params.runtime * 1000)
 }
 
-stop = module.exports.stop = function(listener, providers, done){
-
-  // stop collector
-  coax.get([listener,"stop","statcollector"])
+stop = module.exports.stop = function(providers, complete){
 
   async.map(providers, function(url, cb){
 
-    // stop all workloads
-    coax.get([url,"stop","workload"], function(){
+    // stop any stat collectors
+    coax.get([url,"stop","statcollector"], function(js){
 
-      // cleanup
-      coax.get([url,"cleanup"], cb)
+      // stop all workloads
+      coax.get([url,"stop","workload"], cb)
+
     })
+
   }, function(err, result){
-    if(done){
-      done({ err: err, ok : 'stop test'})
-    }
+
+    // wait for workloads to finish
+    setTimeout(function(){
+
+      // stop any initialized resources
+      initialize.cleanup(function(err, result){
+        //console.log(result)
+        if(complete)
+          complete({ err: err, ok : result.ok})
+      })
+
+    }, 10000)
   })
 }
 
@@ -80,13 +87,17 @@ function _initialize(done){
   // do general init/set based on params
   // before running specific test
 
-    initialize(params,  function(err, ok){
-    if(err.error){
+    initialize(params,  function(res){
+    if(res.error){
       console.log("Error occured setup clients")
-      console.log(err.error)
+      console.log(res.error)
+    } else {
+      console.log(res)
+      params.gateway = res.gateway
+      params.sg = res.sg
     }
     setTimeout(function(){
-      done(err.error, {ok : 'client initialize'})
+      done(res.error, {ok : 'client initialize'})
     }, 2000)
 
   })
@@ -95,43 +106,63 @@ function _initialize(done){
 
 function _setup(done){
 
-  setup(params, function(err, ok){
-    if(err.error){
+  setup(params, function(res){
+    if(res.error){
       console.log("Error occured setup clients")
-      console.log(err.error)
+      console.log(res.error)
     }
-    done(err.error, {ok : 'clients setup'})
+    done(res.error, {ok : 'clients setup'})
   })
 
 }
 
-function runStatCollector(cb){
+function runStatCollector(done){
 
+  var monitorClient = null
+  var iosProvider = null
 
-   var lsprovider = resources.LiteServProviders[0]
-   // get an ios client
+  // looping through providers looking for an ios provider
+  async.map(params.providers, function(provider, _cb){
+    coax(provider, function(e, js){
 
-  coax([lsprovider, "clients"],  function(err, clients){
-    if ((!err)){
-      var monitorClient = clients.ok[0]
-      coax([monitorClient, '_all_dbs'], function(err, dbs){
+      if(js && ('provider' in js) && (js.provider === 'ios')){
 
-        if(!err && (dbs.length > 0)){
-          var monitorClientDb = dbs[0].replace(/.*:\/\//,"")
-          params.monitorClient = coax([monitorClient,monitorClientDb]).pax().toString()
-          console.log("MonitorClient: "+params.monitorClient)
-          coax.post([lsprovider,"start", "statcollector"], params, function(errors, res){
-            cb(res)
-            console.log({err : errors, ok : res})
+          // this is an ios provider...get clients
+          coax([provider, "clients"],  function(err, clients){
+            monitorClient = clients.ok[0]
+
+            // get client db to monitor
+            coax([monitorClient, '_all_dbs'], function(err, dbs){
+
+              if(!err && (dbs.length > 0)){
+
+                // set client url
+                var monitorClientDb = dbs[0].replace(/.*:\/\//,"")
+                monitorClient = coax([monitorClient,monitorClientDb]).pax().toString()
+                iosProvider = provider
+             }
+             _cb(err, {ok : monitorClient})
+           })
           })
-       }
-     })
-    } else{
-      console.log(err)
-      console.log("Unable to get a monitor client!")
+
+      } else {
+        _cb(e, {ok : 'non-ios'})
+      }
+    })
+  }, function(err, oks){
+    if(monitorClient){
+      params.monitorClient = monitorClient
+      console.log("MonitorClient: "+params.monitorClient)
+      coax.post([iosProvider, "start", "statcollector"], params, function(errors, res){
+        if(done)
+          done(res)
+        console.log({err : errors, ok : res})
+      })
+    } else {
+      if(done)
+        done({ok : "no ios providers?"})
     }
   })
-
 }
 
 function startload(done){
