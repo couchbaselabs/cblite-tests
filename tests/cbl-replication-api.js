@@ -49,9 +49,10 @@ test("push replication should close connection on completion", function(t) {
   }, function(err, info) {
     t.false(err, "replication created")
     console.log("info", info)
-    sg.db.get(function(err, info){
+    sg.db.get(function(err, dbinfo){
       t.false(err, "sg database exists")
-      t.equals(100, info.doc_count, "all docs replicated")
+      t.ok(dbinfo, "got an info repsonse")
+      t.equals(100, dbinfo.doc_count, "all docs replicated")
       t.end()
     })
   })
@@ -67,10 +68,11 @@ test("pull replication should close connection on completion", function(t) {
     target : lite
   }, function(err, info) {
     t.false(err, "replication created")
-    console.log("info", info)
-    coax([server, lite], function(err, info){
+    // console.log("info", info)
+    coax([server, lite], function(err, dbinfo){
       t.false(err, "lite database exists")
-      t.equals(100, info.doc_count, "all docs replicated")
+      t.ok(dbinfo, "got an info repsonse")
+      t.equals(100, dbinfo.doc_count, "all docs replicated")
       t.end()
     })
   })
