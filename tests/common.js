@@ -502,6 +502,8 @@ var common = module.exports = {
         })
 
         feed.on('change', function(js){
+
+
           // get seqno
           tseq = js.seq
 
@@ -510,11 +512,13 @@ var common = module.exports = {
             var err = "detected duplicate sequence_no "+tseq
             console.log(err)
             cb(err, feed)
-          }
+
           // we don't expect target seqno to exceed source
-          else if (tseq > srcseq){
-            err = "target db seqnum is "+tseq+" expected "+srcseq
-            cb(err, feed)
+          // we can't do this because sequence-ids are not numbers,
+          // they are opaque tokens, and can't be compared with >
+          // else if (tseq > srcseq){
+            // err = "target db seqnum is "+tseq+" expected "+srcseq
+            // cb(err, feed)
           } else if(tseq == srcseq){
             // make sure no new changes incomming
             setTimeout(function(){
