@@ -72,6 +72,7 @@ test("pull replication should close connection on completion", function(t) {
     coax([server, lite], function(err, dbinfo){
       t.false(err, "lite database exists")
       t.ok(dbinfo, "got an info repsonse")
+      console.log("lite dbinfo", dbinfo)
       t.equals(100, dbinfo.doc_count, "all docs replicated")
       t.end()
     })
