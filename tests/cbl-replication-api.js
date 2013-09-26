@@ -36,15 +36,13 @@ test("create test databases", function(t){
 })
 
 test("load databases", function(t){
-  common.createDBDocs(t, {numdocs : 10, dbs : dbs})
+  common.createDBDocs(t, {numdocs : 100, dbs : dbs})
 })
 
 test("push replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
   var lite = dbs[0]
-  console.log(sgdb+"!!")
-  console.log(lite+"!!")
-  console.log(server+"!!")
+
   coax.post([server, "_replicate"], {
     source : lite,
     target : sgdb
@@ -53,13 +51,13 @@ test("push replication should close connection on completion", function(t) {
     console.log("info", info)
     sg.db.get(function(err, info){
       t.false(err, "sg database exists")
-      t.equals(10, info.doc_count, "all docs replicated")
+      t.equals(100, info.doc_count, "all docs replicated")
       t.end()
     })
   })
 })
 
-/*
+
 test("pull replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
   var lite = pulldbs[0]
@@ -72,7 +70,7 @@ test("pull replication should close connection on completion", function(t) {
     console.log("info", info)
     coax([server, lite], function(err, info){
       t.false(err, "lite database exists")
-      t.equals(10, info.doc_count, "all docs replicated")
+      t.equals(100, info.doc_count, "all docs replicated")
       t.end()
     })
   })
@@ -84,4 +82,3 @@ test("done", function(t){
     t.end()
   })
 })
-*/
