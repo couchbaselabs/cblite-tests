@@ -10,7 +10,7 @@ var launcher = require("../lib/launcher"),
 
 var NUM_DOCS = 500;
 
-var server, sg, gateway,
+var server, sg, gateway, sgdb
   // local dbs
  dbs = ["mismatch-test-one", "mismatch-test-two"];
 
@@ -36,31 +36,15 @@ test("create test databases", function(t){
   common.createDBs(t, dbs)
 })
 
-function setupPushAndPull(server, dba, dbb, cb) {
-  coax.post([server, "_replicate"], {
-    source : dba,
-    target : dbb,
-    continuous : true
-  }, function(err, info) {
-    if (err) {return cb(err)}
-    coax.post([server, "_replicate"], {
-      source : dbb,
-      target : dba,
-      continuous : true
-    }, cb)
-  })
-}
 
-var sgdb;
 test("setup continuous push and pull from both client database", function(t) {
   sgdb = sg.db.pax().toString()
-  var lite = dbs[0]
 
   // sgdb = "http://sync.couchbasecloud.com:4984/guestok64"
 
-  setupPushAndPull(server, dbs[0], sgdb, function(err, ok){
+  common.setupPushAndPull(server, dbs[0], sgdb, function(err, ok){
     t.false(err, 'replication one ok')
-    setupPushAndPull(server, dbs[1], sgdb, function(err, ok){
+    common.setupPushAndPull(server, dbs[1], sgdb, function(err, ok){
       t.false(err, 'replication two ok')
       t.end()
     })
@@ -180,7 +164,6 @@ test("verify cbl changes", function(t){
     })
   })
 })
-
 
 test("done", function(t){
   common.cleanup(t, function(json){

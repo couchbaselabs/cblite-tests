@@ -86,7 +86,6 @@ var common = module.exports = {
   },
 
   launchSG : function(t, done){
-
     sg = launcher.launchSyncGateway({
       port : 9888,
       dir : __dirname+"/../tmp/sg",
@@ -105,6 +104,26 @@ var common = module.exports = {
     });
 
   },
+
+  launchSGWithParams : function(t, port, db, done){
+      sg = launcher.launchSyncGateway({
+        port : port,
+        dir : __dirname+"/../tmp/sg",
+        path : config.SyncGatewayPath,
+        configPath : config.SyncGatewayAdminParty
+      })
+      sg.once("ready", function(err){
+        if(t)
+          t.false(err, "no error, Sync Gateway running on port " + port)
+        sg.db = coax([sg.url, db])
+        sg.db(function(err, ok){
+          if(t)
+            t.false(err, "no error, Sync Gateway reachable by: " + sg.url + db)
+          done(sg)
+        })
+      });
+
+    },
 
   createDBs : function(t, dbs, emits){
 
@@ -153,7 +172,6 @@ var common = module.exports = {
 	    }, notifycaller.call(t, emits))
 
 	  },
-
 
 
   compactDBs : function(t, dbs, emits){
@@ -586,6 +604,21 @@ var common = module.exports = {
 
     }, notifycaller.call(t, emits))
 
+  },
+
+  setupPushAndPull: function (server, dba, dbb, cb) {
+    coax.post([server, "_replicate"], {
+      source : dba,
+      target : dbb,
+      continuous : true
+    }, function(err, info) {
+      if (err) {return cb(err)}
+      coax.post([server, "_replicate"], {
+        source : dbb,
+        target : dba,
+        continuous : true
+      }, cb)
+    })
   }
 
 }
