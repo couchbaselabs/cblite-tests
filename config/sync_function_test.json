@@ -1,0 +1,26 @@
+{
+	"log": ["CRUD", "REST+"],
+	"facebook" : {"register":true},
+	"databases": {
+		"db": {
+			"server": "walrus:",
+			"sync": `
+function(doc){
+	if (doc.channels.indexOf("voyage") != -1) {
+		requireUser("coolio")
+	}
+	if (doc.subscribe) {
+		requireUser(doc.subscribe)
+		access(doc.subscribe, doc.channels)
+	} else {
+		// you can't update a document unless you are subscribed to one of the documents channels
+		requireAccess(doc.channels)
+	}
+	channel(doc.channels);
+}`,
+			"users": {
+				"GUEST": {"disabled": true, "admin_channels": [] }
+			}
+		}
+	}
+}
