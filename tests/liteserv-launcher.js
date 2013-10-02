@@ -1,6 +1,7 @@
 var launcher = require("../lib/launcher"),
   coax = require("coax"),
-  config = require("../config/local"),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   test = require("tap").test;
 
 var serve, port = 59850, server = "http://localhost:"+port+"/"

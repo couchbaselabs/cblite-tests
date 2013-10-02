@@ -6,7 +6,9 @@ var launcher = require("../lib/launcher"),
   util =  require("util"),
   eventEmitter = common.ee,
   emitsdefault  = "default",
-  test = require("tap").test;
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
+  test = require("tap").test
 
 var server, sg, gateway,
   // local dbs
@@ -66,7 +68,7 @@ test("set up local to local replication", function(t){
 test("set push/pull replication to gateway", function(t){
 
   var i = 0
-  var gatewayDB = coax([gateway, "db"]).pax().toString()
+  var gatewayDB = coax([gateway, config.DbBucket]).pax().toString()
 
   async.series([
     function(sgpush){
@@ -184,6 +186,16 @@ test("verify local-replicated num-docs 0-2", { timeout : 15000}, function(t){
 //   common.compareDBSeqNums(t, {sourcedbs : dbs,
 //                               targetdbs : repdbs})
 // })
+
+test("cleanup cb bucket", function(t){
+    if (config.DbUrl.indexOf("http") > -1){
+    coax.post([config.DbUrl, "pools/default/buckets/", config.DbBucket, "controller/doFlush"],
+	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
+	      t.false(err, "flush cb bucket")
+    })
+    }
+    t.end()
+})
 
 
 test("done", function(t){

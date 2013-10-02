@@ -1,7 +1,8 @@
 var  coax = require("coax"),
   async = require("async"),
   perfparams = require("../config/perf"),
-  config = require('../config/local'),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   listener = require("../lib/listener"),
   common = require("../tests/common");
 

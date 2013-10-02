@@ -3,7 +3,8 @@ var launcher = require("../lib/launcher"),
   phalanx = require("../lib/phalanx"),
   coax = require("coax"),
   async = require("async"),
-  config = require("../config/local"),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   test = require("tap").test,
   replicateClientServerClient = require("./subtests/replicate-client-server-client")
 
@@ -39,7 +40,7 @@ test("launch a Sync Gateway", function(t) {
   })
   sg.once("ready", function(err){
     t.false(err, "no error, Sync Gateway running on our port")
-    sg.db = coax([sg.url,"db"])
+    sg.db = coax([sg.url, config.DbBucket])
     sg.db(function(err, ok){
       t.false(err, "no error, Sync Gateway reachable")
       t.end()

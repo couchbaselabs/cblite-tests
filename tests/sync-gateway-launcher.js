@@ -1,6 +1,7 @@
 var launcher = require("../lib/launcher"),
   coax = require("coax"),
-  config = require("../config/local.js"),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   test = require("tap").test;
 
 var serve, port = 8888, server = "http://localhost:"+port+"/"
@@ -23,14 +24,15 @@ test("can launch a Sync Gateway", function(t) {
 });
 
 test("can get db info", function(t){
-  coax([server, "db"]).get(function(err, ok){
+  coax([server, config.DbBucket]).get(function(err, ok){
     t.ok(ok, "created database")
-    t.equals(ok.db_name, "db", "correct name")
+    t.equals(ok.db_name, config.DbBucket, "correct name")
     t.end()
   })
 })
+
 test("can write and read", function(t) {
-  var doc = coax([server, "db", "docid"])
+  var doc = coax([server, config.DbBucket, "docid"])
   console.log(doc.pax.toString())
   doc.put({"ok":true}, function(err, ok){
     console.log(err, ok)
@@ -44,7 +46,7 @@ test("can write and read", function(t) {
 })
 
 test("can write and read in admin server", function(t) {
-  var doc = coax([admin_server, "db", "admin_docid"])
+  var doc = coax([admin_server, config.DbBucket, "admin_docid"])
   console.log(doc.pax.toString())
   doc.put({"ok":true}, function(err, ok){
     console.log(err, ok)
@@ -59,7 +61,7 @@ test("can write and read in admin server", function(t) {
 
 
 test("longpoll feed", function(t){
-  var docInterval, db = coax([server, "db"])
+  var docInterval, db = coax([server, config.DbBucket])
   db.get(["_changes",{feed : "longpoll"}], function(err, changes) {
     // console.log(changes)
     t.false(err, "got changes")
@@ -92,6 +94,16 @@ test("longpoll feed", function(t){
       docidCount++
     }
   }, 100)
+})
+
+test("cleanup cb bucket", function(t){
+    if (config.DbUrl.indexOf("http") > -1){
+    coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
+	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
+	      t.false(err, "flush cb bucket")
+	    })
+	}
+    t.end()
 })
 
 test("exit", function(t) {

@@ -3,6 +3,8 @@ var launcher = require("../lib/launcher"),
   async = require("async"),
   tstart = process.hrtime(),
   common = require("../tests/common"),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   util =  require("util"),
   eventEmitter = common.ee,
   emitsdefault  = "default",
@@ -12,7 +14,7 @@ var NUM_DOCS = 500;
 
 var server, sg1, sg2, gateway1, sg2, sgdb
   // local dbs
- dbs = ["mismatch-test-one", "mismatch-test-two"];
+ dbs = ["mismatch-gateways-one", "mismatch-test-two"];
 
 // start client endpoint
 test("start test client", function(t){
@@ -24,7 +26,7 @@ test("start test client", function(t){
 
 // start sync gateway
 test("start syncgateway", function(t){
-  common.launchSGWithParams(t, 9888, "db", function(_sg1){
+  common.launchSGWithParams(t, 9888, config.DbUrl, config.DbBucket, function(_sg1){
     sg1  = _sg1
     gateway1 = sg1.url
     t.end()
@@ -33,7 +35,7 @@ test("start syncgateway", function(t){
 
 // start sync gateway2
 test("start syncgateway", function(t){
-  common.launchSGWithParams(t, 9890, "db", function(_sg2){
+  common.launchSGWithParams(t, 9890, config.DbUrl, config.DbBucket, function(_sg2){
     sg2  = _sg2
     gateway2 = sg2.url
     t.end()
@@ -181,6 +183,16 @@ test("verify cbl changes", function(t){
       t.end()
     })
   })
+})
+
+test("cleanup cb bucket", function(t){
+    if (config.DbUrl.indexOf("http") > -1){
+    coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
+	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
+	      t.false(err, "flush cb bucket")
+	    })
+	}
+    t.end()
 })
 
 test("done", function(t){

@@ -159,8 +159,6 @@ test("compact during doc delete", function(t){
 
   // run compaction while documents are being deleted
   common.compactDBs(t, [dbs[0]], emitsdefault)
-
-
 })
 
 test("load multiple databases", function(t){

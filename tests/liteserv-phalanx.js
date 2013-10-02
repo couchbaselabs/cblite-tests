@@ -2,7 +2,8 @@ var phalanx = require("../lib/phalanx"),
   rmdir = require("../lib/rmdir"),
   async = require("async"),
   coax = require("coax"),
-  config = require("../config/local"),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   test = require("tap").test;
 
 var replicateClientServerClient = require("./subtests/replicate-client-server-client")

@@ -7,7 +7,8 @@ var launcher = require("../lib/launcher"),
   util =  require("util"),
   fs = require('fs'),
   listener = require('../lib/listener'),
-  config = require("../config/local"),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   port = 59850;
 
 
@@ -88,6 +89,8 @@ var common = module.exports = {
   launchSG : function(t, done){
     sg = launcher.launchSyncGateway({
       port : 9888,
+      db : config.DbUrl,
+      bucket : config.DbBucket,
       dir : __dirname+"/../tmp/sg",
       path : config.SyncGatewayPath,
       configPath : config.SyncGatewayAdminParty
@@ -95,7 +98,7 @@ var common = module.exports = {
     sg.once("ready", function(err){
       if(t)
         t.false(err, "no error, Sync Gateway running on our port")
-      sg.db = coax([sg.url,"db"])
+      sg.db = coax([sg.url, config.DbBucket])
       sg.db(function(err, ok){
         if(t)
           t.false(err, "no error, Sync Gateway reachable")
@@ -105,20 +108,23 @@ var common = module.exports = {
 
   },
 
-  launchSGWithParams : function(t, port, db, done){
+  launchSGWithParams : function(t, port, db, bucket, done){
       sg = launcher.launchSyncGateway({
         port : port,
+        db : db,
+        bucket : bucket,
         dir : __dirname+"/../tmp/sg",
         path : config.SyncGatewayPath,
         configPath : config.SyncGatewayAdminParty
+
       })
       sg.once("ready", function(err){
         if(t)
           t.false(err, "no error, Sync Gateway running on port " + port)
-        sg.db = coax([sg.url, db])
+        sg.db = coax([sg.url, bucket])
         sg.db(function(err, ok){
           if(t)
-            t.false(err, "no error, Sync Gateway reachable by: " + sg.url + db)
+            t.false(err, "no error, Sync Gateway reachable by: " + sg.url)
           done(sg)
         })
       });

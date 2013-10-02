@@ -1,7 +1,8 @@
 var resources = require("../config/local").resources,
   async = require("async"),
   workloads = require("../perf/workloads"),
-  config = require("../config/local"),
+  conf_file = process.env.CONF_FILE || 'local',
+  config = require('../config/' + conf_file),
   initialize = require('../perf/initialize'),
   setup = require('../perf/setup'),
   coax = require("coax");
