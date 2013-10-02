@@ -1,12 +1,11 @@
 var launcher = require("../lib/launcher"),
   coax = require("coax"),
   common = require("../tests/common"),
-  sleep = require('sleep');
   test = require("tap").test;
 
 var NUM_DOCS = 500;
 
-var server, sg1, sg2, gateway1, sg2, sgdb
+var server, sg1, sg2, gateway1, sg2, sgdb,
   // local dbs
  dbs = ["mismatch-test-one", "mismatch-test-two"];
 
@@ -62,13 +61,15 @@ test("done", function(t){
                 t.fail("failed to get db info from " + dburl)
               }
               count = json.doc_count
-              console.log("doc count in " + dbs[i] + ": " +count)                
+              console.log("doc count in " + dbs[i] + ": " +count)
     })
     }
     console.log("sleep 3 second before sg1.kill")
-    sleep.sleep(3)
-    sg1.kill()
-    t.end()
+    setTimeout(function(){
+      sg1.kill()
+      t.end()
+    }, 3000)
+
 })
 
 //start sync gateway

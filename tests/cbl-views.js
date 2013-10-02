@@ -202,14 +202,15 @@ test("test array keys", function(t){
     t.equals(oks.length, 8, "startkey array")
   })
 
-  view({ startkey : [2013, 7, 2], startkey_docid : "cbl_views_8", reduce : false},
-    function(e, js){
-      var oks = js.rows.filter(function(row, i){
-        console.log(row)
-        return row.key[2] == (i+4)
-      })
-      t.equals(oks.length, 8, "startkey array")
-  })
+// TODO these should be individual tests
+  // view({ startkey : [2013, 7, 2], startkey_docid : "cbl_views_8", reduce : false},
+  //   function(e, js){
+  //     var oks = js.rows.filter(function(row, i){
+  //       console.log(row)
+  //       return row.key[2] == (i+4)
+  //     })
+  //     t.equals(oks.length, 8, "startkey array")
+  // })
 
 
   view({ group : true}, function(e, js){
