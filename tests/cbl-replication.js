@@ -18,6 +18,8 @@ var server, sg, gateway,
  // sg->local dbs
  sgdbs = ["api-test7", "api-test8", "api-test9"];
 
+var numDocs=config.numDocs || 100;
+
 // start client endpoint
 test("start test client", function(t){
   common.launchClient(t, function(_server){
@@ -42,12 +44,12 @@ test("create test databases", function(t){
   common.createDBs(t, alldbs)
 })
 
+//issue#77 couchbase-lite-android: support for shorthand target in local->local replication
 // set up replication
 test("set up local to local replication", function(t){
 
   var i = 0
   async.mapSeries(dbs, function(db, cb){
-
     coax([server, "_replicate"]).post({
         source : db,
         target : repdbs[i],
@@ -113,7 +115,7 @@ test("set push/pull replication to gateway", function(t){
 })
 
 test("load databases", function(t){
-  common.createDBDocs(t, {numdocs : 100, dbs : dbs})
+  common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
 test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
@@ -122,7 +124,7 @@ test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
 })
 
 test("verify local-replicated num-docs 100", function(t){
-  common.verifyNumDocs(t, repdbs, 100)
+  common.verifyNumDocs(t, repdbs, numDocs)
 })
 
 test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
@@ -132,12 +134,12 @@ test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
 })
 
 test("verify sg-replicated num-docs", function(t){
-  common.verifyNumDocs(t, sgdbs, 300)
+  common.verifyNumDocs(t, sgdbs, numDocs*3)
 })
 
 
 test("delete db docs",  function(t){
-  common.deleteDBDocs(t, dbs, 100)
+  common.deleteDBDocs(t, dbs, numDocs)
 })
 
 
@@ -164,16 +166,16 @@ test("verify sg-replicated num-docs", function(t){
 
 // load databaes
 test("load databases", function(t){
-  common.createDBDocs(t, {numdocs : 100, dbs : dbs})
+  common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
-test("verify local-replicated num-docs 100-2", { timeout : 15000}, function(t){
-  common.verifyNumDocs(t, repdbs, 100)
+test("verify local-replicated num-docs numDocs-2", { timeout : 15000}, function(t){
+  common.verifyNumDocs(t, repdbs, numDocs)
 })
 
 // purge all dbs
 test("purge dbs", function(t){
-  common.purgeDBDocs(t, dbs, 100)
+  common.purgeDBDocs(t, dbs, numDocs)
 })
 
 // check dbs

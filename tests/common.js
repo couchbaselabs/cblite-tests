@@ -68,6 +68,7 @@ var common = module.exports = {
     } else if(testendpoint == "android"){
       // TODO: requires manual launch
       this.server = "http://localhost:8080"
+      server = this.server
       done(this.server)
     } else if(testendpoint == "couchdb"){
       // TODO: requires manual launch
@@ -132,7 +133,6 @@ var common = module.exports = {
     },
 
   createDBs : function(t, dbs, emits){
-
     async.mapSeries(dbs, function(db, cb){
 
       // check if db exists
@@ -157,19 +157,19 @@ var common = module.exports = {
     var docgen = params.docgen || 'basic'
     var dbs = params.dbs
     var numdocs = params.numdocs
-    var localdocs = params.localdocs || ''
+    var localdocs = params.localdocs || ""
     //for local documents id formed as _local/ID
-    var docprefix = localdocs
-    if (localdocs != '') docprefix=localdocs + "/"
-
+    if (localdocs) localdocs= localdocs + "/"
     async.map(dbs, function(db, nextdb){
 	async.times(numdocs, function(i, cb){
 		var docid = db+"_"+i
 	    var madeDoc = generators[docgen](i)
 	    madeDoc._id = docid
-	    coax.put([server,db, localdocs, docid], madeDoc, function(err, ok){
-	    t.false(err, "ok loading doc")
-	    t.equals(docprefix + docid, ok.id, "docid")
+	    coax.put([server,db, localdocs + docid], madeDoc, function(err, ok){
+	    if (err){
+		t.false(err, "error loading " + server + "/" + db + "/"+ localdocs + docid +":" + err)
+	    } else
+		t.equals(localdocs + docid, ok.id, "docid")
 	    cb(err, ok)
 	    })
 
@@ -255,7 +255,7 @@ var common = module.exports = {
           // get document rev
           coax(url, function(err, json){
             if(err || (!json)){
-              t.fail("unable to get doc rev")
+              t.fail("unable to get doc rev for url:" + url+ ", err: " + err)
             }
 
             var doc = generators[docgen](i)
@@ -287,12 +287,13 @@ var common = module.exports = {
 
   deleteDBDocs : function(t, dbs, numdocs, localdocs, emits){
     var localdocs = localdocs || ''
+    if (localdocs) localdocs= localdocs + "/"
     async.map(dbs, function(db, nextdb) {
 
       async.times(numdocs, function(i, cb){
 
         var docid = db+"_"+i
-        var url = coax([server, db, localdocs, docid]).pax().toString()
+        var url = coax([server, db, localdocs + docid]).pax().toString()
 
         // get document rev
         coax(url, function(err, json){
@@ -494,6 +495,7 @@ var common = module.exports = {
 
   },
 
+  //issue#112 couchbase-lite-android: missed some keys in /DB API: instance_start_time,committed_update_seq,disk_format_version,purge_seq
   // checks that the sequence_no's between two sets of dbs match
   compareDBSeqNums : function(t, params, emits){
 
@@ -505,9 +507,7 @@ var common = module.exports = {
 
     async.mapSeries(sourcedbs, function(src, cb){
 
-
       var src = coax([server, src]).pax().toString()
-
       coax(src, function(e, js){
         if(e){
           t.fail("unable to get db info")
@@ -526,7 +526,6 @@ var common = module.exports = {
         })
 
         feed.on('change', function(js){
-
 
           // get seqno
           tseq = js.seq
