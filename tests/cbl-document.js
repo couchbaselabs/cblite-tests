@@ -68,7 +68,7 @@ test("create docs with inline text attachments", function(t){
     })
   })
 })
-/*
+
 // purge all dbs
 test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
@@ -116,7 +116,7 @@ test("create docs with image attachements", function(t){
     })
   })
 })
-*/
+
 
 test("multi inline attachements", function(t){
 

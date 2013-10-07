@@ -80,6 +80,7 @@ test("simple map function", function(t){
     })
 })
 
+//issue#82 couchbase-lite-android: view query with keys filter includes unwanted rows
 test("test query filters", function(t){
 
   var view = db(['_design','test','_view','basic'])
@@ -156,7 +157,6 @@ test("test query filters", function(t){
     t.end()
   })
 
-
 })
 
 
@@ -190,11 +190,12 @@ test("update ddoc with player view", function(t){
 })
 
 
+//issue#113 couchbase-lite-android: querying a view having rereduce fn with group=true:
+//CBLRouter unable to route request to do_GET_DesignDocumentjava.lang.reflect.InvocationTargetException
 // group queries
 test("test array keys", function(t){
 
   var view = db(['_design','test','_view','player'])
-
   view({ startkey : [2013, 7, 2], reduce : false }, function(e, js){
     var oks = js.rows.filter(function(row, i){
       return row.key[2] == (i+2)
@@ -214,6 +215,11 @@ test("test array keys", function(t){
 
 
   view({ group : true}, function(e, js){
+	if(typeof js.rows == 'undefined'){
+		t.fail("js.rows not found in: " + js)
+		t.end()
+		return
+	}  
     var oks = js.rows.filter(function(row, i){
         return row.value == (i)
     })
@@ -221,18 +227,27 @@ test("test array keys", function(t){
   })
 
   view({ group : true, group_level : 2}, function(e, js){
+	  if(typeof js.rows == 'undefined'){
+			t.fail("js.rows not found in: " + js)
+			t.end()
+			return
+		}  
     t.equals(js.rows[0].key.length, 2, "group level=2 keys length")
     t.equals(js.rows[0].value, 45, "group_level=2 value")
   })
 
   view({ group : true, group_level : 1}, function(e, js){
+	  if(typeof js.rows == 'undefined'){
+			t.fail("js.rows not found in: " + js)
+			t.end()
+			return
+		}  
     t.equals(js.rows[0].key.length, 1, "group level=1 keys length")
     t.equals(js.rows[0].value, 45, "group_level=1 value")
     t.end()
   })
 
 })
-
 
 test("done", function(t){
   common.cleanup(t, function(json){
