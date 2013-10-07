@@ -147,7 +147,7 @@ test("multi inline attachements", function(t){
 
         // verify text attachement
         var doctext = js.text
-        var attchid = Object.keys(js._attachments)[0]
+        var attchid = Object.keys(js._attachments)[1]
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
                 console.log(err)
