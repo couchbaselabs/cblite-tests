@@ -13,6 +13,8 @@ var server, sg, gateway,
  dbs = ["api-test-once-push"],
  pulldbs = ["api-test-once-pull"];
 
+var numDocs=config.numDocs || 100;
+
 // start client endpoint
 test("start test client", function(t){
   common.launchClient(t, function(_server){
@@ -36,13 +38,13 @@ test("create test databases", function(t){
 })
 
 test("load databases", function(t){
-  common.createDBDocs(t, {numdocs : 100, dbs : dbs})
+  common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
+//issue#114 replication android->sync-gateway doesn't work
 test("push replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
   var lite = dbs[0]
-
   coax.post([server, "_replicate"], {
     source : lite,
     target : sgdb
@@ -52,12 +54,11 @@ test("push replication should close connection on completion", function(t) {
     sg.db.get(function(err, dbinfo){
       t.false(err, "sg database exists")
       t.ok(dbinfo, "got an info repsonse")
-      t.equals(100, dbinfo.doc_count, "all docs replicated")
+      t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
       t.end()
     })
   })
 })
-
 
 test("pull replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
@@ -74,7 +75,7 @@ test("pull replication should close connection on completion", function(t) {
       t.ok(dbinfo, "got an info repsonse")
       console.log("lite dbinfo", dbinfo, coax([server, lite]).pax().toString())
       if (dbinfo)
-        t.equals(100, dbinfo.doc_count, "all docs replicated")
+        t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
       t.end()
     })
   })

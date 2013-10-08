@@ -8,7 +8,7 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
-var NUM_DOCS = 500;
+var numDocs=(config.numDocs || 100)*5;
 
 var server, sg, gateway, sgdb
   // local dbs
@@ -53,12 +53,12 @@ test("setup continuous push and pull from both client database", function(t) {
 
 
 test("load databases", function(t){
-  t.equals(NUM_DOCS/2, Math.floor(NUM_DOCS/2), "NUM_DOCS must be an even number")
-  common.createDBDocs(t, {numdocs : NUM_DOCS/2, dbs : dbs, docgen : "channels"})
+  t.equals(numDocs/2, Math.floor(numDocs/2), "numDocs must be an even number")
+  common.createDBDocs(t, {numdocs : numDocs/2, dbs : dbs, docgen : "channels"})
 })
 
 test("verify dbs have same number of docs", {timeout: 210 * 1000}, function(t) {
-  common.verifyNumDocs(t, dbs, NUM_DOCS)
+  common.verifyNumDocs(t, dbs, numDocs)
 })
 
 var sg_doc_ids;
@@ -92,8 +92,8 @@ test("verify sync gateway changes feed has all docs in it", {timeout: 120 * 1000
         changeSeqs[r.seq] = true
       })
 
-      t.equals(docs.length, NUM_DOCS, "correct number of docs in _all_docs")
-      t.equals(changes.length, NUM_DOCS, "correct number of docs in _changes")
+      t.equals(docs.length, numDocs, "correct number of docs in _all_docs")
+      t.equals(changes.length, numDocs, "correct number of docs in _changes")
       t.equals(dupIds.length, 0, "duplicate ids in changes")
       t.equals(dupSeqs.length, 0, "duplicate seqs in changes")
       t.equals(0, missing.length, "missing changes")
@@ -134,16 +134,16 @@ function verifyChanges(db, cb) {
 test("verify cbl changes", function(t){
   verifyChanges(coax([server, dbs[0]]), function(db_one_ids, db_one_dup_ids, db_one_seqs,db_one_dup_seqs) {
     var one_ids_list = Object.keys(db_one_ids), db_one_seqs_list = Object.keys(db_one_seqs)
-    t.equals(one_ids_list.length, NUM_DOCS, "correct number of docs in _all_docs")
-    t.equals(db_one_seqs_list.length, NUM_DOCS, "correct number of docs in _changes")
+    t.equals(one_ids_list.length, numDocs, "correct number of docs in _all_docs")
+    t.equals(db_one_seqs_list.length, numDocs, "correct number of docs in _changes")
     t.equals(db_one_dup_ids.length, 0, "duplicate ids in changes "+db_one_dup_ids)
     t.equals(db_one_dup_seqs.length, 0, "duplicate seqs in changes")
 
     verifyChanges(coax([server, dbs[0]]), function(db_two_ids, db_two_dup_ids, db_two_seqs,db_two_dup_seqs) {
       var db_two_idslist = Object.keys(db_two_ids), db_two_seqs_list = Object.keys(db_two_seqs)
 
-      t.equals(db_two_idslist.length, NUM_DOCS, "correct number of docs in _all_docs")
-      t.equals(db_two_seqs_list.length, NUM_DOCS, "correct number of docs in _changes")
+      t.equals(db_two_idslist.length, numDocs, "correct number of docs in _all_docs")
+      t.equals(db_two_seqs_list.length, numDocs, "correct number of docs in _changes")
       t.equals(db_two_dup_ids.length, 0, "duplicate ids in changes")
       t.equals(db_two_dup_seqs.length, 0, "duplicate seqs in changes")
 

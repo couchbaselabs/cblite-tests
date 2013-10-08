@@ -134,7 +134,6 @@ var common = module.exports = {
 
   createDBs : function(t, dbs, emits){
     async.mapSeries(dbs, function(db, cb){
-
       // check if db exists
       coax([this.server, db], function(err, json){
           if(!err){
@@ -612,12 +611,14 @@ var common = module.exports = {
   },
 
   setupPushAndPull: function (server, dba, dbb, cb) {
+    console.log("_replicate server: " + server + " source: " + dba + " -> target: " + dbb)
     coax.post([server, "_replicate"], {
       source : dba,
       target : dbb,
       continuous : true
     }, function(err, info) {
       if (err) {return cb(err)}
+      console.log("_replicate server: " + server + " source: " + dbb + " -> target: " + dba)
       coax.post([server, "_replicate"], {
         source : dbb,
         target : dba,
