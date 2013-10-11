@@ -107,17 +107,21 @@ function setupPullReplication(done){
         if(!err){
           dbs.forEach(function(db){
             db = db.replace(/.*:\/\//,"")
-            var channel = common.randomChannelName()
             var opts = {
               continuous : true,
               target : db,
               source : coax([gateway,gatewaydb]).pax.toString()
             }
             if(channelsPerClient > 0){
-              opts['query_params'] = {channels : channel}
+              var chans = []
+              do {
+                    chans.push(common.randomChannelName())
+              } while(chans.length < channelsPerClient)
+
+              opts['query_params'] = {channels : chans.toString() }
               opts['filter'] =  "sync_gateway/bychannel"
             }
-
+             console.log(opts)
             coax.post([url,"_replicate"], opts, _cb)
           })
         } else {

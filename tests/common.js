@@ -711,11 +711,9 @@ var generators = module.exports.generators = {
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
     var chans = [];
-    var i = 0
     do {
       chans.push(module.exports.randomChannelName())
-      i++
-    } while (i < config.channelsPerDoc);
+    } while (chans.length < config.channelsPerDoc);
 
     return { _id : id,
              data : Math.random().toString(5).substring(4),
