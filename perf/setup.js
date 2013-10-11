@@ -5,6 +5,7 @@ var async = require("async"),
   clientList = [],
   providers = [],
   gatewaydb = null,
+  channelsPerClient = 0,
   gateway = null;
 
 
@@ -21,6 +22,7 @@ module.exports = function(params, done){
   gateway = params.gateway
   providers = params.providers
   gatewaydb = params.gatewaydb
+  channelsPerClient = params.channelsPerClient
   clients = {}
 
   var finished = function(errs,oks){
@@ -106,13 +108,17 @@ function setupPullReplication(done){
           dbs.forEach(function(db){
             db = db.replace(/.*:\/\//,"")
             var channel = common.randomChannelName()
-            coax.post([url,"_replicate"], {
-              filter : "sync_gateway/bychannel",
-              query_params : {channels : channel},
+            var opts = {
               continuous : true,
               target : db,
               source : coax([gateway,gatewaydb]).pax.toString()
-            }, _cb)
+            }
+            if(channelsPerClient > 0){
+              opts['query_params'] = {channels : channel}
+              opts['filter'] =  "sync_gateway/bychannel"
+            }
+
+            coax.post([url,"_replicate"], opts, _cb)
           })
         } else {
           cb(err, null)
