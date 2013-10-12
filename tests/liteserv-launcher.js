@@ -6,7 +6,7 @@ var launcher = require("../lib/launcher"),
 
 var serve, port = 59850, server = "http://localhost:"+port+"/"
 
-test("can launch a LiteServ", function(t) {
+test("can launch a LiteServ", {timeout : 60000}, function(t) {
   serve = launcher.launchLiteServ({
     port : port,
     dir : __dirname+"/../tmp/single",
@@ -20,7 +20,7 @@ test("can launch a LiteServ", function(t) {
   serve.once("ready", function(err){
     t.false(err, "no error, LiteServe running on our port")
     coax(server, function(err, ok){
-      t.false(err, "no error, LiteServe reachable")
+      t.false(err, "no error, LiteServe reachable" +err)
       t.end()
     })
   });
@@ -49,14 +49,15 @@ test("changes only show up once in longpoll", function(t) {
     // console.log("change",err,change)
     t.equals(1, change.seq)
     t.equals(1, count, "each change should happen once")
-    t.end()
   })
   db.post({"foo":"bar"}, function(err, ok){
     t.false(err, "saved ok")
   })
+  t.end()
 })
 
 test("done", function(t) {
-  serve.kill()
-  t.end()
+	serve.kill()
+	t.end()
+	if (config.provides=="android") process.exit()
 })
