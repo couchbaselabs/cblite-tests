@@ -71,7 +71,7 @@ test("set push/pull replication to gateway", function(t){
 
   var i = 0
   var gatewayDB = coax([gateway, config.DbBucket]).pax().toString()
-
+  if (config.provides=="android") gatewayDB = gatewayDB.replace("localhost", "10.0.2.2")
   async.series([
     function(sgpush){
 
@@ -83,7 +83,7 @@ test("set push/pull replication to gateway", function(t){
             continuous : true,
           }, function(err, ok){
             t.equals(err, null,
-              util.inspect({_replicate : db+" -> "+gatewayDB}))
+              util.inspect({_replicate : db+" -> " + gatewayDB}))
             i++
             cb(err, ok)
           })
@@ -101,7 +101,7 @@ test("set push/pull replication to gateway", function(t){
           }, function(err, ok){
 
             t.equals(err, null,
-              util.inspect({_replicate : db+" <- "+gatewayDB}))
+              util.inspect({_replicate : db+" <- " + gatewayDB}))
             i++
             cb(err, ok)
           })

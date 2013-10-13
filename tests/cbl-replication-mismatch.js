@@ -39,6 +39,7 @@ test("create test databases", function(t){
 
 test("setup continuous push and pull from both client database", function(t) {
   sgdb = sg.db.pax().toString()
+  if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
 
   // sgdb = "http://sync.couchbasecloud.com:4984/guestok64"
 
@@ -63,8 +64,7 @@ test("verify dbs have same number of docs", {timeout: 210 * 1000}, function(t) {
 
 var sg_doc_ids;
 test("verify sync gateway changes feed has all docs in it", {timeout: 120 * 1000}, function(t) {
-  var db = coax(sgdb)
-
+  var db = coax(sg.db.pax().toString())
   db("_changes", function (err, data) {
     var changes = data.results.map(function(r){return r.id});
     db("_all_docs", function(err, view){
