@@ -14,6 +14,8 @@ var server, sg, gateway,
  pulldbs = ["api-test-once-pull"];
 
 var numDocs=config.numDocs || 100;
+var timeoutReplication = 0;
+if (config.provides=="android") timeoutReplication = 2000;
 
 // start client endpoint
 test("start test client", function(t){
@@ -41,35 +43,37 @@ test("load databases", function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
-//issue#114 replication android->sync-gateway doesn't work
 test("push replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
+  if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
   var lite = dbs[0]
   coax.post([server, "_replicate"], {
     source : lite,
     target : sgdb
   }, function(err, info) {
-    t.false(err, "replication created")
-    console.log("info", info)
-    sg.db.get(function(err, dbinfo){
-      t.false(err, "sg database exists")
-      t.ok(dbinfo, "got an info repsonse")
-      t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
-      t.end()
-    })
+	  setTimeout(function () {
+		  t.false(err, "replication created")
+		  console.log("info", info)
+		  sg.db.get(function(err, dbinfo){
+			  t.false(err, "sg database exists")
+			  t.ok(dbinfo, "got an info repsonse")
+			  t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
+			  t.end()
+		  })
+	  },timeoutReplication)
   })
 })
 
 test("pull replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
+  if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
   var lite = pulldbs[0]
-
   coax.post([server, "_replicate"], {
     source : sgdb,
     target : lite
   }, function(err, info) {
     t.false(err, "replication created")
-    // console.log("info", info)
+    setTimeout(function () {
     coax([server, lite], function(err, dbinfo){
       t.false(err, "lite database exists")
       t.ok(dbinfo, "got an info repsonse")
@@ -78,6 +82,7 @@ test("pull replication should close connection on completion", function(t) {
         t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
       t.end()
     })
+    },timeoutReplication)
   })
 })
 

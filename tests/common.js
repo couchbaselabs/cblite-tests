@@ -66,10 +66,27 @@ var common = module.exports = {
         done(this.server)
       })
     } else if(testendpoint == "android"){
-      // TODO: requires manual launch
-      this.server = "http://localhost:8080"
-      server = this.server
-      done(this.server)
+    // TODO: requires manual launch
+        serve = launcher.launchLiteServ({
+            port : 8080,
+            dir : __dirname+"/../tmp/single",
+            path : config.LiteServPath
+        })
+        serve.on("error", function(e){
+            console.log("error launching LiteServe", e)
+            t.fail("error launching LiteServe")
+            t.end()
+        })
+        serve.once("ready", function(err){
+            t.false(err, "no error, LiteServe running on our port")
+            coax(server, function(err, ok){
+            t.false(err, "no error, LiteServe reachable" +err)
+            t.end()
+        })
+        this.server = "http://localhost:8080"
+            server = this.server
+            done(this.server)
+            })
     } else if(testendpoint == "couchdb"){
       // TODO: requires manual launch
       this.server = "http://localhost:5984"
