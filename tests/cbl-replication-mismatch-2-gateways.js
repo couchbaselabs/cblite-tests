@@ -10,9 +10,9 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
-var NUM_DOCS = 500;
+var numDocs=(config.numDocs || 100)*5;
 
-var server, sg1, sg2, gateway1, sg2, sgdb
+var server, sg1, sg2, sg2, sgdb
   // local dbs
  dbs = ["mismatch-gateways-one", "mismatch-test-two"];
 
@@ -28,7 +28,6 @@ test("start test client", function(t){
 test("start syncgateway", function(t){
   common.launchSGWithParams(t, 9888, config.DbUrl, config.DbBucket, function(_sg1){
     sg1  = _sg1
-    gateway1 = sg1.url
     t.end()
   })
 })
@@ -37,7 +36,6 @@ test("start syncgateway", function(t){
 test("start syncgateway", function(t){
   common.launchSGWithParams(t, 9890, config.DbUrl, config.DbBucket, function(_sg2){
     sg2  = _sg2
-    gateway2 = sg2.url
     t.end()
   })
 })
@@ -45,11 +43,16 @@ test("start syncgateway", function(t){
 // create all dbs
 test("create test databases", function(t){
   common.createDBs(t, dbs)
-})
-
-test("setup continuous push and pull from both client database", function(t) {
   sgdb1 = sg1.db.pax().toString()
   sgdb2 = sg2.db.pax().toString()
+  })
+
+
+test("setup continuous push and pull from both client database", function(t) {
+	  if (config.provides=="android"){
+		  sgdb1 = sgdb1.replace("localhost", "10.0.2.2")
+		  sgdb2 = sgdb2.replace("localhost", "10.0.2.2")
+	  }
 
   common.setupPushAndPull(server, dbs[0], sgdb1, function(err, ok){
     t.false(err, 'replication one ok')
@@ -61,9 +64,6 @@ test("setup continuous push and pull from both client database", function(t) {
 })
 
 test("setup continuous push and pull from both client database", function(t) {
-  sgdb1 = sg1.db.pax().toString()
-  sgdb2 = sg2.db.pax().toString()
-
   common.setupPushAndPull(server, sgdb1, dbs[1], function(err, ok){
     t.false(err, 'replication one ok')
     common.setupPushAndPull(server, sgdb2, dbs[0], function(err, ok){
@@ -71,18 +71,23 @@ test("setup continuous push and pull from both client database", function(t) {
       t.end()
     })
   })
+  if (config.provides=="android"){
+   sgdb1 = sg1.db.pax().toString()
+   sgdb2 = sg2.db.pax().toString()
+  }
 })
 
 test("load databases", function(t){
-  t.equals(NUM_DOCS/2, Math.floor(NUM_DOCS/2), "NUM_DOCS must be an even number")
-  common.createDBDocs(t, {numdocs : NUM_DOCS/2, dbs : dbs, docgen : "channels"})
+  t.equals(numDocs/2, Math.floor(numDocs/2), "numDocs must be an even number")
+  common.createDBDocs(t, {numdocs : numDocs/2, dbs : dbs, docgen : "channels"})
 })
 
 test("verify dbs have same number of docs", {timeout: 210 * 1000}, function(t) {
-  common.verifyNumDocs(t, dbs, NUM_DOCS)
+  common.verifyNumDocs(t, dbs, numDocs)
 })
 
 var sg_doc_ids;
+
 test("verify sync gateway changes feed has all docs in it", {timeout: 120 * 1000}, function(t) {
   var db = coax(sgdb1)
 
@@ -113,11 +118,11 @@ test("verify sync gateway changes feed has all docs in it", {timeout: 120 * 1000
         changeSeqs[r.seq] = true
       })
 
-      t.equals(docs.length, NUM_DOCS, "correct number of docs in _all_docs")
-      t.equals(changes.length, NUM_DOCS, "correct number of docs in _changes")
-      t.equals(dupIds.length, 0, "duplicate ids in changes")
-      t.equals(dupSeqs.length, 0, "duplicate seqs in changes")
-      t.equals(0, missing.length, "missing changes")
+      t.equals(docs.length, numDocs, "correct number of docs in _all_docs:" + docs.length )
+      t.equals(changes.length, numDocs, "correct number of docs in _changes:" + changes.length)
+      t.equals(dupIds.length, 0, "duplicate ids in changes:"+ dupIds.length)
+      t.equals(dupSeqs.length, 0, "duplicate seqs in changes:" + dupSeqs.length)
+      t.equals(missing.length, 0, "missing changes:" + missing.length)
 
       console.log("missing "+missing.length+", ids:", missing.join(', '))
       console.log("duplicate change ids "+dupIds.length+", ids:", dupIds.join(', '))
@@ -154,16 +159,16 @@ function verifyChanges(db, cb) {
 test("verify cbl changes", function(t){
   verifyChanges(coax([server, dbs[0]]), function(db_one_ids, db_one_dup_ids, db_one_seqs,db_one_dup_seqs) {
     var one_ids_list = Object.keys(db_one_ids), db_one_seqs_list = Object.keys(db_one_seqs)
-    t.equals(one_ids_list.length, NUM_DOCS, "correct number of docs in _all_docs")
-    t.equals(db_one_seqs_list.length, NUM_DOCS, "correct number of docs in _changes")
+    t.equals(one_ids_list.length, numDocs, "correct number of docs in _all_docs")
+    t.equals(db_one_seqs_list.length, numDocs, "correct number of docs in _changes")
     t.equals(db_one_dup_ids.length, 0, "duplicate ids in changes "+db_one_dup_ids)
     t.equals(db_one_dup_seqs.length, 0, "duplicate seqs in changes")
 
     verifyChanges(coax([server, dbs[0]]), function(db_two_ids, db_two_dup_ids, db_two_seqs,db_two_dup_seqs) {
       var db_two_idslist = Object.keys(db_two_ids), db_two_seqs_list = Object.keys(db_two_seqs)
 
-      t.equals(db_two_idslist.length, NUM_DOCS, "correct number of docs in _all_docs")
-      t.equals(db_two_seqs_list.length, NUM_DOCS, "correct number of docs in _changes")
+      t.equals(db_two_idslist.length, numDocs, "correct number of docs in _all_docs")
+      t.equals(db_two_seqs_list.length, numDocs, "correct number of docs in _changes")
       t.equals(db_two_dup_ids.length, 0, "duplicate ids in changes")
       t.equals(db_two_dup_seqs.length, 0, "duplicate seqs in changes")
 

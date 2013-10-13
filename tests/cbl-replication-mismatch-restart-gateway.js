@@ -5,9 +5,9 @@ var launcher = require("../lib/launcher"),
   config = require('../config/' + conf_file);
   test = require("tap").test;
 
-var NUM_DOCS = 500;
+var numDocs=(config.numDocs || 100)*5;
 
-var server, sg1, sg2, gateway1, sg2, sgdb,
+var server, sg1, sg2, sg2, sgdb,
   // local dbs
  dbs = ["mismatch-restart-one", "mismatch-restart-two"];
 
@@ -23,7 +23,6 @@ test("start test client", function(t){
 test("start syncgateway", function(t){
   common.launchSGWithParams(t, 9888, config.DbUrl, config.DbBucket, function(_sg1){
     sg1  = _sg1
-    gateway1 = sg1.url
     t.end()
   })
 })
@@ -31,27 +30,29 @@ test("start syncgateway", function(t){
 // create all dbs
 test("create test databases", function(t){
   common.createDBs(t, dbs)
+  sgdb1 = sg1.db.pax().toString()
 })
 
 test("load databases", function(t){
-  t.equals(NUM_DOCS/2, Math.floor(NUM_DOCS/2), "NUM_DOCS must be an even number")
-  common.createDBDocs(t, {numdocs : NUM_DOCS/2, dbs : dbs, docgen : "channels"})
+  t.equals(numDocs/2, Math.floor(numDocs/2), "numDocs must be an even number")
+  common.createDBDocs(t, {numdocs : numDocs/2, dbs : dbs, docgen : "channels"})
 })
 
 test("setup continuous push and pull from both client database", function(t) {
-  sgdb1 = sg1.db.pax().toString()
-
-  common.setupPushAndPull(server, dbs[0], sgdb1, function(err, ok){
-    t.false(err, 'replication one ok')
-    common.setupPushAndPull(server, dbs[1], sgdb1, function(err, ok){
-      t.false(err, 'replication two ok')
-      t.end()
-    })
-  })
-})
+	if (config.provides=="android"){
+		sgdb1 = sgdb1.replace("localhost", "10.0.2.2")
+	  }
+	common.setupPushAndPull(server, dbs[0], sgdb1, function(err, ok){
+		t.false(err, 'replication one ok')
+		common.setupPushAndPull(server, dbs[1], sgdb1, function(err, ok){
+			t.false(err, 'replication two ok')
+			t.end()
+		})
+	  })
+	})
 
 //test("verify dbs have same number of docs", {timeout: 12 * 1000}, function(t) {
-//  common.verifyNumDocs(t, dbs, NUM_DOCS)
+//  common.verifyNumDocs(t, dbs, numDocs)
 //})
 
 test("done", function(t){
@@ -76,14 +77,11 @@ test("done", function(t){
 test("start syncgateway", function(t){
   common.launchSGWithParams(t, 9888, config.DbUrl, config.DbBucket, function(_sg1){
     sg1  = _sg1
-    gateway1 = sg1.url
     t.end()
   })
 })
 
 test("setup continuous push and pull from both client database", function(t) {
-  sgdb1 = sg1.db.pax().toString()
-
   common.setupPushAndPull(server, dbs[0], sgdb1, function(err, ok){
     t.false(err, 'replication one ok')
     common.setupPushAndPull(server, dbs[1], sgdb1, function(err, ok){
@@ -94,7 +92,7 @@ test("setup continuous push and pull from both client database", function(t) {
 })
 
 test("verify dbs have same number of docs", {timeout: 30 * 1000}, function(t) {
-  common.verifyNumDocs(t, dbs, NUM_DOCS)
+  common.verifyNumDocs(t, dbs, numDocs)
 })
 
 test("cleanup cb bucket", function(t){
