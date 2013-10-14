@@ -89,6 +89,19 @@ test("verify db loaded", function(t){
   })
 })
 
+//TODO add a more detailed inspection of _active_tasks
+test("_active_tasks API", function(t){
+  var db = dbs[0]
+  coax([server, "_active_tasks"], function(e, js){
+    if(e){
+      console.log(e)
+      t.fail("error calling _active_tasks")
+    }
+    t.equals(js instanceof Array, true , "verify _active_tasks")
+    t.end()
+  })
+})
+
 test("all docs", function(t){
 
   var db = dbs[0]
