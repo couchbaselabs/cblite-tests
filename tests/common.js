@@ -67,8 +67,9 @@ var common = module.exports = {
       })
     } else if(testendpoint == "android"){
     // TODO: requires manual launch
+        port = config.LiteServPort || 8080
         serve = launcher.launchLiteServ({
-            port : 8080,
+            port : port,
             dir : __dirname+"/../tmp/single",
             path : config.LiteServPath
         })
@@ -83,7 +84,7 @@ var common = module.exports = {
             t.false(err, "no error, LiteServe reachable" +err)
             t.end()
         })
-        this.server = "http://localhost:8080"
+        this.server = "http://localhost:"+port
             server = this.server
             done(this.server)
             })
