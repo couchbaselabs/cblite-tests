@@ -9,6 +9,7 @@ var launcher = require("../lib/launcher"),
   listener = require('../lib/listener'),
   conf_file = process.env.CONF_FILE || 'local',
   config = require('../config/' + conf_file),
+  perfconfig = require('../config/perf.js'),
   port = 59850;
 
 
@@ -706,8 +707,31 @@ function notifycaller(args){
 
 // the channel name function -- can be monkeypatched for advanced workloads
 
+module.exports.randomChannelNameGen = function (num_chans) {
+
+  if (!num_chans)
+    num_chans = perfconfig.numChannels
+
+  // base10 number between 0-1M
+  var rand = Math.random().toString(10).substring(2,6)
+
+  // reduce to number of sig digits
+  var channel = Number(rand.substring(rand.length - String(num_chans).length, rand.length))
+
+
+  if(channel > num_chans){
+    // reduce channel
+    channel = String(channel)
+    channel = Number(channel.substring(0, channel.length -1))
+  }
+
+  return channel
+}
+
 module.exports.randomChannelName = function () {
-  return Math.random().toString(16).substring(2,4)
+
+  // return a channel within set of hot channels
+  return module.exports.randomChannelNameGen(perfconfig.hotChannels)
 }
 
 //########## doc generators #########
@@ -725,13 +749,15 @@ var generators = module.exports.generators = {
 
   },
 
-  channels : function(){
+  channels : function(chans){
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
-    var chans = [];
-    do {
-      chans.push(module.exports.randomChannelName())
-    } while (chans.length < config.channelsPerDoc);
+    if(!chans){
+      chans = [];
+      do {
+        chans.push(module.exports.randomChannelName())
+      } while (chans.length < config.channelsPerDoc);
+    }
 
     return { _id : id,
              data : Math.random().toString(5).substring(4),

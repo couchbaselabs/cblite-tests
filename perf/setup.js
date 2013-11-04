@@ -6,6 +6,7 @@ var async = require("async"),
   providers = [],
   gatewaydb = null,
   channelsPerClient = 0,
+  numChannels = null,
   gateway = null;
 
 
@@ -23,6 +24,7 @@ module.exports = function(params, done){
   providers = params.providers
   gatewaydb = params.gatewaydb
   channelsPerClient = params.channelsPerClient
+  numChannels = params.numChannels
   clients = {}
 
   var finished = function(errs,oks){
@@ -41,6 +43,7 @@ module.exports = function(params, done){
     getEnvInfo,
     createDBs,
     setupPushReplication,
+    createChannels,
   ], finished)
 
 }
@@ -183,6 +186,30 @@ function setupPushReplication(done){
     done(err, oks)
  })
 
+ }
+
+function createChannels(done){
+
+  console.log("create initial set of channels")
+  var client = clientList[0][0]
+  var generators = require("../tests/common").generators
+  var doc_gen = generators.channels
+  var chans = []
+
+  // generate a document that will be pushed to all channels
+  for (var i = 0; i < numChannels; i++){
+    chans.push(String(i))
+  }
+  var doc = doc_gen(chans)
+
+  // push to gateway
+  coax.put([gateway, gatewaydb, "perfchanneldoc"], doc, function(err, json){
+
+        if (err != null){
+            console.log("ERROR Pushing channel doc: "+gateway+"/"+gatewaydb)
+            console.log(err)
+        }
+        done(err,json)
+  })
 
 }
-

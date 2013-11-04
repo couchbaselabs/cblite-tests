@@ -1,7 +1,9 @@
 var perf = module.exports = {
   testid : "perf_"+process.hrtime()[0],
   numClients : 10,  // number of clients to start will be distributed across providers
-  channelsPerClient : 5,  //TODO
+  channelsPerClient : 1,
+  numChannels : 1000,
+  hotChannels : 10,   // if = NUM_CHANNELS or null then we will select from all channels
   runtime: 40,  // time to run perftest
   requestsPerSec: 1,  // multiplies the writeRatio/(per sec) for 1x/2x/3x testing
   readRatio: 0,  // rate at which client reads it's own docs 
