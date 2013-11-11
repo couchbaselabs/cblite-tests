@@ -4,20 +4,18 @@ var perftests = require('../perf/test'),
     // start local listener
     listener = require('../lib/listener').start();
 
-
 // print params when test started
-var started = function(result){
-  console.log(result)
-}
+var started = function(result) {
+  console.log(result);
+};
 
 // close listener when test completes
-var complete = function(result){
-
-  listener.close()
+var complete = function(result) {
+  listener.close();
 
   // TODO: good place to replicate stats somewhere
-  console.log(result)
-}
+  console.log(result);
+};
 
 // start test
-perftests.run(params, started, complete)
+perftests.run(params, started, complete);
