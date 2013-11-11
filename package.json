@@ -9,16 +9,17 @@
     "mobile",
     "sync"
   ],
-  "dependencies" : {
-    "tap" : "0.4.x",
-    "coax" : "0.4.x",
-    "fast-stats" : "0.0.2",
-    "async" : "0.2.x",
-    "nodeload" : "0.4.x",
-    "restify" : "2.6.x",
-    "express-pouchdb" : "0.0.x",
-    "follow" : "0.9.x",
-    "request-json" : "0.4.x"
+  "dependencies": {
+    "async": "0.2.x",
+    "coax": "0.4.x",
+    "express-pouchdb": "0.0.x",
+    "fast-stats": "0.0.2",
+    "follow": "0.9.x",
+    "nodeload": "0.4.x",
+    "request-json": "0.4.x",
+    "restify": "2.6.x",
+    "winston": "",
+    "tap": "0.4.x"
   },
   "scripts": {
     "test": "TAP_TIMEOUT=500 tap --tap ./tests"
