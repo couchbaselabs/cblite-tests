@@ -26,7 +26,7 @@ First edit `config/local.js` to point to your build of LiteServ (found via "Prod
 
 Get the dependencies with `npm install`. (It reads `package.json` to know what to get.)
 
-Make a `tmp` directory inside your `mobile-testing` checkout, by running `mkdir tmp`
+Make a `tmp` directory inside your `cblite-tests` checkout, by running `mkdir tmp`
 
 Run the tests with `npm test`. NPM test will pick up any file in the 'tests' directory.
 
