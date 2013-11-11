@@ -18,7 +18,7 @@
     "nodeload": "0.4.x",
     "request-json": "0.4.x",
     "restify": "2.6.x",
-    "winston": "",
+    "winston": "0.7.x",
     "tap": "0.4.x"
   },
   "scripts": {
