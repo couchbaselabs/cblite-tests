@@ -1,4 +1,6 @@
 module.exports = {
+    cluster: "explorer",
+    entry_point: "172.23.97.50",
     sync_gateway: [
         "172.23.97.50"
     ],

@@ -1,0 +1,16 @@
+[cbmonitor]
+host_port = cbmonitor.sc.couchbase.com
+
+[store]
+interval = 10
+host = cbmonitor.sc.couchbase.com
+update_metadata = True
+
+[target]
+cluster = PLACEHOLDER
+master_node = PLACEHOLDER
+sync_gateway_nodes = PLACEHOLDER
+rest_username = Administrator
+rest_password = password
+ssh_username = PLACEHOLDER
+ssh_password = PLACEHOLDER
