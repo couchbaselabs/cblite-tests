@@ -56,6 +56,7 @@ function getReport(cluster) {
 
 (function () {
   var cluster = servers.cluster + "_" + (Math.random()*0xFFF<<0).toString(16);
+  logger.info("using %s as cbmonitor cluster", cluster);
 
   prepareCbAgentConfig(cluster);
   prepareWorkloadConfig();
