@@ -1,5 +1,7 @@
-var fs = require('fs'),
+var fs = require("fs"),
     ini = require("ini"),
+    http = require("http"),
+    util = require("util"),
     logger = require("../lib/log"),
     servers = require("../config/servers"),
     workload = require("../config/workload");
@@ -34,9 +36,31 @@ function prepareWorkloadConfig() {
   }); 
 }
 
+function getReport(cluster) {
+  var path = util.format("/reports/html/?snapshot=all_data&cluster=%s&report=SyncGatewayReport", cluster),
+      options = { hostname: "cbmonitor.sc.couchbase.com", path: path };
+
+  var req = http.request(options, function(response) {
+    response.on('end', function () {
+      logger.info("HTML report: %s", path);
+    });
+  });
+
+  req.setTimeout(600000, function () {
+    req.abort();
+    logger.error("request timeout");
+  });
+
+  req.end();
+}
+
 (function () {
   var cluster = servers.cluster + "_" + (Math.random()*0xFFF<<0).toString(16);
 
   prepareCbAgentConfig(cluster);
   prepareWorkloadConfig();
+
+  setInterval(function() {
+    getReport(cluster);
+  }, workload.RunTimeMs);
 })();
