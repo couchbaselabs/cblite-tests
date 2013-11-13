@@ -3,6 +3,7 @@ var fs = require("fs"),
     http = require("http"),
     util = require("util"),
     logger = require("../lib/log"),
+    spawn = require("child_process").spawn,
     servers = require("../config/servers"),
     workload = require("../config/workload");
 
@@ -54,6 +55,33 @@ function getReport(cluster) {
   req.end();
 }
 
+function runWorkload(cluster) {
+  logger.info("starting sgw_collector");
+  var sgw_collector = spawn("/tmp/env/bin/sgw_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
+  logger.info("starting ns_collector");
+  var ns_collector = spawn("/tmp/env/bin/ns_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
+  logger.info("starting gateload");
+  var gateload = spawn("gateload", ["-workload=config/workload.json"], { stdio: 'inherit' });
+
+  sgw_collector.on("close", function () {
+    logger.info("sgw_collector was killed");
+  });
+  ns_collector.on("close", function () {
+    logger.info("ns_collector was killed");
+  });
+  gateload.on("close", function () {
+    logger.info("gateload was killed");
+  });
+
+  setTimeout(function(cluster) {
+    sgw_collector.kill("SIGKILL");
+    ns_collector.kill("SIGKILL");
+    gateload.kill("SIGKILL");
+
+    getReport(cluster);
+  }, workload.RunTimeMs);
+}
+
 (function () {
   var cluster = servers.cluster + "_" + (Math.random()*0xFFF<<0).toString(16);
   logger.info("using %s as cbmonitor cluster", cluster);
@@ -61,7 +89,5 @@ function getReport(cluster) {
   prepareCbAgentConfig(cluster);
   prepareWorkloadConfig();
 
-  setInterval(function() {
-    getReport(cluster);
-  }, workload.RunTimeMs);
+  runWorkload(cluster);
 })();
