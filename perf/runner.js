@@ -38,21 +38,15 @@ function prepareWorkloadConfig() {
 }
 
 function getReport(cluster) {
+  logger.info("getting HTML report");
   var path = util.format("/reports/html/?snapshot=all_data&cluster=%s&report=SyncGatewayReport", cluster),
       options = { hostname: "cbmonitor.sc.couchbase.com", path: path };
 
-  var req = http.request(options, function(response) {
+  http.request(options, function(response) {
     response.on('end', function () {
       logger.info("HTML report: %s", path);
     });
-  });
-
-  req.setTimeout(600000, function () {
-    req.abort();
-    logger.error("request timeout");
-  });
-
-  req.end();
+  }).end();
 }
 
 function runWorkload(cluster) {
