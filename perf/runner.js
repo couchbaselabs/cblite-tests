@@ -39,14 +39,12 @@ function prepareWorkloadConfig() {
 
 function getReport(cluster) {
   logger.info("getting HTML report");
-  var path = util.format("/reports/html/?snapshot=all_data&cluster=%s&report=SyncGatewayReport", cluster),
-      options = { hostname: "cbmonitor.sc.couchbase.com", path: path };
+  var hostname = "cbmonitor.sc.couchbase.com",
+      path = util.format("/reports/html/?snapshot=all_data&cluster=%s&report=SyncGatewayReport", cluster);
 
-  http.request(options, function(response) {
-    response.on('end', function () {
-      logger.info("HTML report: %s", path);
-    });
-  }).end();
+  http.get({hostname: hostname, path: path}, function(response) {
+    logger.info("HTML report: http://%s%s", hostname, path);
+  });
 }
 
 function runWorkload(cluster) {
@@ -73,7 +71,7 @@ function runWorkload(cluster) {
     gateload.kill("SIGKILL");
 
     getReport(cluster);
-  }, workload.RunTimeMs);
+  }, workload.RunTimeMs, cluster);
 }
 
 (function () {
