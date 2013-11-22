@@ -52,6 +52,8 @@ function runWorkload(cluster) {
   var sgw_collector = spawn("/tmp/env/bin/sgw_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
   logger.info("starting ns_collector");
   var ns_collector = spawn("/tmp/env/bin/ns_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
+  logger.info("starting ps_collector");
+  var ps_collector = spawn("/tmp/env/bin/ps_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
   logger.info("starting gateload");
   var gateload = spawn("gateload", ["-workload=config/workload.json"], { stdio: 'inherit' });
 
@@ -61,6 +63,9 @@ function runWorkload(cluster) {
   ns_collector.on("close", function () {
     logger.info("ns_collector was killed");
   });
+  ps_collector.on("close", function () {
+    logger.info("ps_collector was killed");
+  });
   gateload.on("close", function () {
     logger.info("gateload was killed");
   });
@@ -68,6 +73,7 @@ function runWorkload(cluster) {
   setTimeout(function(cluster) {
     sgw_collector.kill("SIGKILL");
     ns_collector.kill("SIGKILL");
+    ps_collector.kill("SIGKILL");
     gateload.kill("SIGKILL");
 
     getReport(cluster);
