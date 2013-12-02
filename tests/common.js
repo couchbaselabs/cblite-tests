@@ -1,4 +1,5 @@
 var launcher = require("../lib/launcher"),
+  http = require("http"),
   coax = require("coax"),
   async = require("async"),
   tstart = process.hrtime(),
@@ -6,6 +7,7 @@ var launcher = require("../lib/launcher"),
   events = require('events'),
   util =  require("util"),
   fs = require('fs'),
+  logger = require("../lib/log"),
   listener = require('../lib/listener'),
   conf_file = process.env.CONF_FILE || 'local',
   config = require('../config/' + conf_file),
@@ -171,6 +173,93 @@ var common = module.exports = {
     }, notifycaller.call(t, emits))
   },
 
+
+	http_get_api : function(t, options, callback){
+		var request = http.get(options, function(response) {
+			response.setTimeout(10, [callback])
+
+			var body = '';
+
+			response.on('data', function (chunk){
+				body += chunk;
+			})
+
+			response.on('error', function (e){
+				logger.error("Got error: " + e.message)
+				t.fail("ERROR ")
+			})
+
+			response.on('end', function (){
+				logger.info(response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+
+				if(response.statusCode=='200' || response.statusCode=='201'){
+					try {
+						body = JSON.parse(body);
+					} catch(err){
+					    console.warning("not json format of response body");
+					}
+					callback(body)
+				}
+				else{
+					logger.info(body)
+					t.fail("wrong response status code " + response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+					t.end()
+				}
+			})
+		})
+	},
+
+		http_post_api : function(t, post_data, options, callback){
+			var body = '';
+			var req=http.request(options, function(response) {
+
+				response.setEncoding('utf8');
+
+				response.on('data', function (chunk){
+					console.log(chunk)
+					body += chunk;
+					callback(body);
+				})
+
+				response.on('error', function (e){
+					logger.error("Got error: " + e.message)
+					t.fail("ERROR ")
+					t.end()
+				})
+
+				response.on('end', function (){
+					logger.info(response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+
+					if(response.statusCode=='200' || response.statusCode=='202'){
+						try {
+							body = JSON.parse(body);
+						} catch(err){
+						    logger.warn("not json format:" + body);
+						}
+						logger.info("callback")
+						callback(body)
+					}
+					else{
+						logger.info(body)
+						t.fail("wrong response status code " + response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+						t.end()
+					}
+				})
+			});
+			logger.info(post_data)
+			req.write(post_data);
+			req.end();
+			},
+
+
+	 compactDBs : function(t, dbs, emits){
+
+		    async.map(dbs, function(db, nextdb){
+		      coax.post([server, db, "_compact"], nextdb)
+		    }, notifycaller.call(t, emits))
+
+		  },
+
   createDBDocs : function(t, params, emits){
     var docgen = params.docgen || 'basic'
     var dbs = params.dbs
@@ -185,9 +274,9 @@ var common = module.exports = {
 	    madeDoc._id = docid
 	    coax.put([server,db, localdocs + docid], madeDoc, function(err, ok){
 	    if (err){
-		t.false(err, "error loading " + server + "/" + db + "/"+ localdocs + docid +":" + err)
+	        t.false(err, "error loading " + server + "/" + db + "/"+ localdocs + docid +":" + err)
 	    } else
-		t.equals(localdocs + docid, ok.id, "docid")
+	        t.equals(localdocs + docid, ok.id, "docid")
 	    cb(err, ok)
 	    })
 
@@ -407,19 +496,23 @@ var common = module.exports = {
 
           // expect only 1 available rev
           var revs_info = json._revs_info
-          var num_avail = revs_info.filter(function(rev,i){
-            if(rev.status == "available"){
-              return true
-            }}).length
+          if (revs_info == undefined){
+              console.log("response of " + url + " doens't contains _revs_info:" + json)
+              t.fail("response of docid failed")
+          } else{
+              var num_avail = revs_info.filter(function(rev,i){
+                  if(rev.status == "available"){
+                      return true
+                      }}).length
 
-          if(num_avail > 1){
-              t.fail(num_avail+' uncompacted revision(s) remain')
-          }
+                  if(num_avail > 1){
+                      t.fail(num_avail+' uncompacted revision(s) remain')
+                      }
 
-          if(num_avail < 1){
-              t.fail('no doc revisions available')
-          }
-
+              if(num_avail < 1){
+                  t.fail('no doc revisions available')
+                  }
+              }
           cb(err, json)
         })
       }, nextdb)
@@ -675,15 +768,11 @@ function defaultHandler(err, oks){
 // * can emit an event during innter loop completion and call it's callback
 function notifycaller(args){
 
-
-
   if(args && typeof(args) == 'string'){
     args = {emits : args}
   }
-
   var tctx = this
   return function(err, json){
-
     if(args){
 
       if(args.emits){

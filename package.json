@@ -22,7 +22,8 @@
     "scp2": "0.1.x",
     "ssh2": "0.2.x",
     "tap": "0.4.x",
-    "winston": "0.7.x"
+    "winston": "0.7.x",
+    "couchbase": "1.1.x"
   },
   "scripts": {
     "test": "TAP_TIMEOUT=500 tap --tap ./tests"
