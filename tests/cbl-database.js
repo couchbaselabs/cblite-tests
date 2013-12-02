@@ -8,7 +8,8 @@ var launcher = require("../lib/launcher"),
   utils = common.utils,
   eventEmitter = common.ee,
   emitsdefault  = "default",
-  test = require("tap").test;
+  test = require("tap").test,
+  logger = require("../lib/log");
 
 var server,
  dbs = ["api-test1", "api-test2", "api-test3"];
@@ -33,11 +34,13 @@ test("session api", function(t){
 })
 
 // create valid dbs
-test("create test databases", function(t){
+test("create valid test databases", function(t){
   common.createDBs(t, dbs)
 })
 
-//issue#70 couchbase-lite-android: able to create database with capital letters
+
+
+// issue#133 Request timed out when create db with capital letters
 test("try to create a database with caps", function(t){
     coax.put([server, "dbwithCAPS"], function(e, js){
       t.equals(e.status, 400, "db with caps not allowed")
@@ -45,9 +48,10 @@ test("try to create a database with caps", function(t){
     })
 })
 
-//issue#71 couchbase-lite-android: database with > 240 chars allowed
+
+// issue#71 couchbase-lite-android: database with > 240 chars allowed
 test("longdbname", function(t){
-  // try to exceed max db length of  240
+  // try to exceed max db length of 240
   var db = "asfasdfasfasdfasdfasdfasfasjkfhslfkjhalkjfhajkflhskjdfhlkfhajkfheajfkaheflwkjhfawekfhelakjwehflawefhawklejfewhakjfhwaeflakwejfhwaelfhwejflawefhawelfjkhawelfjaeelkfhjaewkfhwaelfhkjwefhawlkejfwaflhewfafjekhwaelfkjahejklfakfdsldlflsldlfkdfszdkf"
   coax.put([server, db], function(e, js){
     t.equals(e.status, 400, "dbname "+db.length+" is > 240 chars (not allowed)")
@@ -62,15 +66,17 @@ test("create special char dbs", function(t){
   common.createDBs(t, specialdbs)
 })
 
-//issue#100 couchbase-lite-android: bad request to create db should return response with "error" and "status" as for ios
+// issue#100 couchbase-lite-android: bad request to create db should return
+// response with "error" and "status" as for ios
 test("create duplicate db", function(t){
   coax.put([server, dbs[0]], function(e, js){
-    t.equals(e.status, 412, "db exists")
-    t.end()
+	  t.equals(e.status, 412, "db exists")
+	  t.end()
   })
 })
 
-//issue#100 couchbase-lite-android: bad request to create db should return response with "error" and "status" as for ios
+// issue#100 couchbase-lite-android: bad request to create db should return
+// response with "error" and "status" as for ios
 test("db bad name", function(t){
   coax.put([server, ".*------------------???"], function(err, json){
     t.equals(err.status, 400, "bad request")
@@ -89,7 +95,7 @@ test("verify db loaded", function(t){
   })
 })
 
-//TODO add a more detailed inspection of _active_tasks
+// TODO add a more detailed inspection of _active_tasks
 test("_active_tasks API", function(t){
   var db = dbs[0]
   coax([server, "_active_tasks"], function(e, js){
@@ -148,12 +154,13 @@ test("compact db", function(t){
   common.compactDBs(t, [dbs[0]])
 })
 
-//issue#101 compact during doc update: CBLRouter unable to route request to do_PUT_Documentjava.lang.reflect.InvocationTargetException
+// issue#101 compact during doc update: CBLRouter unable to route request to
+// do_PUT_Documentjava.lang.reflect.InvocationTargetException
 test("compact during doc update", function(t){
   // start updating docs
   common.updateDBDocs(t, {dbs : [dbs[0]],
                           numrevs : 5,
-                          numdocs : 100})
+                          numdocs : numDocs})
 
   // run compaction while documents are updating
   eventEmitter.once("docsUpdating", function(){
@@ -202,8 +209,9 @@ test("verify compaction", function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })
 
-//issue#76 couchbase-lite-android: _purge api needs implementing
-//{ error: 'not_found', reason: 'CBLRouter unable to route request to do_POST_Document_purge' }
+// issue#76 couchbase-lite-android: _purge api needs implementing
+// { error: 'not_found', reason: 'CBLRouter unable to route request to
+// do_POST_Document_purge' }
 // purge all dbs
 test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
@@ -317,7 +325,8 @@ test("can load using bulk docs", function(t){
 })
 
 
-//issue#111 couchbase-lite-android: can't run temp view: CBLRouter unable to route request to do_POST_Document_temp_view
+// issue#111 couchbase-lite-android: can't run temp view: CBLRouter unable to
+// route request to do_POST_Document_temp_view
 // temp views
 test("can run temp view", function(t){
   var view = {
