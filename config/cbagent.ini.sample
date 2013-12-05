@@ -2,7 +2,7 @@
 host_port = cbmonitor.sc.couchbase.com
 
 [store]
-interval = 10
+interval = 5
 host = cbmonitor.sc.couchbase.com
 update_metadata = True
 
