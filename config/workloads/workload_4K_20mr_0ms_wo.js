@@ -2,9 +2,9 @@ module.exports = {
     "Hostname": null,
     "Database": "db",
     "DocSize": 1024,
-    "RampUpIntervalMs": 600000,
-    "RunTimeMs": 660000,
+    "RampUpIntervalMs": 1200000,
+    "RunTimeMs": 3600000,
     "SleepTimeMs": 5000,
     "NumPullers": 0,
-    "NumPushers": 1000
+    "NumPushers": 4000
 }
