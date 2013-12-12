@@ -21,6 +21,8 @@ function prepareCbAgentConfig(cluster) {
   fs.writeFile("config/cbagent.ini", ini.stringify(config), function(err) {
     if (err) {
       logger.error(err);
+    } else {
+      prepareWorkloadConfig(cluster)
     }
   });
 }
@@ -34,8 +36,10 @@ function prepareWorkloadConfig(cluster) {
   fs.writeFile("config/workload.json", JSON.stringify(workload, null, 4), function(err) {
     if (err) {
       logger.error(err);
+    } else {
+      runWorkload(cluster);
     }
-  }); 
+  });
 }
 
 function getReport(cluster) {
@@ -90,7 +94,4 @@ function runWorkload(cluster) {
   logger.info("using %s as cbmonitor cluster", cluster);
 
   prepareCbAgentConfig(cluster);
-  prepareWorkloadConfig(cluster);
-
-  runWorkload(cluster);
 })();
