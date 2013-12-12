@@ -6,5 +6,7 @@ module.exports = {
     "RunTimeMs": 1200000,
     "SleepTimeMs": 10000,
     "NumPullers": 700,
-    "NumPushers": 300
+    "NumPushers": 300,
+    "SerieslyHostname": "cbmonitor.sc.couchbase.com",
+    "SerieslyDatabase": null
 }

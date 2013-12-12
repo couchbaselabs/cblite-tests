@@ -25,10 +25,11 @@ function prepareCbAgentConfig(cluster) {
   });
 }
 
-function prepareWorkloadConfig() {
+function prepareWorkloadConfig(cluster) {
   logger.info("preparing workload config");
 
   workload.Hostname = servers.entry_point;
+  workload.SerieslyDatabase = cluster;
 
   fs.writeFile("config/workload.json", JSON.stringify(workload, null, 4), function(err) {
     if (err) {
@@ -47,34 +48,38 @@ function getReport(cluster) {
   });
 }
 
-function runWorkload(cluster) {
-  logger.info("starting sgw_collector");
-  var sgw_collector = spawn("/tmp/env/bin/sgw_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
-  logger.info("starting ns_collector");
-  var ns_collector = spawn("/tmp/env/bin/ns_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
-  logger.info("starting ps_collector");
-  var ps_collector = spawn("/tmp/env/bin/ps_collector", ["config/cbagent.ini"], { stdio: 'inherit' });
-  logger.info("starting gateload");
-  var gateload = spawn("gateload", ["-workload=config/workload.json"], { stdio: 'inherit' });
+function spawnBgProcess(process, cmd, args) {
+  logger.info("starting " + process);
+  var p = spawn(cmd, args, { stdio: 'inherit' });
+  p.on("close", function () {
+    logger.info(process + " was killed");
+  });
+  return p
+}
 
-  sgw_collector.on("close", function () {
-    logger.info("sgw_collector was killed");
-  });
-  ns_collector.on("close", function () {
-    logger.info("ns_collector was killed");
-  });
-  ps_collector.on("close", function () {
-    logger.info("ps_collector was killed");
-  });
-  gateload.on("close", function () {
-    logger.info("gateload was killed");
-  });
+function runWorkload(cluster) {
+  var processes = [];
+
+  processes.push(
+    spawnBgProcess("sgw_collector", "/tmp/env/bin/sgw_collector", ["config/cbagent.ini"])
+  );
+  processes.push(
+    spawnBgProcess("ns_collector", "/tmp/env/bin/ns_collector", ["config/cbagent.ini"])
+  );
+  processes.push(
+    spawnBgProcess("ps_collector", "/tmp/env/bin/ps_collector", ["config/cbagent.ini"])
+  );
+  processes.push(
+    spawnBgProcess("gateload", "gateload", ["-workload=config/workload.json"])
+  );
+  processes.push(
+    gocbagent = spawnBgProcess("go-cbagent", "go-cbagent", ["-workload=config/workload.json"])
+  );
 
   setTimeout(function(cluster) {
-    sgw_collector.kill("SIGKILL");
-    ns_collector.kill("SIGKILL");
-    ps_collector.kill("SIGKILL");
-    gateload.kill("SIGKILL");
+    for (var i=0, l=processes.length; i<l; i++) {
+      processes[i].kill("SIGKILL");
+    }
 
     getReport(cluster);
   }, workload.RunTimeMs, cluster);
@@ -85,7 +90,7 @@ function runWorkload(cluster) {
   logger.info("using %s as cbmonitor cluster", cluster);
 
   prepareCbAgentConfig(cluster);
-  prepareWorkloadConfig();
+  prepareWorkloadConfig(cluster);
 
   runWorkload(cluster);
 })();
