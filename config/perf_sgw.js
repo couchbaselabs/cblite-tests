@@ -2,7 +2,7 @@ module.exports = {
 	"log": ["CRUD", "REST+"],
 	"adminInterface": ":4985",
 	"maxIncomingConnections": 0,
-	"maxCouchbaseConnections": 256,
+	"maxCouchbaseConnections": 1024,
 	"databases": {
 		"db": {
 			"server": null,
