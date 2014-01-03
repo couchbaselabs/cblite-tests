@@ -361,26 +361,26 @@ var common = module.exports = {
 
           // get document rev
           coax(url, function(err, json){
-            if(err || (!json)){
-              t.fail("unable to get doc rev for url:" + url+ ", err: " + err)
+            if(err || (!json) || json == undefined){
+                t.fail("unable to get doc rev for url:" + url + ", err:" + err + ", json:" + json)
+                cb(err, json)
+            } else {
+                var doc = generators[docgen](i)
+                // preserve other attachments
+                if(json._attachments && doc._attachments){
+                    for(var id in json._attachments){
+                        if(!(id in doc._attachments)){
+                            doc._attachments[id] = json._attachments[id]
+                            }
+                        }
+                    }
+                // preserve id and rev
+                doc._id = json._id
+                doc._rev = json._rev
+
+                // put updated doc
+                coax.put([url], doc, cb)
             }
-
-            var doc = generators[docgen](i)
-
-            // preserve other attachments
-            if(json._attachments && doc._attachments){
-              for(var id in json._attachments){
-                if(!(id in doc._attachments)){
-                  doc._attachments[id] = json._attachments[id]
-                }
-              }
-            }
-            // preserve id and rev
-            doc._id = json._id
-            doc._rev = json._rev
-
-            // put updated doc
-            coax.put([url], doc, cb)
           })
 
         },
