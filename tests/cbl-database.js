@@ -27,7 +27,7 @@ test("start test client", function(t){
 // _session api
 test("session api", function(t){
 
-  coax([server, "_session"] , function(err, ok){
+  coax([server, "_session"], function(err, ok){
     t.equals(ok.ok, true, "api exists")
     t.end()
   })
@@ -37,7 +37,6 @@ test("session api", function(t){
 test("create valid test databases", function(t){
   common.createDBs(t, dbs)
 })
-
 
 
 // issue#133 Request timed out when create db with capital letters
@@ -57,7 +56,6 @@ test("longdbname", function(t){
     t.equals(e.status, 400, "dbname "+db.length+" is > 240 chars (not allowed)")
     t.end()
   })
-
 })
 
 
@@ -65,6 +63,7 @@ test("create special char dbs", function(t){
   var specialdbs = ["un_derscore", "dollar$ign","left(paren", "right)paren", "c+plus+plus+", "t-minus1", "foward/slash"]
   common.createDBs(t, specialdbs)
 })
+
 
 // issue#100 couchbase-lite-android: bad request to create db should return
 // response with "error" and "status" as for ios
@@ -75,14 +74,14 @@ test("create duplicate db", function(t){
   })
 })
 
-// issue#100 couchbase-lite-android: bad request to create db should return
-// response with "error" and "status" as for ios
+// issue#146 Timeout when create db with bad name: .*------------------???
 test("db bad name", function(t){
   coax.put([server, ".*------------------???"], function(err, json){
     t.equals(err.status, 400, "bad request")
     t.end()
   })
 })
+
 
 test("load a test database", function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : [dbs[0]]})
@@ -103,13 +102,12 @@ test("_active_tasks API", function(t){
       console.log(e)
       t.fail("error calling _active_tasks")
     }
-    t.equals(js instanceof Array, true , "verify _active_tasks")
+    t.equals(js instanceof Array, true, "verify _active_tasks")
     t.end()
   })
 })
 
 test("all docs", function(t){
-
   var db = dbs[0]
   coax([server, db, "_all_docs"], function(e, js){
     if(e){
@@ -121,6 +119,8 @@ test("all docs", function(t){
   })
 })
 
+
+// issue#147 _all_docs with keys returns all docs( should supply only "keys" array)
 test("all docs with keys", function(t){
 
   var db = dbs[0]
@@ -138,7 +138,7 @@ test("all docs with keys", function(t){
         return row.key
       })
 
-      t.equals(resultkeys.length, numDocs/5 , "verify _all_docs")
+      t.equals(resultkeys.length, numDocs/5, "verify _all_docs with keys")
 
       for(var i in keys){
         if(resultkeys.indexOf(keys[i]) == -1){
@@ -150,12 +150,11 @@ test("all docs with keys", function(t){
   })
 })
 
+
 test("compact db", function(t){
   common.compactDBs(t, [dbs[0]])
 })
 
-// issue#101 compact during doc update: CBLRouter unable to route request to
-// do_PUT_Documentjava.lang.reflect.InvocationTargetException
 test("compact during doc update", function(t){
   // start updating docs
   common.updateDBDocs(t, {dbs : [dbs[0]],
@@ -169,6 +168,7 @@ test("compact during doc update", function(t){
 
 })
 
+
 test("compact during doc delete", function(t){
   // start deleting docs
   common.deleteDBDocs(t, [dbs[0]], numDocs)
@@ -177,13 +177,13 @@ test("compact during doc delete", function(t){
   common.compactDBs(t, [dbs[0]], emitsdefault)
 })
 
+
 test("load multiple databases", function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
 
 test("compact during multi-db update", {timeout : 300000}, function(t){
-
   common.updateDBDocs(t, {dbs : dbs,
                           numrevs : 5,
                           numdocs : numDocs}, "emit-updated")
@@ -198,16 +198,18 @@ test("compact during multi-db update", {timeout : 300000}, function(t){
     if(err){
       t.fail("errors occured updating docs during compaction: " + err)
     }
-
     // final compaction
     common.compactDBs(t, dbs)
   })
 })
 
+
+// issue#73 previous revisions remain after compaction
 // expecting compacted revs to be 'missing'
 test("verify compaction", function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })
+
 
 // issue#76 couchbase-lite-android: _purge api needs implementing
 // { error: 'not_found', reason: 'CBLRouter unable to route request to
@@ -215,13 +217,14 @@ test("verify compaction", function(t){
 // purge all dbs
 test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
-
 })
+
 
 // verify db purge
 test("verify db purge", function(t){
   common.verifyDBPurge(t, dbs)
 })
+
 
 test("can load using bulk docs", function(t){
   common.createDBBulkDocs(t, {numdocs : numDocs*10, dbs : dbs})
@@ -302,8 +305,10 @@ test("can delete bulk docs", function(t){
     })
 })
 
+
+// issue#148 can load bulk docs with dupe id's when "all_or_nothing : true"
 // bulk docs dupe id's
-test("can load using bulk docs", function(t){
+test("can't load bulk docs with dupe id's", function(t){
   var docs = common.generators.bulk(2)
 
   docs[0] = docs[1]
@@ -314,11 +319,11 @@ test("can load using bulk docs", function(t){
   function(err, json){
     if(!err){
 	console.log(json)
-        t.fail("cannot post duplicate bulk doc entries?")
+        t.fail("can post duplicate bulk doc entries?")
         t.end()
         return
     }
-    t.equals(err.status, 409, "cannot post duplicate bulk doc entries")
+    t.equals(err.status, 409, "can post duplicate bulk doc entries")
     t.end()
   })
 
@@ -384,6 +389,7 @@ test("verify missing revs", function(t){
   })
 
 })
+
 
 test("done", function(t){
   common.cleanup(t, function(json){
