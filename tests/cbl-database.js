@@ -183,6 +183,7 @@ test("load multiple databases", function(t){
 })
 
 
+//issue#149 "Error: socket hang up" when request docs asynchronously
 test("compact during multi-db update", {timeout : 300000}, function(t){
   common.updateDBDocs(t, {dbs : dbs,
                           numrevs : 5,
