@@ -42,22 +42,22 @@ test("create docs with inline text attachments", function(t){
         t.fail("unable to retrieve doc from all_docs")
       }
 
-      // get doc with attachement info
+      // get doc with attachment info
       var docid = js.rows[0].id
-      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+      coax([server, dbs[0], docid, { attachments : true }], function(e, js){
 
         if(e){
           console.log(e)
           t.fail("read doc failed")
         }
 
-        // get just attachement
+        // get just attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[0]
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
               console.log(err)
-              t.false(err, "retrieved doc with attachement")
+              t.false(err, "retrieved doc with attachment")
             }else{
               // search for cblite string
               t.ok(doctext == response, "verify attachment data")
@@ -75,7 +75,7 @@ test("test purge", function(t){
 
 })
 
-test("create docs with image attachements", function(t){
+test("create docs with image attachments", function(t){
 
  common.createDBDocs(t, {numdocs : numDocs,
                           dbs : dbs,
@@ -93,23 +93,23 @@ test("create docs with image attachements", function(t){
         t.fail("unable to retrieve doc from all_docs")
       }
 
-      // get doc with attachement info
+      // get doc with attachment info
       var docid = js.rows[0].id
-      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+      coax([server, dbs[0], docid, { attachments : true }], function(e, js){
 
         if(e){
           console.log(e)
           t.fail("read doc failed")
         }
 
-        // get just attachement
+        // get just attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[0]
         coax([server, dbs[0], docid, attchid], function(e, response){
 
           // search for cblite string
-          t.false(e, "retrieved doc with attachement")
-            t.ok(response.slice(1,4) == "PNG", "verify img attachement")
+          t.false(e, "retrieved doc with attachment")
+            t.ok(response.slice(1,4) == "PNG", "verify img attachment")
             t.end()
         })
       })
@@ -118,7 +118,7 @@ test("create docs with image attachements", function(t){
 })
 
 
-test("multi inline attachements", function(t){
+test("multi inline attachments", function(t){
 
  common.updateDBDocs(t, {numdocs : numDocs,
                          numrevs : 3,
@@ -137,21 +137,21 @@ test("multi inline attachements", function(t){
         t.fail("unable to retrieve doc from all_docs")
       }
 
-      // get doc with attachement info
+      // get doc with attachment info
       var docid = js.rows[0].id
-      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+      coax([server, dbs[0], docid, { attachments : true }], function(e, js){
         if(e){
           console.log(e)
           t.fail("read doc failed")
         }
 
-        // verify text attachement
+        // verify text attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[1]
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
                 console.log(err)
-              t.false(err, "retrieved doc with attachement")
+              t.false(err, "retrieved doc with attachment")
             }else{
                 // search for cblite string
                 t.ok(doctext == response, "verify attachment data")
@@ -202,22 +202,22 @@ test("verify db loaded", function(t){
         t.fail("unable to retrieve doc from all_docs")
       }
 
-      // get doc with attachement info
+      // get doc with attachment info
       var docid = js.rows[0].id
-      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+      coax([server, dbs[0], docid, { attachments : true }], function(e, js){
 
         if(e){
           console.log(e)
           t.fail("read doc failed")
         }
 
-        // get just attachement
+        // get just attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[0]
         coax([server, dbs[0], docid, attchid], function(e, response){
 
           // search for cblite string
-          t.false(e, "retrieved doc with attachement")
+          t.false(e, "retrieved doc with attachment")
           t.ok(doctext == response, "verify attachment data")
           t.end()
         })
@@ -257,17 +257,17 @@ test("delete doc with _delete", function(t){
   })
 })
 
-// X multi attachements (inline | external)
+// X multi attachments (inline | external)
 
-// X update attachements (inline | external)
+// X update attachments (inline | external)
 
-// X delete attachements (inline | external)
+// X delete attachments (inline | external)
 
 // X bulkdoc attachments (inline | external)
 
-// bulkdoc multi attachements (inline | external)
+// bulkdoc multi attachments (inline | external)
 
-// update bulkdoc multi attachements (inline | external)
+// update bulkdoc multi attachments (inline | external)
 
 // get changed attachments
 
@@ -292,9 +292,9 @@ test("create basic local docs", function(t){
         t.fail("unable to retrieve local doc:"+ dbs[0] + "/_local/" + dbs[0]+"_0")
       }
 
-      // get doc with attachement info
+      // get doc with attachment info
       var docid = js._id
-      coax([server, dbs[0], docid, { attachements : true }], function(e, js){
+      coax([server, dbs[0], docid, { attachments : true }], function(e, js){
 
         if(e){
           console.log(e)
@@ -302,7 +302,7 @@ test("create basic local docs", function(t){
         }
 
         if (typeof js._attachments != 'undefined') {
-        	t.fail("local doc " + js._id + " stores attachement", js)
+        	t.fail("local doc " + js._id + " stores attachment", js)
         	t.end()
         	return
         }

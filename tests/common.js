@@ -443,12 +443,12 @@ var common = module.exports = {
           var attchids = Object.keys(json._attachments)
           async.mapSeries(attchids, function(attid, _cb){
 
-            // delete attachement
+            // delete attachment
             var rmurl = coax([url, attid, {rev : revid}]).pax().toString()
 
             coax.del(rmurl, function(err, json){
               if(err){
-                t.fail("unable to delete attachements")
+                t.fail("unable to delete attachments")
               }
 
               // get updated revid
@@ -461,7 +461,7 @@ var common = module.exports = {
             // check if doc exists without attchement
             coax([url], function(err, json){
               if('_attachments' in json){
-                t.fail("unable to remove all attachements")
+                t.fail("unable to remove all attachments")
               }
               cb(err, json)
             })
@@ -469,7 +469,7 @@ var common = module.exports = {
         })
 
       }, function(err, json){
-        t.equals(json.length, numdocs, "all doc attachements deleted")
+        t.equals(json.length, numdocs, "all doc attachments deleted")
         nextdb(err, json)
       })
 
