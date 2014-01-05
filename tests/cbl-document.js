@@ -33,7 +33,7 @@ test("create docs with inline text attachments", function(t){
                           docgen : 'inlineTextAtt'}, 'emits-created')
 
   ee.once('emits-created', function(e, js){
-    t.false(e, "created docs with attachment")
+    t.false(e, "created docs with inline text attachments")
 
     // get doc
     coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
@@ -56,11 +56,14 @@ test("create docs with inline text attachments", function(t){
         var attchid = Object.keys(js._attachments)[0]
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
-              console.log(err)
-              t.false(err, "retrieved doc with attachment")
+                console.log(err)
+                t.false(err, "retrieved doc with attachment")
             }else{
               // search for cblite string
-              t.ok(doctext == response, "verify attachment data")
+                var url = coax([server, dbs[0], docid, attchid]).pax().toString()
+                var rsp = JSON.stringify(response)
+                t.ok(doctext == response, "verify data with inline text attachments for " + url +
+                        ". Expected:'" + doctext +"' but got:" + rsp)
           }
           t.end()
         })
@@ -83,7 +86,7 @@ test("create docs with image attachments", function(t){
 
   ee.once('emits-created', function(e, js){
 
-    t.false(e, "created docs with attachment")
+    t.false(e, "created docs with image attachments")
 
     // get doc
     coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
