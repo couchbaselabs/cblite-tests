@@ -86,7 +86,7 @@ test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
 
 })
-
+*/
 //issue#150 request doc attachment by name returns status instead of content
 //note: 'test purge' should pass otherwise the first item in array _attachments will be inline.txt
 test("create docs with image attachments", function(t){
@@ -125,7 +125,7 @@ test("create docs with image attachments", function(t){
           t.false(e, "retrieved doc with image attachment")
           	var url = coax([server, dbs[0], docid, attchid]).pax().toString()
             if (response.constructor ==  String) {
-                t.ok(rsp == "PNG", "verify img attachment. Got response from " + url +":" + response)
+                t.ok(rsp == "PNG", "verify img attachment. Got response from " + url +": " + response)
             } else {
                 var rsp = JSON.stringify(response)
                 t.fail("requst of image is not String. Got response from " + url +":" + rsp)
@@ -137,7 +137,7 @@ test("create docs with image attachments", function(t){
   })
 })
 
-
+//issue#151 impossible to update doc specifying rev
 test("multi inline attachments", function(t){
 
  common.updateDBDocs(t, {numdocs : numDocs,
@@ -147,34 +147,36 @@ test("multi inline attachments", function(t){
 
   ee.once('emits-updated', function(e, js){
 
-    t.false(e, "added attachment to docs")
+    t.false(e, "added attachment to docs failed with exception:" + JSON.stringify(e))
 
     // get doc
     coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
 
       if(e){
         console.log(e)
-        t.fail("unable to retrieve doc from all_docs")
+        var url = coax([server, dbs[0], "_all_docs", {limit : 1}]).pax().toString()
+        t.fail("unable to retrieve doc from all_docs via " + url +": " + JSON.stringify(e))
       }
 
       // get doc with attachment info
       var docid = js.rows[0].id
       coax([server, dbs[0], docid, { attachments : true }], function(e, js){
         if(e){
-          console.log(e)
-          t.fail("read doc failed")
+           var url = coax([server, dbs[0], docid, { attachments : true }]).pax().toString()
+          t.fail("read doc failed with exception:" + JSON.stringify(e))
         }
 
         // verify text attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[1]
+        console.log(js)
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
-                console.log(err)
-              t.false(err, "retrieved doc with attachment")
+              var url = coax([server, dbs[0], docid, attchid]).pax().toString()
+              t.false(err, "retrieved doc " + url + " with attachment: " + JSON.stringify(e))
             }else{
                 // search for cblite string
-                t.ok(doctext == response, "verify attachment data")
+                t.ok(doctext == response, "verify attachment data after updates")
             }
           t.end()
         })
