@@ -27,6 +27,7 @@ test("create test databases", function(t){
   common.createDBs(t, dbs)
 })
 
+//issue#150 request doc attachment by name returns status instead of content
 test("create docs with inline text attachments", function(t){
   common.createDBDocs(t, {numdocs : numDocs,
                           dbs : dbs,
@@ -61,9 +62,14 @@ test("create docs with inline text attachments", function(t){
             }else{
               // search for cblite string
                 var url = coax([server, dbs[0], docid, attchid]).pax().toString()
-                var rsp = JSON.stringify(response)
-                t.ok(doctext == response, "verify data with inline text attachments for " + url +
+                if (response.constructor ==  String) {
+                    t.ok(doctext == response, "verify data with inline text attachments for " + url +
+                            ". Expected:'" + doctext +"' but got:" + response)
+                } else {
+                    var rsp = JSON.stringify(response)
+                    t.ok(doctext == response, "verify data with inline text attachments for " + url +
                         ". Expected:'" + doctext +"' but got:" + rsp)
+                }
           }
           t.end()
         })
@@ -72,12 +78,17 @@ test("create docs with inline text attachments", function(t){
   })
 })
 
+// issue#76 couchbase-lite-android: _purge api needs implementing
+// { error: 'not_found', reason: 'CBLRouter unable to route request to
+// do_POST_Document_purge' }
 // purge all dbs
 test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
 
 })
 
+//issue#150 request doc attachment by name returns status instead of content
+//note: 'test purge' should pass otherwise the first item in array _attachments will be inline.txt
 test("create docs with image attachments", function(t){
 
  common.createDBDocs(t, {numdocs : numDocs,
@@ -111,12 +122,18 @@ test("create docs with image attachments", function(t){
         coax([server, dbs[0], docid, attchid], function(e, response){
 
           // search for cblite string
-          t.false(e, "retrieved doc with attachment")
-            t.ok(response.slice(1,4) == "PNG", "verify img attachment")
+          t.false(e, "retrieved doc with image attachment")
+          	var url = coax([server, dbs[0], docid, attchid]).pax().toString()
+            if (response.constructor ==  String) {
+                t.ok(rsp == "PNG", "verify img attachment. Got response from " + url +":" + response)
+            } else {
+                var rsp = JSON.stringify(response)
+                t.fail("requst of image is not String. Got response from " + url +":" + rsp)
+            }
             t.end()
         })
       })
-    })
+    })	
   })
 })
 
@@ -335,7 +352,6 @@ test("delete local db docs",  function(t){
 // doc expire
 
 test("done", function(t){
-
   common.cleanup(t, function(json){
     t.end()
   })
