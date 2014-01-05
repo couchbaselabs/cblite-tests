@@ -86,7 +86,7 @@ test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
 
 })
-*/
+
 //issue#150 request doc attachment by name returns status instead of content
 //note: 'test purge' should pass otherwise the first item in array _attachments will be inline.txt
 test("create docs with image attachments", function(t){
