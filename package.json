@@ -26,7 +26,7 @@
     "couchbase": "1.1.x"
   },
   "scripts": {
-    "test": "TAP_TIMEOUT=500 tap --tap ./tests"
+    "test": "TAP_TIMEOUT=2000 tap --tap ./tests"
   },
   "author": "Couchbase, Inc.",
   "license": "Apache 2.0"
