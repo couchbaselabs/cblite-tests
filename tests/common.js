@@ -377,7 +377,6 @@ var common = module.exports = {
                 // preserve id and rev
                 doc._id = json._id
                 doc._rev = json._rev
-
                 // put updated doc
                 coax.put([url], doc, cb)
             }
@@ -434,7 +433,7 @@ var common = module.exports = {
         coax(url, function(err, json){
 
           if(err){
-            t.fail("unable to get doc to delete")
+            t.fail("unable to get doc to delete " + url)
           }
 
           // get attachment ids
@@ -448,7 +447,7 @@ var common = module.exports = {
 
             coax.del(rmurl, function(err, json){
               if(err){
-                t.fail("unable to delete attachments")
+                t.fail("unable to delete attachments by " + rmurl)
               }
 
               // get updated revid
@@ -497,7 +496,7 @@ var common = module.exports = {
           // expect only 1 available rev
           var revs_info = json._revs_info
           if (revs_info == undefined){
-              console.log("response of " + url + " doens't contains _revs_info:" + json)
+              console.log("response of " + url + " doens't contain _revs_info:" + json)
               t.fail("response of docid failed")
           } else{
               var num_avail = revs_info.filter(function(rev,i){
@@ -702,10 +701,14 @@ var common = module.exports = {
           setTimeout(function(){
             coax(dburl, function(err, json){
               if(err){
-                t.fail("failed to get db info from "+dburl)
+                t.fail("failed to get db info from " + dburl)
               }
               doc_count = json.doc_count
-              console.log(db +" has " +doc_count+" docs expecting "+numexpected)
+              if (json == undefined) {
+                  t.fail("json.doc_count is undefined in: " + json)
+              } else {
+                  console.log(db + " has " + doc_count + " docs expecting " + numexpected)
+              }
               _cb(err)
             })
             tries++
@@ -714,7 +717,7 @@ var common = module.exports = {
         function (err) {
           cb(err, { ok : doc_count})
           t.equals(numexpected, doc_count,
-                  "verified "+db+" numdocs "+numexpected+" == "+doc_count)
+                  "verified " + db + " numdocs " + numexpected + " == " + doc_count)
       });
 
 

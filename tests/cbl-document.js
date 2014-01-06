@@ -125,7 +125,7 @@ test("create docs with image attachments", function(t){
           t.false(e, "retrieved doc with image attachment")
           	var url = coax([server, dbs[0], docid, attchid]).pax().toString()
             if (response.constructor ==  String) {
-                t.ok(rsp == "PNG", "verify img attachment. Got response from " + url +": " + response)
+                t.ok(response.slice(1, 4) == "PNG", "verify img attachment. Got response from " + url +": " + response)
             } else {
                 var rsp = JSON.stringify(response)
                 t.fail("requst of image is not String. Got response from " + url +":" + rsp)
@@ -168,7 +168,7 @@ test("multi inline attachments", function(t){
 
         // verify text attachment
         var doctext = js.text
-        var attchid = Object.keys(js._attachments)[1]
+        var attchid = Object.keys(js._attachments)[1] // we expect 2 attachments per doc here
         console.log(js)
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
@@ -193,6 +193,7 @@ test("compact db", function(t){
 
 })
 
+// issue#73 previous revisions remain after compaction
 // expecting compacted revs to be 'missing'
 test("verify compaction", function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
