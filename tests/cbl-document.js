@@ -125,7 +125,8 @@ test("create docs with image attachments", function(t){
           t.false(e, "retrieved doc with image attachment")
           	var url = coax([server, dbs[0], docid, attchid]).pax().toString()
             if (response.constructor ==  String) {
-                t.ok(response.slice(1, 4) == "PNG", "verify img attachment. Got response from " + url +": " + response)
+                t.ok(response.slice(1, 4) == "PNG", "verify img attachment. Got attachment file type from "
+                        + url +": " +  response.slice(1, 4))
             } else {
                 var rsp = JSON.stringify(response)
                 t.fail("requst of image is not String. Got response from " + url +":" + rsp)
@@ -169,7 +170,6 @@ test("multi inline attachments", function(t){
         // verify text attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[1] // we expect 2 attachments per doc here
-        console.log(js)
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
               var url = coax([server, dbs[0], docid, attchid]).pax().toString()
@@ -199,6 +199,7 @@ test("verify compaction", function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })
 
+//issue#151 delete attachment: Router unable to route request to do_DELETE_Attachmentjava.lang.reflect.InvocationTargetException
 test("delete doc attachments", function(t){
   common.deleteDBDocAttachments(t, dbs, numDocs)
 })
@@ -213,6 +214,7 @@ test("create attachments using bulk docs", function(t){
                               dbs : dbs})
 })
 
+//issue#150 request doc attachment by name returns status instead of content
 test("verify db loaded", function(t){
   coax([server, dbs[0]], function(err, json){
     t.equals(json.doc_count, numDocs*10, "verify db loaded")
@@ -241,7 +243,7 @@ test("verify db loaded", function(t){
 
           // search for cblite string
           t.false(e, "retrieved doc with attachment")
-          t.ok(doctext == response, "verify attachment data")
+          t.ok(doctext == response, "verify attachment data, expected data: " + doctext +", but got: " + JSON.stringify(response))
           t.end()
         })
       })
@@ -270,9 +272,9 @@ test("delete doc with _delete", function(t){
       coax([server, dbs[0], "hello"], function(err, _js){
 	  if (typeof err.status == 'undefined'){
 	      console.log(err)
-	      t.fail("err.status code missed")
+	      t.fail("err.status code missed in error: " + JSON.stringify(err))
 	  }else{
-	      t.equals(err.status, 404, "doc missing")
+	      t.equals(err.status, 404, "doc missing, got error: " + JSON.stringify(err))
 	  }
         t.end()
       })

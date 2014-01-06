@@ -433,7 +433,7 @@ var common = module.exports = {
         coax(url, function(err, json){
 
           if(err){
-            t.fail("unable to get doc to delete " + url)
+            t.fail("unable to get doc to delete " + url + ": " + JSON.stringify(err))
           }
 
           // get attachment ids
@@ -447,7 +447,7 @@ var common = module.exports = {
 
             coax.del(rmurl, function(err, json){
               if(err){
-                t.fail("unable to delete attachments by " + rmurl)
+                t.fail("unable to delete attachments by " + rmurl + ": " + JSON.stringify(err))
               }
 
               // get updated revid
@@ -683,7 +683,6 @@ var common = module.exports = {
   // gives up after 10 seconds
   verifyNumDocs : function(t, dbs, numexpected, emits){
 
-
     async.map(dbs, function(db, cb){
 
       var dburl = coax([server, db]).pax().toString()
@@ -719,8 +718,6 @@ var common = module.exports = {
           t.equals(numexpected, doc_count,
                   "verified " + db + " numdocs " + numexpected + " == " + doc_count)
       });
-
-
     }, notifycaller.call(t, emits))
 
   },
