@@ -879,7 +879,7 @@ var generators = module.exports.generators = {
               {
                 "inline.txt" :
                 {
-                  "content-type" : "text\/plain",
+                  "content_type" : "text\/plain",
                   "data" : data
                 }
               }
@@ -901,7 +901,7 @@ var generators = module.exports.generators = {
               {
                 "ggate.png" :
                 {
-                  "content-type" : "image\/png",
+                  "content_type" : "image\/png",
                   "data" : data_binary
                 }
               }
@@ -937,13 +937,13 @@ var generators = module.exports.generators = {
                  {
                    "photo.png" :
                    {
-                     "content-type" : "image\/png",
+                     "content_type" : "image\/png",
                      "data" : photo
                    },
 
                    "profile.txt" :
                    {
-                     "content-type" : "text\/plain",
+                     "content_type" : "text\/plain",
                      "data" : profile
                     }
                  }
