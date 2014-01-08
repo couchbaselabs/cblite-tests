@@ -142,11 +142,11 @@ var common = module.exports = {
       })
       sg.once("ready", function(err){
         if(t)
-          t.false(err, "no error, Sync Gateway running on port " + port)
+          t.false(err, "no error, Sync Gateway running on port " + port  + ": " + JSON.stringify(err))
         sg.db = coax([sg.url, bucket])
         sg.db(function(err, ok){
           if(t)
-            t.false(err, "no error, Sync Gateway reachable by: " + sg.url)
+            t.false(err, "no error, Sync Gateway reachable by: " + sg.url + ": " + JSON.stringify(err))
           done(sg)
         })
       });
@@ -272,9 +272,11 @@ var common = module.exports = {
 		var docid = db+"_"+i
 	    var madeDoc = generators[docgen](i)
 	    madeDoc._id = docid
+
 	    coax.put([server,db, localdocs + docid], madeDoc, function(err, ok){
+	    var url = coax([server,db, localdocs + docid]).pax().toString()
 	    if (err){
-	        t.false(err, "error loading " + server + "/" + db + "/"+ localdocs + docid +":" + err)
+	        t.false(err, "error loading " + url +":" + JSON.stringify(err))
 	    } else
 	        t.equals(localdocs + docid, ok.id, "docid")
 	    cb(err, ok)
@@ -539,8 +541,7 @@ var common = module.exports = {
           doc[docid] = [json._rev]
           coax.post([server, db, "_purge"], doc, function(e, js){
             if(e){
-              console.log(e)
-              t.fail("unable to purge doc history")
+              t.fail("unable to purge doc history: " + JSON.stringify(e))
             }
             cb(e,js)
           })
@@ -580,7 +581,7 @@ var common = module.exports = {
       var numPurged = responses.filter(function(dbinfo){
         return dbinfo.doc_count == 0
         }).length
-      t.equals(numPurged, dbs.length, "doc_count=0 on all dbs")
+      t.equals(numPurged, dbs.length, "purge failed. doc_count!=0 on all dbs")
 
       notifycaller.call(t, 'verify-purged')(e, responses)
     })
@@ -598,7 +599,7 @@ var common = module.exports = {
           t.fail("unable to retrieve db doc")
         }
         var revid = js.rows[0].value.rev.replace(/-.*/,"")
-        t.equals(revid, "1", db+" revids reset")
+        t.equals(revid, "1", db + " revids reset")
         cb(e, revid)
       })
     }, notifycaller.call(t, emits))

@@ -38,8 +38,6 @@ test("create valid test databases", function(t){
   common.createDBs(t, dbs)
 })
 
-
-// issue#133 Request timed out when create db with capital letters
 test("try to create a database with caps", function(t){
     coax.put([server, "dbwithCAPS"], function(e, js){
       t.equals(e.status, 400, "db with caps not allowed")
@@ -47,8 +45,6 @@ test("try to create a database with caps", function(t){
     })
 })
 
-
-// issue#71 couchbase-lite-android: database with > 240 chars allowed
 test("longdbname", function(t){
   // try to exceed max db length of 240
   var db = "asfasdfasfasdfasdfasdfasfasjkfhslfkjhalkjfhajkflhskjdfhlkfhajkfheajfkaheflwkjhfawekfhelakjwehflawefhawklejfewhakjfhwaeflakwejfhwaelfhwejflawefhawelfjkhawelfjaeelkfhjaewkfhwaelfhkjwefhawlkejfwaflhewfafjekhwaelfkjahejklfakfdsldlflsldlfkdfszdkf"
@@ -58,15 +54,12 @@ test("longdbname", function(t){
   })
 })
 
-
 test("create special char dbs", function(t){
   var specialdbs = ["un_derscore", "dollar$ign","left(paren", "right)paren", "c+plus+plus+", "t-minus1", "foward/slash"]
   common.createDBs(t, specialdbs)
 })
 
 
-// issue#100 couchbase-lite-android: bad request to create db should return
-// response with "error" and "status" as for ios
 test("create duplicate db", function(t){
   coax.put([server, dbs[0]], function(e, js){
 	  t.equals(e.status, 412, "db exists")
@@ -74,7 +67,6 @@ test("create duplicate db", function(t){
   })
 })
 
-// issue#146 Timeout when create db with bad name: .*------------------???
 test("db bad name", function(t){
   coax.put([server, ".*------------------???"], function(err, json){
     t.equals(err.status, 400, "bad request")
