@@ -55,13 +55,13 @@ test("create docs with inline text attachments", function(t){
         // get just attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[0]
+        var url = coax([server, dbs[0], docid, attchid]).pax().toString()
         coax([server, dbs[0], docid, attchid], function(err, response){
             if (err){
                 console.log(err)
-                t.false(err, "retrieved doc with attachment")
+                t.false(err, "retrieved doc with attachment by " + url +": " + JSON.stringify(err))
             }else{
               // search for cblite string
-                var url = coax([server, dbs[0], docid, attchid]).pax().toString()
                 if (response.constructor ==  String) {
                     t.ok(doctext == response, "verify data with inline text attachments for " + url +
                             ". Expected:'" + doctext +"' but got:" + response)
@@ -120,16 +120,17 @@ test("create docs with image attachments", function(t){
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[0]
         coax([server, dbs[0], docid, attchid], function(e, response){
-
+          var url = coax([server, dbs[0], docid, attchid]).pax().toString()
           // search for cblite string
-          t.false(e, "retrieved doc with image attachment")
-          	var url = coax([server, dbs[0], docid, attchid]).pax().toString()
+          t.false(e, "retrieved doc with image attachment " +  url + ": " + JSON.stringify(e))
             if (response.constructor ==  String) {
                 t.ok(response.slice(1, 4) == "PNG", "verify img attachment. Got attachment file type from "
                         + url +": " +  response.slice(1, 4))
-            } else {
+            } else if(response.constructor ==  JSON ) {
                 var rsp = JSON.stringify(response)
-                t.fail("requst of image is not String. Got response from " + url +":" + rsp)
+                t.fail("requst of image is JSON format instead of String. Got response from " + url +": " + rsp)
+            } else {
+                t.fail("requst of image failed. Got response from " + url +": " + response)
             }
             t.end()
         })

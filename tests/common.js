@@ -58,7 +58,7 @@ var common = module.exports = {
 
     if(testendpoint == "ios"){
       coax.post([url, "start", "ios"], function(err, json){
-        t.false(json.error, "error launching LiteServe "+JSON.stringify([err, json]))
+        t.false(json.error, "error launching LiteServe " + JSON.stringify([err, json]))
         this.server = json.ok
         done(this.server)
       })
@@ -78,7 +78,7 @@ var common = module.exports = {
         })
         serve.on("error", function(e){
             console.log("error launching LiteServe", e)
-            t.fail("error launching LiteServe")
+            t.fail("error launching LiteServe: " + JSON.stringify([err, json]))
             t.end()
         })
         serve.once("ready", function(err){
