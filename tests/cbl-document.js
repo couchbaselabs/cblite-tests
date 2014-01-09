@@ -48,18 +48,18 @@ test("create docs with inline text attachments", function(t){
       coax([server, dbs[0], docid, { attachments : true }], function(e, js){
 
         if(e){
-          console.log(e)
-          t.fail("read doc failed")
+            var urlWithAtt = coax([server, dbs[0], docid, { attachments : true }]).pax().toString()
+            t.fail("read doc failed " + urlWithAtt +": " + e)
         }
 
         // get just attachment
         var doctext = js.text
         var attchid = Object.keys(js._attachments)[0]
-        var url = coax([server, dbs[0], docid, attchid]).pax().toString()
         coax([server, dbs[0], docid, attchid], function(err, response){
+            var url = coax([server, dbs[0], docid, attchid]).pax().toString()
             if (err){
-                console.log(err)
-                t.false(err, "retrieved doc with attachment by " + url +": " + JSON.stringify(err))
+                t.false(err, "retrieved doc with attachment by " + url +"; error:" +
+                        JSON.stringify(err) + ", resp: " + JSON.stringify(response))
             }else{
               // search for cblite string
                 if (response.constructor ==  String) {
@@ -103,17 +103,16 @@ test("create docs with image attachments", function(t){
     coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
 
       if(e){
-        console.log(e)
-        t.fail("unable to retrieve doc from all_docs")
+        var urlAllDocs = coax([server, dbs[0], "_all_docs", {limit : 1}]).pax().toString()
+        t.fail("unable to retrieve doc from all_docs " + urlAllDocs +": " + e)
       }
 
       // get doc with attachment info
       var docid = js.rows[0].id
       coax([server, dbs[0], docid, { attachments : true }], function(e, js){
-
+	var urlWithAtt = coax([server, dbs[0], docid, { attachments : true }]).pax().toString()
         if(e){
-          console.log(e)
-          t.fail("read doc failed")
+          t.fail("read doc " + urlWithAtt + ": " + JSON.stringify(e))
         }
 
         // get just attachment
