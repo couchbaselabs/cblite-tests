@@ -80,7 +80,6 @@ test("simple map function", function(t){
     })
 })
 
-//issue#82 couchbase-lite-android: view query with keys filter includes unwanted rows
 test("test query filters", function(t){
 
   var view = db(['_design','test','_view','basic'])
@@ -177,8 +176,6 @@ test("update ddoc with player view", function(t){
   ddoc(function(err, js){
     js.views['player'] = {
         map: "function(doc) { emit(doc.joined, doc.points) }",
-        // https://github.com/couchbase/couchbase-lite-ios/issues/76
-        // reduce : "function(keys, values, rereduce) { return sum(values)  }"
         reduce : "function(keys, values, rereduce) { return values.reduce(function(a, b) { return a + b })  }"
       }
     db.post(js, function(e, js){
@@ -190,9 +187,8 @@ test("update ddoc with player view", function(t){
 })
 
 
-//issue#113 couchbase-lite-android: querying a view having rereduce fn with group=true:
-//CBLRouter unable to route request to do_GET_DesignDocumentjava.lang.reflect.InvocationTargetException
-// group queries
+//issue#158 view failed with { group : true}:
+//{"error":"not_found","reason":"Router unable to route request to do_GET_DesignDocumentjava.lang.reflect.InvocationTargetException"}
 test("test array keys", function(t){
 
   var view = db(['_design','test','_view','player'])
@@ -216,7 +212,8 @@ test("test array keys", function(t){
 
   view({ group : true}, function(e, js){
 	if(typeof js.rows == 'undefined'){
-		t.fail("js.rows not found in: " + js)
+		t.false(e, "view failed with { group : true}: " + JSON.stringify(e))
+		t.fail("js.rows not found for view with { group : true}" + js)
 		t.end()
 		return
 	}  
@@ -228,7 +225,7 @@ test("test array keys", function(t){
 
   view({ group : true, group_level : 2}, function(e, js){
 	  if(typeof js.rows == 'undefined'){
-			t.fail("js.rows not found in: " + js)
+			t.fail("js.rows not found for view with { group : true, group_level : 2}" + js)
 			t.end()
 			return
 		}  
@@ -238,7 +235,7 @@ test("test array keys", function(t){
 
   view({ group : true, group_level : 1}, function(e, js){
 	  if(typeof js.rows == 'undefined'){
-			t.fail("js.rows not found in: " + js)
+			t.fail("js.rows not found for view with { group : true, group_level : 1}" + js)
 			t.end()
 			return
 		}  
@@ -246,7 +243,6 @@ test("test array keys", function(t){
     t.equals(js.rows[0].value, 45, "group_level=1 value")
     t.end()
   })
-
 })
 
 test("done", function(t){
