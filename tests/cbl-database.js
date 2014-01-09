@@ -112,7 +112,6 @@ test("all docs", function(t){
 })
 
 
-// issue#147 _all_docs with keys returns all docs( should supply only "keys" array)
 test("all docs with keys", function(t){
 
   var db = dbs[0]
@@ -176,6 +175,7 @@ test("load multiple databases", function(t){
 
 
 //issue#149 "Error: socket hang up" when request docs asynchronously
+https://github.com/couchbase/couchbase-lite-android/issues/149#issuecomment-31798402
 test("compact during multi-db update", {timeout : 300000}, function(t){
   common.updateDBDocs(t, {dbs : dbs,
                           numrevs : 5,
@@ -197,8 +197,6 @@ test("compact during multi-db update", {timeout : 300000}, function(t){
 })
 
 
-// issue#73 previous revisions remain after compaction
-// expecting compacted revs to be 'missing'
 test("verify compaction", function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })

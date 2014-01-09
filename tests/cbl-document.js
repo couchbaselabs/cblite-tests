@@ -28,6 +28,7 @@ test("create test databases", function(t){
 })
 
 //issue#150 request doc attachment by name returns status instead of content
+//with content_type failed on ios, passed on android
 test("create docs with inline text attachments", function(t){
   common.createDBDocs(t, {numdocs : numDocs,
                           dbs : dbs,
@@ -87,7 +88,6 @@ test("test purge", function(t){
 
 })
 
-//issue#150 request doc attachment by name returns status instead of content
 //note: 'test purge' should pass otherwise the first item in array _attachments will be inline.txt
 test("create docs with image attachments", function(t){
 
@@ -186,20 +186,16 @@ test("multi inline attachments", function(t){
   })
 })
 
-
 // compact db
 test("compact db", function(t){
   common.compactDBs(t, dbs)
 
 })
 
-// issue#73 previous revisions remain after compaction
-// expecting compacted revs to be 'missing'
 test("verify compaction", function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })
 
-//issue#151 delete attachment: Router unable to route request to do_DELETE_Attachmentjava.lang.reflect.InvocationTargetException
 test("delete doc attachments", function(t){
   common.deleteDBDocAttachments(t, dbs, numDocs)
 })
@@ -214,7 +210,6 @@ test("create attachments using bulk docs", function(t){
                               dbs : dbs})
 })
 
-//issue#150 request doc attachment by name returns status instead of content
 test("verify db loaded", function(t){
   coax([server, dbs[0]], function(err, json){
     t.equals(json.doc_count, numDocs*10, "verify db loaded")
