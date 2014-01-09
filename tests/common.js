@@ -146,7 +146,7 @@ var common = module.exports = {
         sg.db = coax([sg.url, bucket])
         sg.db(function(err, ok){
           if(t)
-            t.false(err, "no error, Sync Gateway reachable by: " + sg.url + ": " + JSON.stringify(err))
+            t.false(err, "no error, Sync Gateway reachable by: " + sg.url + bucket +": " + JSON.stringify(err))
           done(sg)
         })
       });
@@ -703,10 +703,10 @@ var common = module.exports = {
               if(err){
                 t.fail("failed to get db info from " + dburl)
               }
-              doc_count = json.doc_count
               if (json == undefined) {
-                  t.fail("json.doc_count is undefined in: " + json)
+                  t.fail("json is undefined requesting " + dburl + ": " + json)
               } else {
+                  doc_count = json.doc_count
                   console.log(db + " has " + doc_count + " docs expecting " + numexpected)
               }
               _cb(err)
