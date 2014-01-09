@@ -33,7 +33,7 @@ test("start syncgateway", function(t){
 })
 
 // start sync gateway2
-test("start syncgateway", function(t){
+test("start syncgateway2", function(t){
   common.launchSGWithParams(t, 9890, config.DbUrl, config.DbBucket, function(_sg2){
     sg2  = _sg2
     t.end()

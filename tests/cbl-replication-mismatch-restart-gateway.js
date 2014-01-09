@@ -51,9 +51,9 @@ test("setup continuous push and pull from both client database", function(t) {
 	  })
 	})
 
-//test("verify dbs have same number of docs", {timeout: 12 * 1000}, function(t) {
-//  common.verifyNumDocs(t, dbs, numDocs)
-//})
+test("verify dbs have same number of docs", {timeout: 12 * 1000}, function(t) {
+  common.verifyNumDocs(t, dbs, numDocs)
+})
 
 test("done", function(t){
     for (var i = 0; i < dbs.length; i++) {
@@ -63,14 +63,11 @@ test("done", function(t){
                 t.fail("failed to get db info from " + dburl)
               }
               count = json.doc_count
-              console.log("doc count in " + dbs[i] + ": " +count)
+              console.log("doc count in " + dburl + ": " +count)
     })
     }
-    console.log("sleep 3 second before sg1.kill")
-    setTimeout(function(){
-	sg1.kill()
-	t.end()
-    }, 3000)
+    sg1.kill()
+    t.end()
 })
 
 //start sync gateway
