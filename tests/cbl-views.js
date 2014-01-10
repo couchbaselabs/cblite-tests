@@ -176,7 +176,7 @@ test("update ddoc with player view", function(t){
   ddoc(function(err, js){
     js.views['player'] = {
         map: "function(doc) { emit(doc.joined, doc.points) }",
-        reduce : "function(keys, values, rereduce) { return values.reduce(function(a, b) { return a + b })  }"
+        reduce : "function(keys, values, rereduce) { result = 0; for (i=0;i<values.length;i++) { result += values[i] }; return result  }"
       }
     db.post(js, function(e, js){
       t.false(e, "can update design doc")
