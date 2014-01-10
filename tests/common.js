@@ -608,6 +608,11 @@ var common = module.exports = {
 
   //issue#112 couchbase-lite-android: missed some keys in /DB API: instance_start_time,committed_update_seq,disk_format_version,purge_seq
   // checks that the sequence_no's between two sets of dbs match
+  /*
+	for now workaround is comment out in node_modules/follow/lib/feed.js
+	//if(!db.db_name || !db.instance_start_time)
+	//return self.emit('error', new Error('Bad DB response: ' + body));
+  */
   compareDBSeqNums : function(t, params, emits){
 
     var sourcedbs = params.sourcedbs

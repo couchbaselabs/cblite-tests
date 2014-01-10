@@ -11,7 +11,7 @@ var launcher = require("../lib/launcher"),
   test = require("tap").test
 
 var server, sg, gateway,
-  // local dbs
+ // local dbs
  dbs = ["api-test1", "api-test2", "api-test3"];
  // local->local dbs
  repdbs = ["api-test4", "api-test5", "api-test6"];
@@ -52,7 +52,10 @@ test("set up local to local replication", function(t){
   async.mapSeries(dbs, function(db, cb){
     coax([server, "_replicate"]).post({
         source : db,
-        target : repdbs[i],
+        // target : config.provides=="android" ? "http://localhost:8080/" + repdbs[i] : repdbs[i],
+        // can be applied as workaround for shorthand issue
+        // but seems like local replication doesn't work at all
+        target :  repdbs[i],
         continuous : true,
       }, function(err, ok){
         t.equals(err, null, util.inspect({_replicate : dbs[i]+" -> "+repdbs[i]}))
