@@ -202,9 +202,6 @@ test("verify compaction", function(t){
 })
 
 
-// issue#76 couchbase-lite-android: _purge api needs implementing
-// { error: 'not_found', reason: 'CBLRouter unable to route request to
-// do_POST_Document_purge' }
 // purge all dbs
 test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
@@ -297,8 +294,6 @@ test("can delete bulk docs", function(t){
 })
 
 
-// issue#148 can load bulk docs with dupe id's when "all_or_nothing : true"
-// bulk docs dupe id's
 test("can't load bulk docs with dupe id's", function(t){
   var docs = common.generators.bulk(2)
 

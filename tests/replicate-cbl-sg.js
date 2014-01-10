@@ -57,9 +57,6 @@ test("create test databases", function(t) {
 })
 
 
-//  closed: http://www.couchbase.com/issues/browse/CBLT-26
-//         problem with dbs being coax instances
-
 test("replicate between all 3 servers", function(t){
   var dbs = [
   coax([ph.servers[0], "test-repl"]),

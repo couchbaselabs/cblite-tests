@@ -186,9 +186,6 @@ test("update ddoc with player view", function(t){
 
 })
 
-
-//issue#158 view failed with { group : true}:
-//{"error":"not_found","reason":"Router unable to route request to do_GET_DesignDocumentjava.lang.reflect.InvocationTargetException"}
 test("test array keys", function(t){
 
   var view = db(['_design','test','_view','player'])

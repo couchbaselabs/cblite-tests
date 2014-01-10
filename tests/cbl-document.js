@@ -27,8 +27,7 @@ test("create test databases", function(t){
   common.createDBs(t, dbs)
 })
 
-//issue#150 request doc attachment by name returns status instead of content
-//with content_type failed on ios, passed on android
+//https://github.com/couchbaselabs/cblite-tests/issues/13
 test("create docs with inline text attachments", function(t){
   common.createDBDocs(t, {numdocs : numDocs,
                           dbs : dbs,
@@ -79,9 +78,6 @@ test("create docs with inline text attachments", function(t){
   })
 })
 
-// issue#76 couchbase-lite-android: _purge api needs implementing
-// { error: 'not_found', reason: 'CBLRouter unable to route request to
-// do_POST_Document_purge' }
 // purge all dbs
 test("test purge", function(t){
   common.purgeDBDocs(t, dbs, numDocs)
@@ -138,7 +134,8 @@ test("create docs with image attachments", function(t){
   })
 })
 
-//issue#151 impossible to update doc specifying rev
+//issue#161 complex doc update: {"error":"not_found",
+//"reason":"Router unable to route request to do_PUT_Documentjava.lang.reflect.InvocationTargetException"}
 test("multi inline attachments", function(t){
 
  common.updateDBDocs(t, {numdocs : numDocs,
