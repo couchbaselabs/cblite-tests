@@ -320,6 +320,13 @@ test("can't load bulk docs with dupe id's", function(t){
 // route request to do_POST_Document_temp_view
 // temp views
 test("can run temp view", function(t){
+	
+  if (config.provides == "android") {
+    console.log("Skipping temp view on Android")
+    t.end()
+    return 
+  }
+	
   var view = {
      map : 'function(doc) { if (doc) { emit(null, doc); } }'
   }
