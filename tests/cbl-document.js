@@ -131,8 +131,6 @@ test("create docs with image attachments", function(t){
   })
 })
 
-//issue#161 complex doc update: {"error":"not_found",
-//"reason":"Router unable to route request to do_PUT_Documentjava.lang.reflect.InvocationTargetException"}
 test("multi inline attachments", function(t){
 
  common.updateDBDocs(t, {numdocs : numDocs,

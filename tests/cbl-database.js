@@ -316,8 +316,6 @@ test("can't load bulk docs with dupe id's", function(t){
 })
 
 
-// issue#111 couchbase-lite-android: can't run temp view: CBLRouter unable to
-// route request to do_POST_Document_temp_view
 // temp views
 test("can run temp view", function(t){
 	
