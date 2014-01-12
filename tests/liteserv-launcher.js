@@ -4,7 +4,11 @@ var launcher = require("../lib/launcher"),
   config = require('../config/' + conf_file),
   test = require("tap").test;
 
-var serve, port = 59850, server = "http://localhost:"+port+"/"
+var serve, port = 59850
+if(config.provides == "android"){
+	 port = 8088
+}
+	server = "http://localhost:"+port+"/"
 
 test("can launch a LiteServ", {timeout : 60000}, function(t) {
   serve = launcher.launchLiteServ({
