@@ -62,14 +62,11 @@ test("create docs with inline text attachments", function(t){
                         JSON.stringify(err) + ", resp: " + JSON.stringify(response))
             }else{
               // search for cblite string
-                if (response.constructor ==  String) {
-                    t.ok(doctext == response, "verify data with inline text attachments for " + url +
-                            ". Expected:'" + doctext +"' but got:" + response)
-                } else {
-                    var rsp = JSON.stringify(response)
-                    t.ok(doctext == response, "verify data with inline text attachments for " + url +
-                        ". Expected:'" + doctext +"' but got:" + rsp)
+                if (response.constructor !=  String) {
+                    response = JSON.stringify(response)
                 }
+                t.ok(doctext == response, "verify data with inline text attachments for " + url +
+                            ". Expected:'" + doctext +"', got:" + response)
           }
           t.end()
         })
@@ -235,7 +232,7 @@ test("verify db loaded", function(t){
 
           // search for cblite string
           t.false(e, "retrieved doc with attachment")
-          t.ok(doctext == response, "verify attachment data, expected data: " + doctext +", but got: " + JSON.stringify(response))
+          t.ok(doctext == response, "verify attachment data, expected: " + doctext +", got: " + JSON.stringify(response))
           t.end()
         })
       })
