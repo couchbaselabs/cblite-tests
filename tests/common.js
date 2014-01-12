@@ -21,7 +21,7 @@ var common = module.exports = {
   server : null,
 
   ee : new events.EventEmitter(),
-
+/*
   // DEPRECIATED: use launchClient
   launchLS : function(t, done){
 
@@ -46,7 +46,7 @@ var common = module.exports = {
       })
     });
   },
-
+*/
   launchClient : function(t, done){
 
     if(!this.listener){
@@ -76,18 +76,17 @@ var common = module.exports = {
             dir : __dirname+"/../tmp/single",
             path : config.LiteServPath
         })
-        serve.on("error", function(e){
-            console.log("error launching LiteServe", e)
-            t.fail("error launching LiteServe: " + JSON.stringify([err, json]))
+        serve.on("error", function(err){
+            t.fail("error launching LiteServe: " + JSON.stringify(err))
             t.end()
         })
         serve.once("ready", function(err){
             t.false(err, "no error, LiteServe running on our port")
             coax(server, function(err, ok){
-            t.false(err, "no error, LiteServe reachable" +err)
-            t.end()
-        })
-        this.server = "http://localhost:"+port
+                t.false(err, "no error, LiteServe reachable:" + err)
+                t.end()
+            })
+            this.server = "http://localhost:" + port
             server = this.server
             done(this.server)
             })
