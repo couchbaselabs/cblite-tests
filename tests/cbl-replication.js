@@ -126,7 +126,7 @@ test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
                               targetdbs : repdbs})
 })
 
-test("verify local-replicated num-docs 100", function(t){
+test("verify local-replicated num-docs" + numDocs, function(t){
   common.verifyNumDocs(t, repdbs, numDocs)
 })
 
@@ -201,7 +201,6 @@ test("cleanup cb bucket", function(t){
     }
     t.end()
 })
-
 
 test("done", function(t){
   common.cleanup(t, function(json){
