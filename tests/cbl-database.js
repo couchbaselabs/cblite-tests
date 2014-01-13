@@ -1,15 +1,14 @@
 var launcher = require("../lib/launcher"),
   coax = require("coax"),
   async = require("async"),
-  tstart = process.hrtime(),
   common = require("../tests/common"),
   conf_file = process.env.CONF_FILE || 'local',
   config = require('../config/' + conf_file),
   utils = common.utils,
   eventEmitter = common.ee,
   emitsdefault  = "default",
-  test = require("tap").test,
-  logger = require("../lib/log");
+  test = require("tap").test;
+
 
 var server,
  dbs = ["api-test1", "api-test2", "api-test3"];

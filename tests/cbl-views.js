@@ -1,12 +1,10 @@
 var launcher = require("../lib/launcher"),
   coax = require("coax"),
   async = require("async"),
-  tstart = process.hrtime(),
   common = require("../tests/common"),
   util =  require("util"),
   eventEmitter = common.ee,
   docgens = common.generators,
-  emitsdefault  = "default",
   test = require("tap").test;
 
 var server, sg, gateway, db

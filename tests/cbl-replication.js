@@ -1,11 +1,8 @@
 var launcher = require("../lib/launcher"),
   coax = require("coax"),
   async = require("async"),
-  tstart = process.hrtime(),
   common = require("../tests/common"),
   util =  require("util"),
-  eventEmitter = common.ee,
-  emitsdefault  = "default",
   conf_file = process.env.CONF_FILE || 'local',
   config = require('../config/' + conf_file),
   test = require("tap").test
