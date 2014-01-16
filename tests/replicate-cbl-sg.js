@@ -10,7 +10,20 @@ var launcher = require("../lib/launcher"),
 
 var sg, ph;
 
+//https://github.com/couchbaselabs/LiteServAndroid/issues/7
+//need the ability to run multiple instances
+//all android tests should be uncommented when the the issue will be resolved
+
+if (config.provides == "android") {
+	 console.log("Skipping phalanx tests on Android")
+	}
+
+
 test("launch 2 LiteServs", function(t) {
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   ph = phalanx.launchLiteServ(2, {
     port : 59845,
     dir : __dirname+"/../tmp",
@@ -28,6 +41,7 @@ test("launch 2 LiteServs", function(t) {
     console.log("error launching phalanx", err)
     process.exit()
   })
+		}
 });
 
 
@@ -49,46 +63,70 @@ test("launch a Sync Gateway", function(t) {
 });
 
 test("create test databases", function(t) {
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   createDbs(["test-repl","test-http1","test-http2","test-http3",
              "test-local1","test-local2","test-local3"], function(err, oks){
     t.false(err,"all dbs created")
     t.end()
   })
+		}
 })
 
 
 test("replicate between all 3 servers", function(t){
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   var dbs = [
   coax([ph.servers[0], "test-repl"]),
   sg.db,
   coax([ph.servers[1], "test-repl"])];
   //console.log("servers", dbs);
   replicateClientServerClient(t, dbs, t.end.bind(t))
+		}
 })
 
 
 test("_local to _local over http", function(t){
-
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   var dbs = [
   coax([ph.servers[0], "test-http1"]),
   coax([ph.servers[0], "test-http3"]),
   coax([ph.servers[0], "test-http2"])];
   replicateClientServerClient(t, dbs, t.end.bind(t))
+		}
 })
 
 test("_local to _local over native", function(t){
-
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   var dbs = [
   coax([ph.servers[0], "test-local1"]),
   coax([ph.servers[0], "test-local3"]),
   coax([ph.servers[0], "test-local2"])];
   replicateClientServerClient(t, dbs, t.end.bind(t), { http : false })
+		}
 })
 
 test("exit", function(t){
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 sg.kill()
+		 t.end()
+		} else{
   sg.kill()
   ph.kill()
   t.end()
+		}
 })
 
 

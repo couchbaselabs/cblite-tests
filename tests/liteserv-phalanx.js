@@ -8,9 +8,21 @@ var phalanx = require("../lib/phalanx"),
 
 var replicateClientServerClient = require("./subtests/replicate-client-server-client")
 
+//https://github.com/couchbaselabs/LiteServAndroid/issues/7
+//need the ability to run multiple instances
+//all android tests should be uncommented when the the issue will be resolved
+
 var ph, port = 59810, size = 3;
 
+if (config.provides == "android") {
+	 console.log("Skipping phalanx tests on Android")
+	}
+
 test("can launch a phalanx of LiteServ", function(t) {
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   rmdir(__dirname+"/../tmp") // synchronously
   ph = phalanx.launchLiteServ(size, {
     port : port,
@@ -38,9 +50,14 @@ test("can launch a phalanx of LiteServ", function(t) {
       t.end()
     })
   });
+}
 });
 
 test("setup test databases", function(t){
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   async.map(ph.servers, function(url, cb) {
     var db = coax([url,"phalanx-test"])
     console.log("coax", db.pax)
@@ -60,15 +77,26 @@ test("setup test databases", function(t){
     })
     t.end()
   })
+		}
 })
 
-test("replicate between all 3 servers", function(t){
+test("replicate between all " + size +" servers", function(t){
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
   var dbs = ph.servers.map(function(server) {return coax([server, "phalanx-test"])})
   replicateClientServerClient(t, dbs, t.end.bind(t))
+		}
 })
 
 
 test("exit", function(t){
-  ph.kill()
-  t.end()
+	if (config.provides == "android") {
+		 console.log("Skipping phalanx tests on Android")
+		 t.end()
+		} else{
+			ph.kill()
+			t.end()
+		}
 })
