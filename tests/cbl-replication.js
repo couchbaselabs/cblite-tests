@@ -17,6 +17,13 @@ var server, sg, gateway,
 
 var numDocs=config.numDocs || 100;
 
+
+//https://github.com/couchbase/couchbase-lite-android/issues/77
+//support for shorthand target in local->local replication
+//all android tests should be uncommented when the the issue will be resolved
+
+
+
 // start client endpoint
 test("start test client", function(t){
   common.launchClient(t, function(_server){
@@ -44,6 +51,12 @@ test("create test databases", function(t){
 //issue#77 couchbase-lite-android: support for shorthand target in local->local replication
 // set up replication
 test("set up local to local replication", function(t){
+ if (config.provides == "android") {
+	 console.log("Skipping local replication on Android")
+	 t.end()
+    return
+  }
+
 
   var i = 0
   async.mapSeries(dbs, function(db, cb){
@@ -119,22 +132,41 @@ test("load databases", function(t){
 })
 
 test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
-  common.compareDBSeqNums(t, {sourcedbs : dbs,
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {common.compareDBSeqNums(t, {sourcedbs : dbs,
                               targetdbs : repdbs})
+	 }
 })
 
 test("verify local-replicated num-docs" + numDocs, function(t){
-  common.verifyNumDocs(t, repdbs, numDocs)
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {
+		 common.verifyNumDocs(t, repdbs, numDocs)
+	 }
 })
 
 test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
-  common.compareDBSeqNums(t, {sourcedbs : dbs,
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {
+		 common.compareDBSeqNums(t, {sourcedbs : dbs,
                               targetdbs : sgdbs,
                               replfactor : 3})
+	 }
 })
 
 test("verify sg-replicated num-docs", function(t){
-  common.verifyNumDocs(t, sgdbs, numDocs*3)
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {
+		  common.verifyNumDocs(t, sgdbs, numDocs*3)
+	 }
 })
 
 
@@ -144,8 +176,13 @@ test("delete db docs",  function(t){
 
 
 test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
-  common.compareDBSeqNums(t, {sourcedbs : dbs,
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {
+		 common.compareDBSeqNums(t, {sourcedbs : dbs,
                               targetdbs : repdbs})
+	 }
 })
 
 
@@ -154,13 +191,23 @@ test("verify local-replicated num-docs 0", function(t){
 })
 
 test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
-  common.compareDBSeqNums(t, {sourcedbs : dbs,
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {
+		 common.compareDBSeqNums(t, {sourcedbs : dbs,
                               targetdbs : sgdbs,
                               replfactor : 3})
+	 }
 })
 
 test("verify sg-replicated num-docs", function(t){
-  common.verifyNumDocs(t, sgdbs, 0)
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {
+		 common.verifyNumDocs(t, sgdbs, 0)
+	 }
 })
 
 
@@ -170,7 +217,12 @@ test("load databases", function(t){
 })
 
 test("verify local-replicated num-docs numDocs-2", { timeout : 15000}, function(t){
-  common.verifyNumDocs(t, repdbs, numDocs)
+	 if (config.provides == "android") {
+		 console.log("Skipping local replication on Android")
+		 t.end()
+	 } else {
+		 common.verifyNumDocs(t, repdbs, numDocs)
+	 }
 })
 
 // purge all dbs
