@@ -6,7 +6,7 @@ var launcher = require("../lib/launcher"),
 
 var serve, port = 59850
 if(config.provides == "android"){
-	 port = 8088
+	 port = 8080
 }
 	server = "http://localhost:"+port+"/"
 
