@@ -7,8 +7,8 @@ var config = module.exports = {
   LocalListenerPort : 8189,
   DbUrl             : "walrus:",
   DbBucket          : "db",
-  provides          : "ios",  // ios, android, pouchdb, couchdb
-  numDocs           : 100,
+  provides          : "android",  // ios, android, pouchdb, couchdb
+  numDocs           : 10,
   channelsPerDoc    : 1,
 }
 
