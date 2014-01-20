@@ -7,7 +7,7 @@ var launcher = require("../lib/launcher"),
   docgens = common.generators,
   test = require("tap").test;
 
-var server, sg, gateway, db
+var server, db;
 
 // start client endpoint
 test("start test client", function(t){
@@ -17,14 +17,6 @@ test("start test client", function(t){
   })
 })
 
-// start sync gateway
-test("start syncgateway", function(t){
-  common.launchSG(t, function(_sg){
-    sg  = _sg
-    gateway = sg.url
-    t.end()
-  })
-})
 
 // create all dbs
 test("create test database", function(t){
@@ -242,7 +234,6 @@ test("test array keys", function(t){
 
 test("done", function(t){
   common.cleanup(t, function(json){
-    sg.kill()
     t.end()
   })
 })
