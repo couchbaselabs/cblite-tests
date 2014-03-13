@@ -54,7 +54,8 @@ test("push replication should close connection on completion", function(t) {
 		  sg.db.get(function(err, dbinfo){
 			  t.false(err, "sg database exists")
 			  t.ok(dbinfo, "got an info repsonse")
-			  t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
+			  console.log("sg dbinfo", coax(sg).pax().toString(), dbinfo)
+			  t.equals(dbinfo.doc_count, numDocs, "all docs replicated:")
 			  t.end()
 		  })
 	  },timeoutReplication)
@@ -74,9 +75,8 @@ test("pull replication should close connection on completion", function(t) {
     coax([server, lite], function(err, dbinfo){
       t.false(err, "lite database exists")
       t.ok(dbinfo, "got an info repsonse")
-      console.log("lite dbinfo", dbinfo, coax([server, lite]).pax().toString())
-      if (dbinfo)
-        t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
+      console.log("lite dbinfo ", coax([server, lite]).pax().toString(), dbinfo)
+      t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
       t.end()
     })
     },timeoutReplication)
