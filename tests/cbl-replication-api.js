@@ -54,8 +54,9 @@ test("push replication should close connection on completion", function(t) {
 		  sg.db.get(function(err, dbinfo){
 			  t.false(err, "sg database exists")
 			  t.ok(dbinfo, "got an info repsonse")
-			  console.log("sg dbinfo", coax(sg).pax().toString(), dbinfo)
-			  t.equals(dbinfo.doc_count, numDocs, "all docs replicated:")
+			  //https://github.com/couchbase/sync_gateway/issues/292
+			  console.log("sg update_seq", coax(sg).pax().toString(), dbinfo)
+			  t.equals(dbinfo.update_seq, numDocs, "all docs replicated:")
 			  t.end()
 		  })
 	  },timeoutReplication)
