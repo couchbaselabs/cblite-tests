@@ -153,7 +153,7 @@ test("load databases", function(t){
   common.createDBDocs(t, {numdocs : numDocs/2, dbs : dbs, docgen : "channels"})
 })
 
-test("verify dbs have same number of docs", {timeout: 210 * 1000}, function(t) {
+test("verify dbs have same number of docs", {timeout: 30 * 1000}, function(t) {
   common.verifyNumDocs(t, dbs, numDocs)
 })
 

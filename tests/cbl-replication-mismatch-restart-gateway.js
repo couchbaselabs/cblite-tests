@@ -51,7 +51,7 @@ test("setup continuous push and pull from both client database", function(t) {
 	  })
 	})
 
-test("verify dbs have same number of docs", {timeout: 12 * 1000}, function(t) {
+test("verify dbs have same number of docs", {timeout: 30 * 1000}, function(t) {
   common.verifyNumDocs(t, dbs, numDocs)
 })
 

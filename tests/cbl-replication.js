@@ -216,7 +216,7 @@ test("load databases", function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
-test("verify local-replicated num-docs numDocs-2", { timeout : 15000}, function(t){
+test("verify local-replicated in repdbs: " + numDocs, { timeout : 15000}, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
@@ -231,7 +231,7 @@ test("purge dbs", function(t){
 })
 
 // check dbs
-test("verify local-replicated num-docs 0-2", { timeout : 15000}, function(t){
+test("verify local-replicated in dbs: 0", { timeout : 30000}, function(t){
   common.verifyNumDocs(t, dbs, 0)
 })
 
