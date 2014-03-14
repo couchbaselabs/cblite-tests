@@ -12,7 +12,7 @@ var server, sg, gateway,
 
 var numDocs=config.numDocs || 100;
 var timeoutReplication = 0;
-if (config.provides=="android") timeoutReplication = 2000;
+if (config.provides=="android") timeoutReplication = 3000;
 
 // start client endpoint
 test("start test client", function(t){
@@ -56,10 +56,10 @@ test("push replication should close connection on completion", function(t) {
 			  t.ok(dbinfo, "got an info repsonse")
 			  //https://github.com/couchbase/sync_gateway/issues/292
 			  console.log("sg update_seq", coax(sg).pax().toString(), dbinfo)
-			  t.equals(dbinfo.update_seq, numDocs, "all docs replicated:")
+			  t.equals(dbinfo.update_seq, numDocs, "all docs replicated")
 			  t.end()
 		  })
-	  },timeoutReplication)
+	  }, timeoutReplication)
   })
 })
 
@@ -80,7 +80,7 @@ test("pull replication should close connection on completion", function(t) {
       t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
       t.end()
     })
-    },timeoutReplication)
+    }, timeoutReplication)
   })
 })
 

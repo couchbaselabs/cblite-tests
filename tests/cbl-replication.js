@@ -231,7 +231,7 @@ test("purge dbs", function(t){
 })
 
 // check dbs
-test("verify local-replicated in dbs: 0", { timeout : 30000}, function(t){
+test("verify local-replicated in dbs: 0", { timeout : 60 * 1000}, function(t){
   common.verifyNumDocs(t, dbs, 0)
 })
 
