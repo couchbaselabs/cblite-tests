@@ -44,6 +44,7 @@ test("push replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
   if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
   var lite = dbs[0]
+  console.log(coax([server, "_replicate"]).pax().toString(), "source:", lite, ">>  target:", sgdb)
   coax.post([server, "_replicate"], {
     source : lite,
     target : sgdb
@@ -67,6 +68,7 @@ test("pull replication should close connection on completion", function(t) {
   var sgdb = sg.db.pax().toString()
   if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
   var lite = pulldbs[0]
+  console.log(coax([server, "_replicate"]).pax().toString(), "source:", sgdb, ">>  target:", lite)
   coax.post([server, "_replicate"], {
     source : sgdb,
     target : lite
