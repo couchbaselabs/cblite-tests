@@ -9,6 +9,9 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
+  test_time = process.env.TAP_TIMEOUT || 30
+  test_conf = {timeout: test_time * 1000}
+
 
 var server,
  dbs = ["api-test1", "api-test2", "api-test3"];
@@ -145,7 +148,7 @@ test("compact db", function(t){
   common.compactDBs(t, [dbs[0]])
 })
 
-test("compact during doc update", function(t){
+test("compact during doc update", test_conf, function(t){
   // start updating docs
   common.updateDBDocs(t, {dbs : [dbs[0]],
                           numrevs : 5,
@@ -159,7 +162,7 @@ test("compact during doc update", function(t){
 })
 
 
-test("compact during doc delete", function(t){
+test("compact during doc delete", test_conf, function(t){
   // start deleting docs
   common.deleteDBDocs(t, [dbs[0]], numDocs)
 
