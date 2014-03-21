@@ -6,7 +6,10 @@ var launcher = require("../lib/launcher"),
   config = require('../config/' + conf_file),
   utils = common.utils,
   ee = common.ee,
-  test = require("tap").test;
+  test = require("tap").test,
+  test_time = process.env.TAP_TIMEOUT || 30,
+  test_conf = {timeout: test_time * 1000};
+
 
 var server,
  dbs = ["api-test1", "api-test2", "api-test3"];
@@ -79,8 +82,12 @@ test("test purge", function(t){
 
 })
 
+test("create test databases", function(t){
+  common.createDBs(t, dbs)
+})
+
 //note: 'test purge' should pass otherwise the first item in array _attachments will be inline.txt
-test("create docs with image attachments", function(t){
+test("create docs with image attachments", test_conf, function(t){
 
  common.createDBDocs(t, {numdocs : numDocs,
                           dbs : dbs,
@@ -129,7 +136,7 @@ test("create docs with image attachments", function(t){
   })
 })
 
-test("multi inline attachments", function(t){
+test("multi inline attachments", test_conf, function(t){
 
  common.updateDBDocs(t, {numdocs : numDocs,
                          numrevs : 3,
@@ -177,7 +184,7 @@ test("multi inline attachments", function(t){
 })
 
 // compact db
-test("compact db", function(t){
+test("compact db", test_conf, function(t){
   common.compactDBs(t, dbs)
 
 })
@@ -186,7 +193,7 @@ test("verify compaction", function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })
 
-test("delete doc attachments", function(t){
+test("delete doc attachments", test_conf, function(t){
   common.deleteDBDocAttachments(t, dbs, numDocs)
 })
 

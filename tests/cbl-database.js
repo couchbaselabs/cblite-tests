@@ -16,7 +16,7 @@ var launcher = require("../lib/launcher"),
 var server,
  dbs = ["api-test1", "api-test2", "api-test3"];
 
-var numDocs=config.numDocs || 100;
+var numDocs=parseInt(config.numDocs) || 100;
 
 // start client endpoint
 test("start test client", function(t){
@@ -177,8 +177,8 @@ test("load multiple databases", function(t){
 
 
 //issue#149 "Error: socket hang up" when request docs asynchronously
-https://github.com/couchbase/couchbase-lite-android/issues/149#issuecomment-31798402
-test("compact during multi-db update", {timeout : 300000}, function(t){
+//https://github.com/couchbase/couchbase-lite-android/issues/149#issuecomment-31798402
+test("compact during multi-db update", test_conf, function(t){
   common.updateDBDocs(t, {dbs : dbs,
                           numrevs : 5,
                           numdocs : numDocs}, "emit-updated")
