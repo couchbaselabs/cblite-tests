@@ -3,7 +3,9 @@ var launcher = require("../lib/launcher"),
   common = require("../tests/common"),
   conf_file = process.env.CONF_FILE || 'local',
   config = require('../config/' + conf_file);
-  test = require("tap").test;
+  test = require("tap").test,
+  test_time = process.env.TAP_TIMEOUT || 30,
+  test_conf = {timeout: test_time * 1000};
 
 var numDocs=(parseInt(config.numDocs) || 100)*5;
 
@@ -33,7 +35,7 @@ test("create test databases", function(t){
   sgdb1 = sg1.db.pax().toString()
 })
 
-test("load databases", function(t){
+test("load databases", test_conf, function(t){
   t.equals(numDocs/2, Math.floor(numDocs/2), "numDocs must be an even number")
   common.createDBDocs(t, {numdocs : numDocs/2, dbs : dbs, docgen : "channels"})
 })
@@ -51,7 +53,7 @@ test("setup continuous push and pull from both client database", function(t) {
 	  })
 	})
 
-test("verify dbs have same number of docs", {timeout: 30 * 1000}, function(t) {
+test("verify dbs have same number of docs", test_conf, function(t) {
   common.verifyNumDocs(t, dbs, numDocs)
 })
 
@@ -88,7 +90,7 @@ test("setup continuous push and pull from both client database", function(t) {
   })
 })
 
-test("verify dbs have same number of docs", {timeout: 30 * 1000}, function(t) {
+test("verify dbs have same number of docs", test_conf, function(t) {
   common.verifyNumDocs(t, dbs, numDocs)
 })
 

@@ -5,7 +5,9 @@ var launcher = require("../lib/launcher"),
   util =  require("util"),
   conf_file = process.env.CONF_FILE || 'local',
   config = require('../config/' + conf_file),
-  test = require("tap").test
+  test = require("tap").test,
+  test_time = process.env.TAP_TIMEOUT || 30,
+  test_conf = {timeout: test_time * 1000};
 
 var server, sg, gateway,
  // local dbs
@@ -127,11 +129,11 @@ test("set push/pull replication to gateway", function(t){
 
 })
 
-test("load databases", function(t){
+test("load databases", test_conf, function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
-test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
+test("verify local-replicated dbs changefeed", test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
@@ -149,7 +151,7 @@ test("verify local-replicated num-docs" + numDocs, function(t){
 	 }
 })
 
-test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
+test("verify sg-replicated dbs loaded", test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
@@ -170,12 +172,12 @@ test("verify sg-replicated num-docs", function(t){
 })
 
 
-test("delete db docs",  function(t){
+test("delete db docs", test_conf, function(t){
   common.deleteDBDocs(t, dbs, numDocs)
 })
 
 
-test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
+test("verify local-replicated dbs changefeed", test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
@@ -190,7 +192,7 @@ test("verify local-replicated num-docs 0", function(t){
   common.verifyNumDocs(t, repdbs, 0)
 })
 
-test("verify sg-replicated dbs loaded", {timeout : 15000}, function(t){
+test("verify sg-replicated dbs loaded", test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
@@ -216,7 +218,7 @@ test("load databases", function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
-test("verify local-replicated in repdbs: " + numDocs, { timeout : 15000}, function(t){
+test("verify local-replicated in repdbs: " + numDocs, test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
@@ -226,12 +228,12 @@ test("verify local-replicated in repdbs: " + numDocs, { timeout : 15000}, functi
 })
 
 // purge all dbs
-test("purge dbs", function(t){
+test("purge dbs", test_conf, function(t){
   common.purgeDBDocs(t, dbs, numDocs)
 })
 
 // check dbs
-test("verify local-replicated in dbs: 0", { timeout : 60 * 1000}, function(t){
+test("verify local-replicated in dbs: 0", test_conf, function(t){
   common.verifyNumDocs(t, dbs, 0)
 })
 
