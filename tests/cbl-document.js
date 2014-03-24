@@ -77,7 +77,7 @@ test("create docs with inline text attachments", function(t){
 })
 
 // purge all dbs
-test("test purge", function(t){
+test("test purge", test_conf, function(t){
   common.purgeDBDocs(t, dbs, numDocs)
 
 })
@@ -197,11 +197,11 @@ test("delete doc attachments", test_conf, function(t){
   common.deleteDBDocAttachments(t, dbs, numDocs)
 })
 
-test("delete db docs", function(t){
+test("delete db docs", test_conf, function(t){
   common.deleteDBDocs(t, dbs, numDocs)
 })
 
-test("create attachments using bulk docs", function(t){
+test("create attachments using bulk docs", test_conf, function(t){
   common.createDBBulkDocs(t, {numdocs : numDocs*10,
                               docgen : 'bulkInlineTextAtt',
                               dbs : dbs})
@@ -260,7 +260,8 @@ test("delete doc with _delete", function(t){
     doc._id = js.id
     doc._deleted = true
     coax.post([server, dbs[0]], doc, function(err, _js){
-      t.false(err)
+      var dbUrl = coax([server, dbs[0]]).pax().toString()
+      t.false(err, "failed insert " + doc._id + " in " + dbUrl)
       coax([server, dbs[0], "hello"], function(err, _js){
 	  if (typeof err.status == 'undefined'){
 	      console.log(err)
@@ -334,7 +335,7 @@ test("create basic local docs", function(t){
     })
   })
 
-test("delete local db docs",  function(t){
+test("delete local db docs",  test_conf, function(t){
   common.deleteDBDocs(t, dbs, numDocs, "_local")
 })
 
