@@ -52,7 +52,7 @@ var common = module.exports = {
     if(!this.listener){
       this.listener = listener.start()
     }
-    var url = "http://"+config.LocalListenerIP+":"+config.LocalListenerPort
+    var url = "http://" + config.LocalListenerIP + ":" + config.LocalListenerPort
     this.listener.url = url
     var testendpoint = config.provides
 
@@ -73,7 +73,7 @@ var common = module.exports = {
         port = config.LiteServPort || 8080
         serve = launcher.launchLiteServ({
             port : port,
-            dir : __dirname+"/../tmp/single",
+            dir : __dirname + "/../tmp/single",
             path : config.LiteServPath
         })
         serve.on("error", function(err){
@@ -112,7 +112,7 @@ var common = module.exports = {
       port : 9888,
       db : config.DbUrl,
       bucket : config.DbBucket,
-      dir : __dirname+"/../tmp/sg",
+      dir : __dirname + "/../tmp/sg",
       path : config.SyncGatewayPath,
       configPath : config.SyncGatewayAdminParty
     })
@@ -134,7 +134,7 @@ var common = module.exports = {
         port : port,
         db : db,
         bucket : bucket,
-        dir : __dirname+"/../tmp/sg",
+        dir : __dirname + "/../tmp/sg",
         path : config.SyncGatewayPath,
         configPath : config.SyncGatewayAdminParty
 
@@ -189,7 +189,7 @@ var common = module.exports = {
 			})
 
 			response.on('end', function (){
-				logger.info(response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+				logger.info(response.statusCode + " from http://" + options.host + ":" + options.port + options.path)
 
 				if(response.statusCode=='200' || response.statusCode=='201'){
 					try {
@@ -201,7 +201,7 @@ var common = module.exports = {
 				}
 				else{
 					logger.info(body)
-					t.fail("wrong response status code " + response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+					t.fail("wrong response status code " + response.statusCode + " from http://" + options.host + ":" + options.port+options.path)
 					t.end()
 				}
 			})
@@ -227,7 +227,7 @@ var common = module.exports = {
 				})
 
 				response.on('end', function (){
-					logger.info(response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+					logger.info(response.statusCode + " from http://"+options.host + ":"+options.port + options.path)
 
 					if(response.statusCode=='200' || response.statusCode=='202'){
 						try {
@@ -240,7 +240,7 @@ var common = module.exports = {
 					}
 					else{
 						logger.info(body)
-						t.fail("wrong response status code " + response.statusCode + " from http://"+options.host + ":"+options.port+options.path)
+						t.fail("wrong response status code " + response.statusCode + " from http://" + options.host + ":" + options.port + options.path)
 						t.end()
 					}
 				})
@@ -267,8 +267,10 @@ var common = module.exports = {
     //for local documents id formed as _local/ID
     if (localdocs) localdocs= localdocs + "/"
     async.map(dbs, function(db, nextdb){
-	async.times(numdocs, function(i, cb){
-		var docid = db+"_"+i
+	async.timesSeries(numdocs, function(i, cb){
+		//with async.times cbl-replication-mismatch-2-gateways(restart-gateway).js failed on android:
+		//{"code":"EPIPE","errno":"EPIPE","syscall":"write"}
+		var docid = db + "_" + i
 	    var madeDoc = generators[docgen](i)
 	    madeDoc._id = docid
 
@@ -325,7 +327,7 @@ var common = module.exports = {
           var numOks = json.filter(function(doc) { return doc.ok } )
 
           if(numOks.length != size){
-            t.fail("bulk_docs loaded: "+numOks.length+" expected "+size)
+            t.fail("bulk_docs loaded: " + numOks.length + " expected " + size)
           }
 
           cb(err, json)
@@ -355,10 +357,10 @@ var common = module.exports = {
 
       async.timesSeries(numrevs, function(revid, nextrev){
 
-        async.times(numdocs, function(i, cb){
+        async.timesSeries(numdocs, function(i, cb){
 
-          var docid = db+"_"+i
-          var url = coax([server,db, docid]).pax().toString()
+          var docid = db + "_" + i
+          var url = coax([server, db, docid]).pax().toString()
 
           // get document rev
           coax(url, function(err, json){
@@ -397,9 +399,9 @@ var common = module.exports = {
     if (localdocs) localdocs= localdocs + "/"
     async.map(dbs, function(db, nextdb) {
 
-      async.times(numdocs, function(i, cb){
+      async.timesSeries(numdocs, function(i, cb){
 
-        var docid = db+"_"+i
+        var docid = db + "_" + i
         var url = coax([server, db, localdocs + docid]).pax().toString()
 
         // get document rev
@@ -425,9 +427,9 @@ var common = module.exports = {
 
     async.map(dbs, function(db, nextdb) {
 
-      async.times(numdocs, function(i, cb){
+      async.timesSeries(numdocs, function(i, cb){
 
-        var docid = db+"_"+i
+        var docid = db + "_" + i
         var url = coax([server,db, docid]).pax().toString()
 
         coax(url, function(err, json){
@@ -495,9 +497,9 @@ var common = module.exports = {
       async.times(numdocs, function(i, cb){
 
         // get doc revs info
-        var docid = db+"_"+i
-        var url = coax([server,db, docid]).pax().toString()
-        url = url+"?revs_info=true"
+        var docid = db + "_" + i
+        var url = coax([server, db, docid]).pax().toString()
+        url = url + "?revs_info=true"
         coax(url, function(err, json){
 
           if(err){
@@ -509,13 +511,13 @@ var common = module.exports = {
               console.log("response of " + url + " doens't contain _revs_info:" + json)
               t.fail("response of docid failed")
           } else{
-              var num_avail = json._revs_info.filter(function(rev,i){
+              var num_avail = json._revs_info.filter(function(rev, i){
                   if(rev.status == "available"){
                       return true
                       }}).length
 
                   if(num_avail > 1){
-                      t.fail(num_avail+' uncompacted revision(s) remain')
+                      t.fail(num_avail + ' uncompacted revision(s) remain')
                       }
 
               if(num_avail < 1){
@@ -535,13 +537,13 @@ var common = module.exports = {
 
     async.map(dbs, function(db, dbdone){
 
-      async.times(numdocs, function(i, cb){
+      async.timesSeries(numdocs, function(i, cb){
         // get last rev
-        var docid = db+"_"+i
+        var docid = db + "_" + i
         var url = coax([server,db, docid]).pax().toString()
         coax(url, function(err, json){
-          if(err){
-            t.fail("unable to retrieve doc ids")
+          if(err || json == undefined || json._rev == undefined){
+            t.fail("unable to retrieve doc id by: " + url)
           }
 
           // purge doc history
@@ -549,7 +551,7 @@ var common = module.exports = {
           doc[docid] = [json._rev]
           coax.post([server, db, "_purge"], doc, function(e, js){
             if(e){
-              t.fail("unable to purge doc history for docid " + docid +": " + JSON.stringify(e))
+              t.fail("unable to purge doc history for docid " + docid + ": " + JSON.stringify(e))
             }
             cb(e,js)
           })
@@ -670,7 +672,7 @@ var common = module.exports = {
             // make sure no new changes incomming
             setTimeout(function(){
               t.equals(tseq, srcseq,
-                "verify target "+tdb+" seq "+tseq+" == "+srcseq)
+                "verify target " + tdb + " seq " + tseq + "==" + srcseq)
               cb(null, feed)
             }, 2000)
           } else {
@@ -725,7 +727,7 @@ var common = module.exports = {
               _cb(err)
             })
             tries++
-          }, 2000)
+          }, 3000)
         },
         function (err) {
           cb(err, { ok : doc_count})
@@ -816,7 +818,7 @@ module.exports.randomChannelNameGen = function (num_chans) {
     num_chans = perfconfig.numChannels
 
   // base10 number between 0-1M
-  var rand = Math.random().toString(10).substring(2,6)
+  var rand = Math.random().toString(10).substring(2, 6)
 
   // reduce to number of sig digits
   var channel = Number(rand.substring(rand.length - String(num_chans).length, rand.length))
@@ -845,7 +847,7 @@ var generators = module.exports.generators = {
   basic :  function(){
 
   var suffix = Math.random().toString(26).substring(7)
-  var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+  var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
   return { _id : id,
            data : Math.random().toString(5).substring(4),
              at : new Date()}
@@ -854,7 +856,7 @@ var generators = module.exports.generators = {
 
   channels : function(chans){
     var suffix = Math.random().toString(26).substring(7)
-    var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
     if(!chans){
       chans = [];
       do {
@@ -882,7 +884,7 @@ var generators = module.exports.generators = {
   inlineTextAtt : function(){
 
     var suffix = Math.random().toString(26).substring(7)
-    var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
     var text = "Inline text string created by cblite functional test"
     var data = new Buffer(text).toString('base64');
 
@@ -903,7 +905,7 @@ var generators = module.exports.generators = {
   inlinePngtAtt : function(){
 
     var suffix = Math.random().toString(26).substring(7)
-    var id = "fctest:"+process.hrtime(tstart)[1]+":"+suffix
+    var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
     var img = __dirname+"/../tests/data/ggate.png"
     var data_binary = fs.readFileSync(img, {encoding : 'base64'})
 
