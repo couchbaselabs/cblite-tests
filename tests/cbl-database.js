@@ -205,7 +205,7 @@ test("verify compaction", function(t){
 
 
 // purge all dbs
-test("test purge", function(t){
+test("test purge", test_conf, function(t){
   common.purgeDBDocs(t, dbs, numDocs)
 })
 
