@@ -216,7 +216,7 @@ test("verify db purge", function(t){
 })
 
 
-test("can load using bulk docs", function(t){
+test("can load using bulk docs", test_conf, function(t){
   common.createDBBulkDocs(t, {numdocs : numDocs*10, dbs : dbs})
 })
 
