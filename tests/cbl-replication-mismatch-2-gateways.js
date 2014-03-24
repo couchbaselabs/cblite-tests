@@ -6,7 +6,7 @@ var launcher = require("../lib/launcher"),
   config = require('../config/' + conf_file),
   test = require("tap").test;
 
-var numDocs=(config.numDocs || 100)*5;
+var numDocs=(parseInt(config.numDocs) || 100)*5;
 
 var server, sg1, sg2, sg2, sgdb
   // local dbs

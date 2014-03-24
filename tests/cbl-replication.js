@@ -15,7 +15,7 @@ var server, sg, gateway,
  // sg->local dbs
  sgdbs = ["api-test7", "api-test8", "api-test9"];
 
-var numDocs=config.numDocs || 100;
+var numDocs=parseInt(config.numDocs) || 100;
 
 
 //https://github.com/couchbase/couchbase-lite-android/issues/77

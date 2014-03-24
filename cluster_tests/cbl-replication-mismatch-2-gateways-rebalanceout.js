@@ -12,7 +12,7 @@ var launcher = require("../lib/launcher"),
   emitsdefault  = "default",
   test = require("tap").test;
 
-var numDocs=(config.numDocs || 100)*5;
+var numDocs=(parseInt(config.numDocs) || 100)*5;
 
 
 

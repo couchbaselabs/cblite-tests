@@ -10,7 +10,7 @@ var server, sg, gateway,
  dbs = ["api-test-once-push"],
  pulldbs = ["api-test-once-pull"];
 
-var numDocs=config.numDocs || 100;
+var numDocs=parseInt(config.numDocs) || 100;
 var timeoutReplication = 0;
 if (config.provides=="android") timeoutReplication = 3000;
 

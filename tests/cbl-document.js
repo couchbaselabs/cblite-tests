@@ -14,7 +14,7 @@ var launcher = require("../lib/launcher"),
 var server,
  dbs = ["api-test1", "api-test2", "api-test3"];
 
-var numDocs=config.numDocs || 100;
+var numDocs=parseInt(config.numDocs) || 100;
 
 // start client endpoint
 test("start test client", function(t){

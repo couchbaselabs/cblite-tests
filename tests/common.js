@@ -404,13 +404,12 @@ var common = module.exports = {
 
         // get document rev
         coax(url, function(err, json){
-
           if(err){
-            t.fail("unable to get doc to delete")
+              t.fail("unable to get doc to delete")
+          } else {
+              // delete doc
+              coax.del([url, {rev : json._rev}], cb)
           }
-
-          // delete doc
-          coax.del([url, {rev : json._rev}], cb)
         })
 
       }, function(err, json){
@@ -434,7 +433,11 @@ var common = module.exports = {
         coax(url, function(err, json){
 
           if(err){
-            t.fail("unable to get doc to delete " + url + ": " + JSON.stringify(err))
+              console.log("unable to get doc to delete " + url + ": " + JSON.stringify(err))
+              t.fail("unable to get doc to delete " + url + ": " + JSON.stringify(err))
+          } else if(json == undefined){
+              console.log("response for doc to be deleted " + url + ":" + err )
+              t.fail("response for doc to be deleted " + url + ":" + err )
           }
 
           // get attachment ids
@@ -452,7 +455,12 @@ var common = module.exports = {
               }
 
               // get updated revid
-              revid = json.rev
+              if (json == undefined){
+                  console.log("response deletion " + rmurl + " doesn't contain rev:" + json)
+                  t.fail("response of docid failed")
+              } else{
+                  revid = json.rev
+              }
               _cb(err, json)
             })
 
@@ -460,9 +468,11 @@ var common = module.exports = {
 
             // check if doc exists without attchement
             coax([url], function(err, json){
-              if('_attachments' in json){
-                t.fail("unable to remove all attachments")
-              }
+              if (json == undefined){
+                      console.log("request of " + url + ": " + json)
+                  } else if ('_attachments' in json){
+                      t.fail("unable to remove all attachments")
+                  }
               cb(err, json)
             })
           })
@@ -495,12 +505,11 @@ var common = module.exports = {
           }
 
           // expect only 1 available rev
-          var revs_info = json._revs_info
-          if (revs_info == undefined){
+          if (json == undefined || json._revs_info == undefined){
               console.log("response of " + url + " doens't contain _revs_info:" + json)
               t.fail("response of docid failed")
           } else{
-              var num_avail = revs_info.filter(function(rev,i){
+              var num_avail = json._revs_info.filter(function(rev,i){
                   if(rev.status == "available"){
                       return true
                       }}).length
@@ -540,7 +549,7 @@ var common = module.exports = {
           doc[docid] = [json._rev]
           coax.post([server, db, "_purge"], doc, function(e, js){
             if(e){
-              t.fail("unable to purge doc history: " + JSON.stringify(e))
+              t.fail("unable to purge doc history for docid " + docid +": " + JSON.stringify(e))
             }
             cb(e,js)
           })
