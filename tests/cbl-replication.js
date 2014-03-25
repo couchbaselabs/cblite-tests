@@ -214,7 +214,7 @@ test("verify sg-replicated num-docs", function(t){
 
 
 // load databaes
-test("load databases", function(t){
+test("load databases", test_conf, function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
