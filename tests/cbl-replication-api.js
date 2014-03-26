@@ -3,7 +3,9 @@ var launcher = require("../lib/launcher"),
   async = require("async"),
   common = require("../tests/common"),
   util =  require("util"),
-  test = require("tap").test;
+  test = require("tap").test,
+  test_time = process.env.TAP_TIMEOUT || 30,
+  test_conf = {timeout: test_time * 1000};
 
 var server, sg, gateway,
   // local dbs
@@ -40,7 +42,7 @@ test("load databases", function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
-test("push replication should close connection on completion", function(t) {
+test("push replication should close connection on completion", test_conf, function(t) {
   var sgdb = sg.db.pax().toString()
   if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
   var lite = dbs[0]
@@ -64,7 +66,7 @@ test("push replication should close connection on completion", function(t) {
   })
 })
 
-test("pull replication should close connection on completion", function(t) {
+test("pull replication should close connection on completion", test_conf, function(t) {
   var sgdb = sg.db.pax().toString()
   if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
   var lite = pulldbs[0]
