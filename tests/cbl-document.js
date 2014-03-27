@@ -189,7 +189,7 @@ test("compact db", test_conf, function(t){
 
 })
 
-test("verify compaction", function(t){
+test("verify compaction", test_conf, function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })
 
@@ -251,7 +251,7 @@ test("docs with bad fields", function(t) {
   })
 })
 
-test("delete doc with _delete", function(t){
+test("delete doc with _delete", test_conf, function(t){
 
   var doc = { _id : "hello" }
   coax.post([server, dbs[0]], doc, function(err, js){

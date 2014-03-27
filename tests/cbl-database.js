@@ -199,7 +199,7 @@ test("compact during multi-db update", test_conf, function(t){
 })
 
 
-test("verify compaction", function(t){
+test("verify compaction", test_conf, function(t){
   common.verifyCompactDBs(t, dbs, numDocs)
 })
 
@@ -211,7 +211,7 @@ test("test purge", test_conf, function(t){
 
 
 // verify db purge
-test("verify db purge", function(t){
+test("verify db purge", test_conf, function(t){
   common.verifyDBPurge(t, dbs)
 })
 
