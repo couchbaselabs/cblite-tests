@@ -29,7 +29,7 @@ test("create test databases", function(t){
 })
 
 //https://github.com/couchbaselabs/cblite-tests/issues/13
-test("create docs with inline text attachments", function(t){
+test("create docs with inline text attachments", test_conf, function(t){
   common.createDBDocs(t, {numdocs : numDocs,
                           dbs : dbs,
                           docgen : 'inlineTextAtt'}, 'emits-created')

@@ -171,7 +171,7 @@ test("compact during doc delete", test_conf, function(t){
 })
 
 
-test("load multiple databases", function(t){
+test("load multiple databases", test_conf, function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
