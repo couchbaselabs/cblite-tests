@@ -291,7 +291,7 @@ test("delete doc with _delete", test_conf, function(t){
 
 // X compact (inline | external)
 
-test("create basic local docs", function(t){
+test("create basic local docs", test_conf, function(t){
 
   common.createDBDocs(t, {numdocs : numDocs,
                           dbs : dbs,
