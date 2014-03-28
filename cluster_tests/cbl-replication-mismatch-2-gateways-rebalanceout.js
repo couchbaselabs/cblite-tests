@@ -230,36 +230,15 @@ test("verify sync gateway changes feed has all docs in it", {timeout: 120 * 1000
 
 })
 
-function verifyChanges(db, cb) {
-  var db_one_ids = {}, db_one_dup_ids = [], db_one_seqs = {}, db_one_dup_seqs = [];
-
-  db("_changes", function(err, data) {
-    db("_all_docs", function(err, view){
-      data.results.forEach(function(r){
-        if (db_one_ids[r.id]) {
-          db_one_dup_ids.push(r.id)
-        }
-        db_one_ids[r.id] = true
-
-        if (db_one_seqs[r.seq]) {
-          db_one_dup_seqs.push(r.seq)
-        }
-        db_one_seqs[r.seq] = true
-      })
-      cb(db_one_ids, db_one_dup_ids, db_one_seqs, db_one_dup_seqs)
-    })
-  })
-}
-
 test("verify cbl changes", function(t){
-  verifyChanges(coax([server, dbs[0]]), function(db_one_ids, db_one_dup_ids, db_one_seqs,db_one_dup_seqs) {
+	common.verifyChanges(coax([server, dbs[0]]), function(db_one_ids, db_one_dup_ids, db_one_seqs,db_one_dup_seqs) {
     var one_ids_list = Object.keys(db_one_ids), db_one_seqs_list = Object.keys(db_one_seqs)
     t.equals(one_ids_list.length, numDocs, "correct number of docs in _all_docs")
     t.equals(db_one_seqs_list.length, numDocs, "correct number of docs in _changes")
     t.equals(db_one_dup_ids.length, 0, "duplicate ids in changes "+db_one_dup_ids)
     t.equals(db_one_dup_seqs.length, 0, "duplicate seqs in changes")
 
-    verifyChanges(coax([server, dbs[0]]), function(db_two_ids, db_two_dup_ids, db_two_seqs,db_two_dup_seqs) {
+    common.verifyChanges(coax([server, dbs[0]]), function(db_two_ids, db_two_dup_ids, db_two_seqs,db_two_dup_seqs) {
       var db_two_idslist = Object.keys(db_two_ids), db_two_seqs_list = Object.keys(db_two_seqs)
 
       t.equals(db_two_idslist.length, numDocs, "correct number of docs in _all_docs")

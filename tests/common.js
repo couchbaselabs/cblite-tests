@@ -753,9 +753,33 @@ var common = module.exports = {
         continuous : true
       }, cb)
     })
-  }
+  },
+
+  verifyChanges: function (db, cb) {
+	  var db_one_ids = {}, db_one_dup_ids = [], db_one_seqs = {}, db_one_dup_seqs = [];
+
+	  db("_changes", function(err, data) {
+	    db("_all_docs", function(err, view){
+	      data.results.forEach(function(r){
+	        if (db_one_ids[r.id]) {
+	          db_one_dup_ids.push(r.id)
+	        }
+	        db_one_ids[r.id] = true
+
+	        if (db_one_seqs[r.seq]) {
+	          db_one_dup_seqs.push(r.seq)
+	        }
+	        db_one_seqs[r.seq] = true
+	      })
+	      cb(db_one_ids, db_one_dup_ids, db_one_seqs, db_one_dup_seqs)
+	    })
+	  })
+	}
 
 }
+
+
+
 
 // defaultHandler: does final test verification
 //
