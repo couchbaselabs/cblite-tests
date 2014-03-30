@@ -121,7 +121,7 @@ test("create test databases", function(t){
             	  t.end()
               });
           } else {
-              coax.put([this.server, db])
+              t.fail(url, " db should exist after restart server")
               t.end()
           }
       });
@@ -158,7 +158,7 @@ test("create test databases", function(t){
             	  t.end()
               });
           } else {
-              coax.put([this.server, db])
+              t.fail(url + " db should exist after server restarted and db recreated")
               t.end()
           }
       });
