@@ -346,53 +346,101 @@ var common = module.exports = {
 
   },
 
+
   updateDBDocs : function(t, params, emits){
+      var docgen = params.docgen || 'basic'
+	  var dbs = params.dbs
+	  var numdocs = params.numdocs
+	  var numrevs = params.numrevs
 
-    var docgen = params.docgen || 'basic'
-    var dbs = params.dbs
-    var numdocs = params.numdocs
-    var numrevs = params.numrevs
+	  async.map(dbs, function (db, nextdb) {
 
-    async.map(dbs, function(db, nextdb){
+	      async.timesSeries(numrevs, function (revid, nextrev) {
 
-      async.timesSeries(numrevs, function(revid, nextrev){
+	          async.timesSeries(numdocs, function (i, cb) {
 
-        async.timesSeries(numdocs, function(i, cb){
+	                  var docid = db + "_" + i
+	                  var url = coax([server, db, docid]).pax().toString()
 
-          var docid = db + "_" + i
-          var url = coax([server, db, docid]).pax().toString()
+	                  // get document rev
+	                  coax(url, function (err, json) {
+	                      if (err || (!json) || json == undefined) {
+	                          t.fail("unable to get doc rev for url:" + url + ", err:" + err + ", json:" + json)
+	                          cb(err, json)
+	                      } else {
+	                          var doc = generators[docgen](i)
+	                          // preserve other attachments
+	                          if (json._attachments && doc._attachments) {
+	                              for (var id in json._attachments) {
+	                                  if (!(id in doc._attachments)) {
+	                                      doc._attachments[id] = json._attachments[id]
+	                                  }
+	                              }
+	                          }
+	                          // preserve id and rev
+	                          doc._id = json._id
+	                          doc._rev = json._rev
+	                          // put updated doc
+	                          coax.put([url], doc, cb)
+	                      }
+	                  })
 
-          // get document rev
-          coax(url, function(err, json){
-            if(err || (!json) || json == undefined){
-                t.fail("unable to get doc rev for url:" + url + ", err:" + err + ", json:" + json)
-                cb(err, json)
-            } else {
-                var doc = generators[docgen](i)
-                // preserve other attachments
-                if(json._attachments && doc._attachments){
-                    for(var id in json._attachments){
-                        if(!(id in doc._attachments)){
-                            doc._attachments[id] = json._attachments[id]
-                            }
-                        }
-                    }
-                // preserve id and rev
-                doc._id = json._id
-                doc._rev = json._rev
-                // put updated doc
-                coax.put([url], doc, cb)
-            }
-          })
+	              },
+	              notifycaller({
+	                  emits: "docsUpdating",
+	                  cb: nextrev
+	              }))
 
-        },
-        notifycaller({emits : "docsUpdating" , cb : nextrev}))
+	      }, nextdb)
 
-      }, nextdb)
+	  }, notifycaller.call(t, emits))},
 
-    }, notifycaller.call(t, emits))
 
-  },
+  updateSGDocs : function(t, params, emits){
+      var docgen = params.docgen || 'basic'
+	  var dbs = params.dbs
+	  var numrevs = params.numrevs
+	  async.map(dbs, function (db, nextdb) {
+	      async.timesSeries(numrevs, function (revid, nextrev) {
+	          var urlAllDocs = coax([db.url, "db", "_all_docs"]).pax().toString()
+	          coax(urlAllDocs, function (err, json) {
+	              numdocs = json.rows.length
+	              async.timesSeries(numdocs, function (i, cb) {
+	                      var doc = json.rows[i]
+	                      var url = coax([db.url, "db", doc.id]).pax().toString()
+	                      // get document rev
+	                      coax(url, function (err, json) {
+	                          if (err || (!json) || json == undefined) {
+	                              t.fail("unable to get doc rev for url:" + url + ", err:" + err + ", json:" + json)
+	                              cb(err, json)
+	                          } else {
+	                              var doc = generators[docgen](i)
+	                              // preserve other attachments
+	                              if (json._attachments && doc._attachments) {
+	                                  for (var id in json._attachments) {
+	                                      if (!(id in doc._attachments)) {
+	                                          doc._attachments[id] = json._attachments[id]
+	                                      }
+	                                  }
+	                              }
+	                              // preserve id and rev
+	                              doc._id = json._id
+	                              doc._rev = json._rev
+	                              // put updated doc
+	                              coax.put([db.url, "db", json._id], doc, cb)
+	                          }
+	                      })
+
+	                  },
+	                  notifycaller({
+	                      emits: "docsSGUpdating",
+	                      cb: nextrev
+	                  }))
+	          })
+	      }, nextdb)
+
+	  }, notifycaller.call(t, emits))},
+
 
   deleteDBDocs : function(t, dbs, numdocs, localdocs, emits){
     var localdocs = localdocs || ''
@@ -422,6 +470,46 @@ var common = module.exports = {
     }, notifycaller.call(t, emits))
 
   },
+
+  deleteDBConflictDocs : function(t, dbs, numdocs, localdocs, emits){var localdocs = localdocs || ''
+	  if (localdocs) localdocs = localdocs + "/"
+	  async.mapSeries(dbs, function (db, nextdb) {
+
+	      async.times(numdocs, function (i, cb) {
+	          var docid = db + "_" + i
+	          var url = coax([server, db, localdocs + docid]).pax().toString()
+	          url += "?conflicts=true"
+	          console.log(url)
+
+	          // get document rev
+	          coax(url, function (err, json) {
+	              if (err) {
+	                  t.fail("unable to get doc to delete", err)
+	              } else {
+	                  console.log(json)
+	                  confls = json._conflicts
+	                  console.log(confls)
+	                  //delete doc
+	                  var docUrl = coax([server, db, localdocs + docid]).pax().toString()
+	                  console.log(docUrl)
+	                  async.map(confls, function (confl, nextConfl) {
+	                      coax.del([docUrl, {
+	                              rev: confl
+	                          }],
+	                          function (err, json) {
+	                              console.log(json)
+	                              t.equals(json.ok, false, "all conflict revisons deleted")
+	                              cb(err, json)
+
+	                          }, nextConfl)
+	                  })
+	              }
+	          })
+
+	      }, nextdb)
+
+	  }, notifycaller.call(t, emits))},
+
 
   deleteDBDocAttachments : function(t, dbs, numdocs, emits){
 
@@ -586,7 +674,7 @@ var common = module.exports = {
 
     // expecting all documents deleted
     async.map(dbs, function(db, cb){
-      coax([server,db], cb)
+      coax([server, db], cb)
     }, function(e, responses){
       var numPurged = responses.filter(function(dbinfo){
         return dbinfo.doc_count == 0
@@ -603,7 +691,7 @@ var common = module.exports = {
 
     // get 1 doc from each db
     async.map(dbs, function(db, cb){
-      var url = coax([server,db,"_all_docs"]).pax().toString()+"?limit=1"
+      var url = coax([server, db, "_all_docs"]).pax().toString()+"?limit=1"
       coax(url, function(e, js){
         if(e){
           t.fail("unable to retrieve db doc")
@@ -737,6 +825,49 @@ var common = module.exports = {
     }, notifycaller.call(t, emits))
 
   },
+
+
+  verifySGNumDocs : function(t, dbs, numexpected, emits){async.map(dbs, function (db, cb) {
+	    var dburl = coax([db.url, "db", "_all_docs"]).pax().toString()
+	    var doc_count = -1
+	    var tries = 0
+
+	    async.whilst(
+	        function () {
+	            if (tries >= 60) {
+	                return false
+	            }
+	            return numexpected != doc_count;
+	        },
+	        function (_cb) {
+
+	            // get doc count every 3s
+	            setTimeout(function () {
+	                coax(dburl, function (err, json) {
+	                    if (err) {
+	                        t.fail("failed to get db info from " + dburl)
+	                    }
+	                    if (json == undefined) {
+	                        t.fail("json is undefined requesting " + dburl + ": " + json)
+	                    } else {
+	                        console.log(json)
+	                        doc_count = json.rows.length
+	                        console.log(db + " has " + doc_count + " docs expecting " + numexpected)
+	                    }
+	                    _cb(err)
+	                })
+	                tries++
+	            }, 3000)
+	        },
+	        function (err) {
+	            cb(err, {
+	                ok: doc_count
+	            })
+	            t.equals(numexpected, doc_count,
+	                "verified " + db + " numdocs " + numexpected + " == " + doc_count)
+	        });
+	}, notifycaller.call(t, emits))},
+
 
   setupPushAndPull: function (server, dba, dbb, cb) {
     console.log("_replicate server: " + server + " source: " + dba + " -> target: " + dbb)
