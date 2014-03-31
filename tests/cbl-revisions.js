@@ -12,10 +12,11 @@ var launcher = require("../lib/launcher"),
 var server, sg, gateway,
  // local dbs
  dbs = ["api-revision1"];
- // sg->local dbs
-// sgdbs = ["sg-revision1"];
 
 var numDocs=parseInt(config.numDocs) || 100;
+var timeoutReplication = 0;
+if (config.provides=="android") timeoutReplication = 300 * numDocs;
+
 
 
 // start client endpoint
@@ -150,20 +151,10 @@ test("set push/pull replication to gateway", function(t){
 			  t.equals(dbinfo.update_seq, numDocs*3, "all docs replicated")
 			  t.end()
 		  })
-	  }, 10000)
+	  }, timeoutReplication)
   })
 
 })
-/*
-test("verify local-replicated dbs changefeed", test_conf, function(t){
-//	 if (config.provides == "android") {
-//		 console.log("Skipping local replication on Android")
-//		 t.end()
-//	 } else {
-		 common.compareDBSeqNums(t, {sourcedbs : dbs,
-                              targetdbs : [sg.url]})
-//	 }
-})*/
 
 test("delete confilcts in docs", test_conf, function(t){
   // start deleting docs
@@ -178,58 +169,3 @@ test("done", function(t){
     t.end()
   })
 })
-
-
-/*
- working!
-test("delete db docs", test_conf, function(t){
-  common.deleteDBDocs(t, dbs, numDocs)
-})
-
-
-test("verify local-replicated num-docs=0", function(t){
-  common.verifyNumDocs(t, sg, 0)
-})
-*/
-/*
-// load databaes
-test("load databases", test_conf, function(t){
-  common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
-})
-
-
-test("doc update", test_conf, function(t){
-  // start updating docs
-  common.updateDBDocs(t, {dbs : [sgdbs[0]],
-                          numrevs : 1,
-                          numdocs : numDocs})
-})
-
-
-// purge all dbs
-test("purge dbs", test_conf, function(t){
-  common.purgeDBDocs(t, dbs, numDocs)
-})
-
-// check dbs
-test("verify local-replicated in dbs: 0", test_conf, function(t){
-  common.verifyNumDocs(t, dbs, 0)
-})
-
-// timing out and the compareDBSeqNums asserts are dubious so skipping for now
-// test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
-//   common.compareDBSeqNums(t, {sourcedbs : dbs,
-//                               targetdbs : repdbs})
-// })
-
-test("cleanup cb bucket", function(t){
-    if (config.DbUrl.indexOf("http") > -1){
-    coax.post([config.DbUrl, "pools/default/buckets/", config.DbBucket, "controller/doFlush"],
-	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
-	      t.false(err, "flush cb bucket")
-    })
-    }
-    t.end()
-})
-
-*/
