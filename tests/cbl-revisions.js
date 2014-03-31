@@ -14,7 +14,7 @@ var server, sg, gateway,
  dbs = ["api-revision1"];
 
 var numDocs=parseInt(config.numDocs) || 100;
-var timeoutReplication = 0;
+var timeoutReplication = 3000;
 if (config.provides=="android") timeoutReplication = 300 * numDocs;
 
 
@@ -162,6 +162,10 @@ test("delete confilcts in docs", test_conf, function(t){
 
 })
 
+test("delete confilcts in docs", test_conf, function(t){
+  common.verifyNoConflictsDocs(t, dbs, numDocs)
+
+})
 
 test("done", function(t){
   common.cleanup(t, function(json){

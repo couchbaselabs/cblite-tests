@@ -479,26 +479,26 @@ var common = module.exports = {
 	          var docid = db + "_" + i
 	          var url = coax([server, db, localdocs + docid]).pax().toString()
 	          url += "?conflicts=true"
-	          console.log(url)
 
 	          // get document rev
 	          coax(url, function (err, json) {
 	              if (err) {
 	                  t.fail("unable to get doc to delete", err)
 	              } else {
-	                  console.log(json)
 	                  confls = json._conflicts
-	                  console.log(confls)
+	                  //console.log(confls)
 	                  //delete doc
 	                  var docUrl = coax([server, db, localdocs + docid]).pax().toString()
 	                  console.log(docUrl)
-	                  async.map(confls, function (confl, nextConfl) {
+	                  async.mapSeries(confls, function (confl, nextConfl) {
 	                      coax.del([docUrl, {
 	                              rev: confl
 	                          }],
 	                          function (err, json) {
-	                              console.log(json)
-	                              t.equals(json.ok, false, "all conflict revisons deleted")
+	                              //console.log(json)
+	                              t.equals(json.ok, true, "all conflict revisons deleted")
+	                              //uncomment when fix https://github.com/couchbase/couchbase-lite-ios/issues/297
+	                              //t.equals(json.rev, undefined, "all conflict revisons deleted")
 	                              cb(err, json)
 
 	                          }, nextConfl)
@@ -576,6 +576,32 @@ var common = module.exports = {
     }, notifycaller.call(t, emits))
 
   },
+
+
+  verifyNoConflictsDocs : function(t, dbs, numdocs, localdocs, emits){var localdocs = localdocs || ''
+	  if (localdocs) localdocs = localdocs + "/"
+	  async.mapSeries(dbs, function (db, nextdb) {
+
+	      async.times(numdocs, function (i, cb) {
+	          var docid = db + "_" + i
+	          var url = coax([server, db, localdocs + docid]).pax().toString()
+	          url += "?conflicts=true"
+
+	          // get document rev
+	          coax(url, function (err, json) {
+	              if (err) {
+	                  t.fail("unable to get doc to delete", err)
+	                   cb(err, json)
+	              } else {
+	                  //console.log(json)
+	                  t.equals(json._conflicts.length, 0, "all conflict revisons deleted")
+	                   cb(err, json)
+	              }
+	          })
+
+	      }, nextdb)
+
+	  }, notifycaller.call(t, emits))},
 
 
   verifyCompactDBs : function(t, dbs, numdocs, emits){

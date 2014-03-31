@@ -8,7 +8,7 @@ var config = module.exports = {
   DbUrl             : "walrus:",
   DbBucket          : "db",
   provides          : "ios",  // ios, android, pouchdb, couchdb
-  numDocs           : 100,
+  numDocs           : process.env.NUM_DOCS || 100,
   channelsPerDoc    : 1,
 }
 
