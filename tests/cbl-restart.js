@@ -94,7 +94,7 @@ test("load databases", test_conf, function(t){
 })
 
 test("verify replicated num-docs=" + numDocs, function(t){
-  common.verifyNumDocs(t, sg, numDocs)
+  common.verifySGNumDocs(t, [sg], numDocs)
 })
 
 test("kill sg", function(t){
@@ -103,12 +103,12 @@ test("kill sg", function(t){
 })
 
 
-test("recreate test databases after cblite restart", function(t){
+test("recreate test databases after killing sg", function(t){
     async.mapSeries(dbs, function(db, cb){
       // check if db exists
       var url = coax([this.server, db]).pax().toString()    	
       coax([this.server, db], function(err, json){
-// console.log("request db ", url, " info: ", json)
+          console.log("request db ", url, " info: ", json)
           if(!err){
               // delete db
               coax.del([this.server, db], function(err, json){
