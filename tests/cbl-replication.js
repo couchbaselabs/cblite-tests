@@ -137,12 +137,13 @@ test("verify local-replicated dbs changefeed", test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
-	 } else {common.compareDBSeqNums(t, {sourcedbs : dbs,
+	 } else {
+		 common.compareDBSeqNums(t, {sourcedbs : dbs,
                               targetdbs : repdbs})
 	 }
 })
 
-test("verify local-replicated num-docs" + numDocs, function(t){
+test("verify local-replicated num-docs=" + numDocs, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android")
 		 t.end()
