@@ -489,7 +489,7 @@ var common = module.exports = {
 	                  //console.log(confls)
 	                  //delete doc
 	                  var docUrl = coax([server, db, localdocs + docid]).pax().toString()
-	                  console.log(docUrl)
+	                  //console.log(docUrl)
 	                  async.mapSeries(confls, function (confl, nextConfl) {
 	                      coax.del([docUrl, {
 	                              rev: confl
@@ -830,9 +830,8 @@ var common = module.exports = {
           setTimeout(function(){
             coax(dburl, function(err, json){
               if(err){
-                t.fail("failed to get db info from " + dburl)
-              }
-              if (json == undefined) {
+                t.fail("failed to get db info from " + dburl + ": " + err)
+              } else if (json == undefined) {
                   t.fail("json is undefined requesting " + dburl + ": " + json)
               } else {
                   doc_count = json.doc_count
@@ -866,19 +865,16 @@ var common = module.exports = {
 	            return numexpected != doc_count;
 	        },
 	        function (_cb) {
-
 	            // get doc count every 3s
 	            setTimeout(function () {
 	                coax(dburl, function (err, json) {
 	                    if (err) {
-	                        t.fail("failed to get db info from " + dburl)
-	                    }
-	                    if (json == undefined) {
+	                        t.fail("failed to get db info from " + dburl + ": " + err)
+	                    } else if (json == undefined) {
 	                        t.fail("json is undefined requesting " + dburl + ": " + json)
 	                    } else {
-	                        console.log(json)
 	                        doc_count = json.rows.length
-	                        console.log(db + " has " + doc_count + " docs expecting " + numexpected)
+	                        console.log(dburl + " has " + doc_count + " docs expecting " + numexpected)
 	                    }
 	                    _cb(err)
 	                })
@@ -1039,10 +1035,14 @@ var generators = module.exports.generators = {
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
     if(!chans){
-      chans = [];
-      do {
-        chans.push(module.exports.randomChannelName())
-      } while (chans.length < config.channelsPerDoc);
+      if (config.channelsPerDoc==1){
+          chans = module.exports.randomChannelName().toString()
+      } else {
+          chans = new Array();
+          do {
+             chans.push(module.exports.randomChannelName())
+          } while (chans.length < config.channelsPerDoc);
+      }
     }
 
     return { _id : id,
