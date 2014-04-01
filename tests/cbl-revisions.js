@@ -42,8 +42,8 @@ test("create test databases", function(t){
 })
 
 
-// setup push/pull replication to gateway
-test("set push/pull replication to gateway", function(t){
+// setup push replication to gateway
+test("set push replication to gateway", function(t){
 
   var i = 0
   var gatewayDB = coax([gateway, config.DbBucket]).pax().toString()
@@ -84,7 +84,7 @@ test("set push/pull replication to gateway", function(t){
 
       }, sgpull)
     }*/], function(err, json){
-      t.false(err, "setup push pull replication to gateway")
+      t.false(err, "setup push replication to gateway")
       t.end()
     })
 
@@ -114,9 +114,8 @@ test("doc update on SG", test_conf, function(t){
 
 
 
-// setup push/pull replication to gateway
-test("set push/pull replication to gateway", function(t){
-
+// setup pull replication from gateway
+test("set pull replication from gateway", test_conf, function(t){
   var i = 0
   var gatewayDB = coax([gateway, config.DbBucket]).pax().toString()
   if (config.provides=="android") gatewayDB = gatewayDB.replace("localhost", "10.0.2.2")
@@ -138,7 +137,7 @@ test("set push/pull replication to gateway", function(t){
           })
 
       }, sgpull)
-    }],  function(err, info) {
+    }], function(err, info) {
 	  setTimeout(function () {
 		  t.false(err, "replication created")
 		  console.log("info", info)

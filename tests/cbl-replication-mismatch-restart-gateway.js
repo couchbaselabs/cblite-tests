@@ -57,23 +57,24 @@ test("verify dbs have same number of docs", test_conf, function(t) {
   common.verifyNumDocs(t, dbs, numDocs)
 })
 
-test("done", function(t){
+test("kill sg", function(t){
     for (var i = 0; i < dbs.length; i++) {
-	dburl = coax([server, dbs[i]]).pax().toString()
-	coax(dburl, function(err, json){
-              if(err){
-                t.fail("failed to get db info from " + dburl)
-              }
-              count = json.doc_count
-              console.log("doc count in " + dburl + ": " +count)
+    dburl = coax([server, dbs[i]]).pax().toString()
+    coax(dburl, function (err, json) {
+        if (err) {
+            t.fail("failed to get db info from " + dburl +":" + err)
+        } else {
+            count = json.doc_count
+            console.log("doc count in " + dburl + ": " + count)
+        }
     })
-    }
-    sg1.kill()
-    t.end()
+}
+sg1.kill()
+t.end()
 })
 
-//start sync gateway
-test("start syncgateway", function(t){
+//restart sync gateway
+test("restart syncgateway", function(t){
   common.launchSGWithParams(t, 9888, config.DbUrl, config.DbBucket, function(_sg1){
     sg1  = _sg1
     t.end()

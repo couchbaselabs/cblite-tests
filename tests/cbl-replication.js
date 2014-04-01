@@ -11,11 +11,11 @@ var launcher = require("../lib/launcher"),
 
 var server, sg, gateway,
  // local dbs
- dbs = ["api-test1", "api-test2", "api-test3"];
+ dbs = ["cbl-replication1", "cbl-replication2", "cbl-replication3"];
  // local->local dbs
- repdbs = ["api-test4", "api-test5", "api-test6"];
+ repdbs = ["cbl-replication4", "cbl-replication5", "cbl-replication6"];
  // sg->local dbs
- sgdbs = ["api-test7", "api-test8", "api-test9"];
+ sgdbs = ["cbl-replication7", "cbl-replication8", "cbl-replication9"];
 
 var numDocs=parseInt(config.numDocs) || 100;
 

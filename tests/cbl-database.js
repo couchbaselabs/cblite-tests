@@ -14,7 +14,7 @@ var launcher = require("../lib/launcher"),
 
 
 var server,
- dbs = ["api-test1", "api-test2", "api-test3"];
+ dbs = ["cbl-database1", "cbl-database2", "cbl-database3"];
 
 var numDocs=parseInt(config.numDocs) || 100;
 
