@@ -105,7 +105,7 @@ test("doc update on SG", test_conf, function(t){
 })
 
 
-test("doc update on SG", test_conf, function(t){
+test("doc update on liteServ", test_conf, function(t){
   // start updating docs
   common.updateDBDocs(t, {dbs : dbs,
                           numrevs : 1,
@@ -156,14 +156,41 @@ test("set pull replication from gateway", test_conf, function(t){
 })
 
 test("delete confilcts in docs", test_conf, function(t){
-  // start deleting docs
   common.deleteDBConflictDocs(t, dbs, numDocs)
 
 })
 
-test("delete confilcts in docs", test_conf, function(t){
+test("verify confilcts deleted in docs", test_conf, function(t){
   common.verifyNoConflictsDocs(t, dbs, numDocs)
+})
 
+test("verify doc revisions 1", test_conf, function(t){
+	//create, update on liteServ( delete & delete conflicts is not included)
+	common.verifyDocsRevisions(t, dbs, numDocs, "2-")
+})
+
+
+test("delete db docs 1", test_conf, function(t){
+	common.deleteDBDocs(t, dbs, numDocs)
+})
+
+
+test("load databases", test_conf, function(t){
+  common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
+})
+
+test("update docs", test_conf, function(t){
+  // start updating docs
+  common.updateDBDocs(t, {dbs : dbs,   numrevs : 5, numdocs : numDocs})
+})
+
+test("verify doc revisions 2", test_conf, function(t){
+	//create, update, delete, create, update*5
+	common.verifyDocsRevisions(t, dbs, numDocs, "9-")
+})
+
+test("delete db docs 2", test_conf, function(t){
+	common.deleteDBDocs(t, dbs, numDocs)
 })
 
 test("done", function(t){
