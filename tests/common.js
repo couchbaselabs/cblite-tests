@@ -495,11 +495,11 @@ var common = module.exports = {
 	                              rev: confl
 	                          }],
 	                          function (err, json) {
-	                              //console.log(json)
-	                              t.equals(json.ok, true, "all conflict revisons deleted")
-	                              //uncomment when fix https://github.com/couchbase/couchbase-lite-ios/issues/297
-	                              //t.equals(json.rev, undefined, "all conflict revisons deleted")
-	                              cb(err, json)
+                              //console.log(json)
+                                  t.equals(parseInt(confl.substring(0, 1)) + 1  + "-", json.rev.substring(0, 2),
+                                  "Deleting a document adds a revision ('tombstone') that records the delete)")
+                                  t.equals(json.ok, true, "all conflict revisons deleted")
+                                  cb(err, json)
 
 	                          }, nextConfl)
 	                  })
@@ -569,8 +569,8 @@ var common = module.exports = {
         })
 
       }, function(err, json){
-        t.equals(json.length, numdocs, "all doc attachments deleted")
-        nextdb(err, json)
+           t.equals(json.length, numdocs, "all doc attachments deleted")
+           nextdb(err, json)
       })
 
     }, notifycaller.call(t, emits))
@@ -612,7 +612,6 @@ var common = module.exports = {
 		      async.times(numdocs, function (i, cb) {
 		          var docid = db + "_" + i
 		          var url = coax([server, db, localdocs + docid]).pax().toString()
-
 		          // get document rev
 		          coax(url, function (err, json) {
 		              if (err) {
@@ -1170,7 +1169,6 @@ var generators = module.exports.generators = {
                     }
                  }
               }
-
   }
 
 }
