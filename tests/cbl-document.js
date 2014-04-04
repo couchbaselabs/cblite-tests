@@ -40,10 +40,8 @@ test("create docs with inline text attachments", test_conf, function(t){
     // get doc
     coax([server, dbs[0], "_all_docs", {limit : 1}], function(e, js){
       if(e){
-        console.log(e)
-        t.fail("unable to retrieve doc from all_docs")
+        t.fail("unable to retrieve doc from all_docs", e)
       }
-
       // get doc with attachment info
       var docid = js.rows[0].id
       coax([server, dbs[0], docid, { attachments : true }], function(e, js){
@@ -52,30 +50,37 @@ test("create docs with inline text attachments", test_conf, function(t){
             var urlWithAtt = coax([server, dbs[0], docid, { attachments : true }]).pax().toString()
             t.fail("read doc failed " + urlWithAtt +": " + e)
         }
-
-        // get just attachment
-        var doctext = js.text
+        //try to get just attachment with header like
+	//curl -X GET -H 'Accept: applicatio/json' http://127.0.0.1:59851/cbl-document1/cbl-document1_0?attachments=true
+	//{"status" : 406, "error" : "not_acceptable"}
         var attchid = Object.keys(js._attachments)[0]
         coax([server, dbs[0], docid, attchid], function(err, response){
             var url = coax([server, dbs[0], docid, attchid]).pax().toString()
             if (err){
-                t.false(err, "retrieved doc with attachment by " + url +"; error:" +
-                        JSON.stringify(err) + ", resp: " + JSON.stringify(response))
+                 t.equals(JSON.stringify(err), JSON.stringify({"status" : 406, "error" : "not_acceptable"}),
+	                        "status is not correct: " + JSON.stringify(err))
+	         var options = {
+				host : config.LocalListenerIP,
+				port : port,
+				path : dbs[0] + '/' + docid + "/" + attchid,
+				method : 'GET',
+			}
+			common.http_get_api(t, options, function(callback) {
+			    t.equals(callback, "Inline text string created by cblite functional test");
+			    t.end()
+			})
             }else{
-              // search for cblite string
-                if (response.constructor !=  String) {
-                    response = JSON.stringify(response)
+                    t.fail("retrieved doc with attachment by " + url +" with Header 'Accept: applicatio/json' successfully")
+                    t.end()
                 }
-                t.ok(doctext == response, "verify data with inline text attachments for " + url +
-                            ". Expected:'" + doctext +"', got:" + response)
-          }
-          t.end()
+//            t.end()
         })
       })
     })
   })
 })
 
+/*
 // purge all dbs
 test("test purge", test_conf, function(t){
   common.purgeDBDocs(t, dbs, numDocs)
@@ -125,9 +130,9 @@ test("create docs with image attachments", test_conf, function(t){
                         + url +": " +  response.slice(1, 4))
               } else if(response.constructor ==  JSON ) {
                 var rsp = JSON.stringify(response)
-                t.fail("requst of image is JSON format instead of String. Got response from " + url +": " + rsp)
+                t.fail("request of image is JSON format instead of String. Got response from " + url +": " + rsp)
               } else {
-                t.fail("requst of image failed. Got response from " + url +": " + response)
+                t.fail("request of image failed. Got response from " + url +": " + response)
               }
             t.end()
         })
@@ -354,4 +359,4 @@ test("done", function(t){
     t.end()
   })
 
-})
+})*/
