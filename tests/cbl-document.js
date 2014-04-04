@@ -8,7 +8,8 @@ var launcher = require("../lib/launcher"),
   ee = common.ee,
   test = require("tap").test,
   test_time = process.env.TAP_TIMEOUT || 30,
-  test_conf = {timeout: test_time * 1000};
+  test_conf = {timeout: test_time * 1000},
+  port = config.LiteServPort;
 
 
 var server,
@@ -38,7 +39,7 @@ test("create docs with inline text attachments", test_conf, function (t) {
 
     ee.once('emits-created', function (e, js) {
         t.false(e, "created docs with inline text attachments")
-
+        console.log((port + "")|| config.LiteServPort)
         // get doc
         coax([server, dbs[0], "_all_docs", {
             limit: 1
@@ -76,6 +77,7 @@ test("create docs with inline text attachments", test_conf, function (t) {
                             path: dbs[0] + '/' + docid + "/" + attchid,
                             method: 'GET',
                         }
+                        console.log(options)
                         common.http_get_api(t, options, 200, function (callback) {
                             t.equals(callback, "Inline text string created by cblite functional test");
                             t.end()
@@ -315,11 +317,10 @@ test("verify db loaded", function (t) {
                 var attchid = Object.keys(js._attachments)[0]
                 var options = {
                     host: config.LocalListenerIP,
-                    port: port || config.LiteServPort,
+                    port: port,
                     path: "/" + dbs[0] + '/' + docid + "/" + attchid,
                     method: 'GET',
                 }
-                console.log(options)
                 common.http_get_api(t, options, 200, function (callback) {
                     t.equals(callback, "Inline text string created by cblite functional test");
                     t.end()
