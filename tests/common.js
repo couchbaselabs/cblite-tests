@@ -175,8 +175,6 @@ var common = module.exports = {
 
 	http_get_api : function(t, options, callback){
 		var request = http.get(options, function(response) {
-			response.setTimeout(10, [callback])
-
 			var body = '';
 
 			response.on('data', function (chunk){
@@ -195,7 +193,7 @@ var common = module.exports = {
 					try {
 						body = JSON.parse(body);
 					} catch(err){
-					    console.warning("not json format of response body");
+					    logger.info("not json format of response body");
 					}
 					callback(body)
 				}
