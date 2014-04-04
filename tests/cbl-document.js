@@ -193,13 +193,13 @@ test("multi inline attachments", test_conf, function(t){
       var docid = js.rows[0].id
       coax([server, dbs[0], docid, { attachments : true }], function(e, js){
         if(e){
-           var url = coax([server, dbs[0], docid, { attachments : true }]).pax().toString()
           t.fail("read doc failed with exception:" + JSON.stringify(e))
         }
 
         // verify text attachment
         var attchid = Object.keys(js._attachments)[1] // we expect 2 attachments per doc here
         coax([server, dbs[0], docid, attchid], function(err, response){
+            var url = coax([server, dbs[0], docid, attchid]).pax().toString()
             if (err) {
                 t.equals(JSON.stringify(err), JSON.stringify({
                         "status": 406,
@@ -274,8 +274,8 @@ test("verify db loaded", function (t) {
                 var attchid = Object.keys(js._attachments)[0]
                 var options = {
                     host: config.LocalListenerIP,
-                    port: port,
-                    path: dbs[0] + '/' + docid + "/" + attchid,
+                    port: config.LiteServPort,
+                    path: "/" + dbs[0] + '/' + docid + "/" + attchid,
                     method: 'GET',
                 }
                 common.http_get_api(t, options, function (callback) {
