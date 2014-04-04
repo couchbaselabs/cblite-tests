@@ -76,7 +76,7 @@ test("create docs with inline text attachments", test_conf, function (t) {
                             path: dbs[0] + '/' + docid + "/" + attchid,
                             method: 'GET',
                         }
-                        common.http_get_api(t, options, function (callback) {
+                        common.http_get_api(t, options, 200, function (callback) {
                             t.equals(callback, "Inline text string created by cblite functional test");
                             t.end()
                         })
@@ -88,6 +88,47 @@ test("create docs with inline text attachments", test_conf, function (t) {
             })
         })
     })
+})
+
+
+test("verify post on doc without data. negative case", test_conf, function (t) {
+        coax([server, dbs[0], "_all_docs", {
+            limit: 1
+        }], function (e, js) {
+            if (e) {
+                t.fail("unable to retrieve doc from all_docs", e)
+            }
+            // get doc with attachment info
+            var docid = js.rows[0].id
+            coax([server, dbs[0], docid, {
+                attachments: true
+            }], function (e, js) {
+
+                if (e) {
+                    var urlWithAtt = coax([server, dbs[0], docid, {
+                        attachments: true
+                    }]).pax().toString()
+                    t.fail("read doc failed " + urlWithAtt + ": " + e)
+                }
+                var attchid = Object.keys(js._attachments)[0]
+
+                        var options = {
+                            host: config.LocalListenerIP,
+                            port: port,
+                            path: dbs[0] + '/' + docid,
+                            method: 'POST',
+                        }
+//                curl -X POST -d "" http://127.0.0.1:59851/cbl-document1/cbl-document1_0
+//                {
+//                  "status" : 400,
+//                  "error" : "bad_request"
+//                }
+
+                        common.http_get_api(t, options, 400, function (callback) {
+                            t.equals(JSON.stringify(callback), JSON.stringify({"status": 400, "error": "bad_request"}))
+                        })
+                })
+            })
 })
 
 
@@ -158,7 +199,7 @@ test("create docs with image attachments", test_conf, function (t) {
                             path: dbs[0] + '/' + docid + "/" + attchid,
                             method: 'GET',
                         }
-                        common.http_get_api(t, options, function (callback) {
+                        common.http_get_api(t, options, 200, function (callback) {
                             t.ok(callback.toString().slice(1, 4) == "PNG", "verify img attachment. Got attachment file type from " + url + ": " + callback.toString().slice(1, 4))
                             t.end()
                         })
@@ -212,7 +253,7 @@ test("multi inline attachments", test_conf, function(t){
                     path: dbs[0] + '/' + docid + "/" + attchid,
                     method: 'GET',
                 }
-                common.http_get_api(t, options, function (callback) {
+                common.http_get_api(t, options, 200, function (callback) {
                     t.equals(callback, "Inline text string created by cblite functional test");
                     t.end()
                 })
@@ -274,11 +315,12 @@ test("verify db loaded", function (t) {
                 var attchid = Object.keys(js._attachments)[0]
                 var options = {
                     host: config.LocalListenerIP,
-                    port: config.LiteServPort,
+                    port: port || config.LiteServPort,
                     path: "/" + dbs[0] + '/' + docid + "/" + attchid,
                     method: 'GET',
                 }
-                common.http_get_api(t, options, function (callback) {
+                console.log(options)
+                common.http_get_api(t, options, 200, function (callback) {
                     t.equals(callback, "Inline text string created by cblite functional test");
                     t.end()
                 })
