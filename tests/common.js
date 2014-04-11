@@ -1114,6 +1114,27 @@ var generators = module.exports.generators = {
       }
   },
 
+  inlineTextLargeJSON : function(){
+
+      var suffix = Math.random().toString(26).substring(7)
+      var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
+      var text = "Inline text string created by cblite functional test"
+      var data = new Buffer(text).toString('base64');
+
+      return { _id : id,
+               text: text,
+               jsooooon : (new Array(4000000)).join("x"),
+               _attachments :
+                {
+                  "inline.txt" :
+                  {
+                    "content_type" : "text\/plain",
+                    "data" : data
+                  }
+                }
+        }
+    },
+
   inlinePngtAtt : function(){
 
     var suffix = Math.random().toString(26).substring(7)
