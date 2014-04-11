@@ -1,106 +1,75 @@
 var launcher = require("../lib/launcher"),
-  coax = require("coax"),
-  async = require("async"),
-  common = require("../tests/common"),
-  util =  require("util"),
-  test = require("tap").test,
-  test_time = process.env.TAP_TIMEOUT || 30,
-  test_conf = {timeout: test_time * 1000};
+    coax = require("coax"),
+    common = require("../tests/common"),
+    ee = common.ee,
+    test = require("tap").test,
+    test_time = process.env.TAP_TIMEOUT || 30,
+    test_conf = {
+        timeout: test_time * 1000
+    };
 
 var server, sg, gateway,
-  // local dbs
- dbs = ["api-test-once-push"],
- pulldbs = ["api-test-once-pull"];
+    // local dbs
+    dbs = ["bigtable"];
 
-var numDocs=parseInt(config.numDocs) || 100;
-var timeoutReplication = 0;
-if (config.provides=="android") timeoutReplication = 300 * numDocs;
+
+var numDocs = parseInt(config.numDocs) || 100;
+//var timeoutReplication = 0;
+//if (config.provides=="android") timeoutReplication = 30000 * numDocs;
 
 // start client endpoint
-test("start test client", function(t){
-  common.launchClient(t, function(_server){
-    server = _server
-    t.end()
-  })
-})
+test("start test client", function (t) {
+    common.launchClient(t, function (_server) {
+        server = _server;
+        t.end();
+    });
+});
 
-// start sync gateway
-test("start syncgateway", function(t){
-  common.launchSG(t, function(_sg){
-    sg  = _sg
-    gateway = sg.url
-    t.end()
-  })
-})
 
 // create all dbs
-test("create test databases", function(t){
-  common.createDBs(t, dbs.concat(pulldbs))
-})
+test("create test databases", function (t) {
+    common.createDBs(t, dbs);
+});
 
-test("load databases", function(t){
-  common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
-})
+test("load databases with large JSON ~4MB", test_conf, function (t) {
+    common.createDBDocs(t, {
+        numdocs: numDocs,
+        dbs: dbs,
+        docgen: 'inlineTextLargeJSON'
+    }, 'emits-created');
 
-test("push replication should close connection on completion", test_conf, function(t) {
-  var sgdb = sg.db.pax().toString()
-  if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
-  var lite = dbs[0]
-  console.log(coax([server, "_replicate"]).pax().toString(), "source:", lite, ">>  target:", sgdb)
-  coax.post([server, "_replicate"], {
-    source : lite,
-    target : sgdb
-  }, function(err, info) {
-	  setTimeout(function () {
-		  t.false(err, "replication created")
-		  console.log("info", info)
-		  sg.db.get(function(err, dbinfo){
-			  t.false(err, "sg database exists")
-			  t.ok(dbinfo, "got an info repsonse")
-			  //https://github.com/couchbase/sync_gateway/issues/292
-			  console.log("sg update_seq", coax(sg).pax().toString(), dbinfo)
-			  t.equals(dbinfo.update_seq, numDocs, "all docs replicated")
-			  t.end()
-		  })
-	  }, timeoutReplication)
-  })
-})
+    ee.once('emits-created', function (e, js) {
+        t.false(e, "created basic local docs");
 
-test("pull replication should close connection on completion", test_conf, function(t) {
-  var sgdb = sg.db.pax().toString()
-  if (config.provides=="android") sgdb = sgdb.replace("localhost", "10.0.2.2")
-  var lite = pulldbs[0]
-  console.log(coax([server, "_replicate"]).pax().toString(), "source:", sgdb, ">>  target:", lite)
-  coax.post([server, "_replicate"], {
-    source : sgdb,
-    target : lite
-  }, function(err, info) {
-    t.false(err, "replication created")
-    setTimeout(function () {
-    coax([server, lite], function(err, dbinfo){
-      t.false(err, "lite database exists")
-      t.ok(dbinfo, "got an info repsonse")
-      console.log("lite dbinfo ", coax([server, lite]).pax().toString(), dbinfo)
-      t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
-      t.end()
-    })
-    }, timeoutReplication)
-  })
-})
+        // get doc
+        coax([server, dbs[0], dbs[0] + "_0"], function (e, js) {
 
-test("cleanup cb bucket", function(t){
-    if (config.DbUrl.indexOf("http") > -1){
-    coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
-	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
-	      t.false(err, "flush cb bucket")
-	    })
-	}
-    t.end()
-})
+            if (e) {
+                console.log(e);
+                t.fail("unable to retrieve doc wiht large json:" + dbs[0] + "/" + dbs[0] + "_0");
+            }
 
-test("done", function(t){
-  common.cleanup(t, function(json){
-    sg.kill()
-    t.end()
-  })
-})
+            var docid = js._id;
+            coax([server, dbs[0], docid, {
+                attachments: true,
+            }], function (e, js) {
+
+                if (e) {
+                    console.log(e);
+                    t.fail("read doc with large json data");
+                }
+
+                var docdata = js.jsooooon;
+                t.equals(docdata, (new Array(4000000)).join("x"));
+                t.end();
+            });
+        });
+    });
+});
+
+
+test("done", function (t) {
+    common.cleanup(t, function (json) {
+        t.end();
+    });
+});
