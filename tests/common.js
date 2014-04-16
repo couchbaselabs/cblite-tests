@@ -1139,7 +1139,7 @@ var generators = module.exports.generators = {
 
     var suffix = Math.random().toString(26).substring(7)
     var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
-    var img = __dirname+"/../tests/data/ggate.png"
+    var img = __dirname + "/../tests/data/ggate.png"
     var data_binary = fs.readFileSync(img, {encoding : 'base64'})
 
 
@@ -1157,6 +1157,29 @@ var generators = module.exports.generators = {
       }
   },
 
+  inlinePngtBigAtt : function(){
+
+	    var suffix = Math.random().toString(26).substring(7)
+	    var id = "fctest:" + process.hrtime(tstart)[1] + ":" + suffix
+	    var img = __dirname+"/../tests/data/IMG_1496.JPG"
+	    var data_binary = fs.readFileSync(img, {encoding : 'base64'})
+
+
+	    return { _id : id,
+	             img : img,
+	             at : new Date(),
+	             _attachments :
+	              {
+	                "IMG_1496.JPG" :
+	                {
+	                  "content_type" : "image\/png",
+	                  "data" : data_binary
+	                }
+	              }
+	      }
+	  },
+
+  
   bulkInlineTextAtt : function(size){
 
     var size = size || this.bsize
