@@ -63,7 +63,7 @@ test("set up local to local replication", function(t){
   async.mapSeries(dbs, function(db, cb){
     coax([server, "_replicate"]).post({
         source : db,
-        // target : config.provides=="android" ? "http://localhost:8080/" + repdbs[i] : repdbs[i],
+        // target : config.provides=="android" ? "http://localhost:8081/" + repdbs[i] : repdbs[i],
         // can be applied as workaround for shorthand issue
         // but seems like local replication doesn't work at all
         target :  repdbs[i],

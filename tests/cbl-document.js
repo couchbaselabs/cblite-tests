@@ -41,22 +41,16 @@ test("create docs with inline text attachments", test_conf, function (t) {
         t.false(e, "created docs with inline text attachments")
         console.log((port + "")|| config.LiteServPort)
         // get doc
-        coax([server, dbs[0], "_all_docs", {
-            limit: 1
-        }], function (e, js) {
+        coax([server, dbs[0], "_all_docs", {limit: 1}], function (e, js) {
             if (e) {
                 t.fail("unable to retrieve doc from all_docs", e)
             }
             // get doc with attachment info
             var docid = js.rows[0].id
-            coax([server, dbs[0], docid, {
-                attachments: true
-            }], function (e, js) {
+            coax([server, dbs[0], docid, {attachments: true}], function (e, js) {
 
                 if (e) {
-                    var urlWithAtt = coax([server, dbs[0], docid, {
-                        attachments: true
-                    }]).pax().toString()
+                    var urlWithAtt = coax([server, dbs[0], docid, {attachments: true}]).pax().toString()
                     t.fail("read doc failed " + urlWithAtt + ": " + e)
                 }
                 var attchid = Object.keys(js._attachments)[0]
@@ -107,9 +101,7 @@ test("verify post on doc without data. negative case", test_conf, function (t) {
             }], function (e, js) {
 
                 if (e) {
-                    var urlWithAtt = coax([server, dbs[0], docid, {
-                        attachments: true
-                    }]).pax().toString()
+                    var urlWithAtt = coax([server, dbs[0], docid, {attachments: true}]).pax().toString()
                     t.fail("read doc failed " + urlWithAtt + ": " + e)
                 }
                 var attchid = Object.keys(js._attachments)[0]
@@ -137,7 +129,6 @@ test("verify post on doc without data. negative case", test_conf, function (t) {
 // purge all dbs
 test("test purge", test_conf, function(t){
   common.purgeDBDocs(t, dbs, numDocs)
-
 })
 
 test("create test databases", function(t){
@@ -170,12 +161,8 @@ test("create docs with image attachments", test_conf, function (t) {
 
             // get doc with attachment info
             var docid = js.rows[0].id
-            coax([server, dbs[0], docid, {
-                attachments: true
-            }], function (e, js) {
-                var urlWithAtt = coax([server, dbs[0], docid, {
-                    attachments: true
-                }]).pax().toString()
+            coax([server, dbs[0], docid, {attachments: true}], function (e, js) {
+                var urlWithAtt = coax([server, dbs[0], docid, {attachments: true}]).pax().toString()
                 if (e) {
                     t.fail("read doc " + urlWithAtt + ": " + JSON.stringify(e))
                 }

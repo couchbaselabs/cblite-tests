@@ -70,7 +70,7 @@ var common = module.exports = {
       })
     } else if(testendpoint == "android"){
     // TODO: requires manual launch
-        port = config.LiteServPort || 8080
+        port = config.LiteServPort || 8081
         serve = launcher.launchLiteServ({
             port : port,
             dir : __dirname + "/../tmp/single",
