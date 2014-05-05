@@ -12,10 +12,12 @@ var server, sg, gateway,
     // local dbs
     dbs = ["bigtable"];
 
-
 var numDocs = parseInt(config.numDocs) || 100;
-//var timeoutReplication = 0;
-//if (config.provides=="android") timeoutReplication = 30000 * numDocs;
+if (config.provides=="android") {
+	//to decrease number of failures for
+	//https://github.com/couchbase/couchbase-lite-android/issues/261
+	numDocs = 1;
+}
 
 // start client endpoint
 test("start test client", function (t) {
