@@ -275,6 +275,40 @@ test("delete db docs", test_conf, function(t){
   common.deleteDBDocs(t, dbs, numDocs)
 })
 
+
+//test https://github.com/couchbase/couchbase-lite-java-core/issues/201
+test("_all_docs handles keys request for non-existent document correctly", test_conf, function (t) {
+    coax([server, dbs[0], "_all_docs", {
+        keys: '["2","0","1000"]'
+    }], function (e, js) {
+        expected = {
+            offset: 0,
+            total_rows: 3,
+            rows: [{
+                id: '2',
+                value: {},
+                key: '2'
+            }, {
+                id: '0',
+                value: {},
+                key: '0'
+            }, {
+                id: '1000',
+                value: {},
+                key: '1000'
+            }]
+        }
+
+        if (e) {
+            t.fail("unable to retrieve doc from all_docs", e);
+            t.end();
+        } else {
+            t.equals(expected.toString(), js.toString())
+            t.end()
+        }
+    })
+})
+
 test("create attachments using bulk docs", test_conf, function(t){
   common.createDBBulkDocs(t, {numdocs : numDocs*10,
                               docgen : 'bulkInlineTextAtt',
@@ -427,5 +461,4 @@ test("done", function(t){
   common.cleanup(t, function(json){
     t.end()
   })
-
 })
