@@ -41,34 +41,42 @@ test("load databases with large JSON ~4MB", test_conf, function (t) {
     }, 'emits-created');
 
     ee.once('emits-created', function (e, js) {
-        t.false(e, "created basic local docs");
+        t.false(e, "created basic local docs with large JSON ~4MB");
 
         // get doc
         coax([server, dbs[0], dbs[0] + "_0"], function (e, js) {
 
             if (e) {
                 console.log(e);
-                t.fail("unable to retrieve doc wiht large json:" + dbs[0] + "/" + dbs[0] + "_0");
+                t.fail("unable to retrieve doc wiht large json: " + dbs[0] + "/" + dbs[0] + "_0");
+                t.end()
+            } else {
+
+                var docid = js._id;
+                coax([server, dbs[0], docid, {
+                    attachments: true,
+                }], function (e, js) {
+
+                    if (e) {
+                        console.log(e);
+                        t.fail("read doc with large json data");
+                    }
+
+                    var docdata = js.jsooooon;
+                    if (docdata == undefined) {
+                        t.fail("unable to get large json data from doc")
+                        t.end();
+                    } else {
+                        t.equals(docdata.length, 4000000 - 1);
+                        t.equals(docdata, (new Array(4000000)).join("x"));
+                        t.end();
+                    }
+                });
             }
-
-            var docid = js._id;
-            coax([server, dbs[0], docid, {
-                attachments: true,
-            }], function (e, js) {
-
-                if (e) {
-                    console.log(e);
-                    t.fail("read doc with large json data");
-                }
-
-                var docdata = js.jsooooon;
-                t.equals(docdata, (new Array(4000000)).join("x"));
-                t.end();
-            });
         });
+
     });
 });
-
 
 test("done", function (t) {
     common.cleanup(t, function (json) {
