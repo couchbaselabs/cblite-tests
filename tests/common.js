@@ -548,6 +548,7 @@ var common = module.exports = {
 
             coax.del(rmurl, function(err, json){
               if(err){
+                //https://github.com/couchbase/couchbase-lite-java-core/issues/191
                 t.fail("unable to delete attachments by " + rmurl + ": " + JSON.stringify(err))
               }
 
