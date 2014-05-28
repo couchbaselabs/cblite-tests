@@ -29,7 +29,8 @@ test("create test databases", function(t){
   common.createDBs(t, dbs)
 })
 
-//https://github.com/couchbaselabs/cblite-tests/issues/13
+//https://github.com/couchbaselabs/cblite-tests/issues/13 ->
+//https://github.com/couchbase/couchbase-lite-android/issues/249
 test("create docs with inline text attachments", test_conf, function (t) {
     common.createDBDocs(t, {
         numdocs: numDocs,
