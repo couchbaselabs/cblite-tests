@@ -50,11 +50,11 @@ test("setup couchbase cluster", function(t) {
 		}
 	}
 
-	common.http_post_api(t, post_data, options, function(callback) {
+	common.http_post_api(t, post_data, options, 201, function(callback) {
 		post_data = "ejectedNodes=&knownNodes=ns_1@" + servers.vm1 + ",ns_1@"
 				+ servers.vm2;
 		options.path = "/controller/rebalance"
-		common.http_post_api(t, post_data, options, function(callback) {
+		common.http_post_api(t, post_data, options, 201, function(callback) {
 			setTimeout(function() {
 			}, 10000);
 			t.end()
@@ -81,7 +81,7 @@ test(
 				}
 			}
 
-			common.http_post_api(t, post_data, options, function(callback) {
+			common.http_post_api(t, post_data, options, 201, function(callback) {
 				t.end()
 			})
 
@@ -104,7 +104,7 @@ test(
 				}
 			}
 
-			common.http_post_api(t, post_data, options, function(callback) {
+			common.http_post_api(t, post_data, options, expectedStatus, function(callback) {
 				t.end()
 			})
 

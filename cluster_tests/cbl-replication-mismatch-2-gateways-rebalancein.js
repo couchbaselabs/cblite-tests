@@ -50,7 +50,7 @@ var server, sg1, sg2, sg2, sgdb
 				}
 			}
 
-			common.http_post_api(t, post_data, options, function(callback) {
+			common.http_post_api(t, post_data, options, expectedStatus, function(callback) {
 				t.end()
 			})
 
@@ -73,11 +73,11 @@ var server, sg1, sg2, sg2, sgdb
 		}
 	}
 
-	common.http_post_api(t, post_data, options, function(callback) {
+	common.http_post_api(t, post_data, options, expectedStatus, function(callback) {
 		post_data = "ejectedNodes=&knownNodes=ns_1@" + servers.vm1 + ",ns_1@"
 				+ servers.vm2;
 		options.path = "/controller/rebalance"
-		common.http_post_api(t, post_data, options, function(callback) {
+		common.http_post_api(t, post_data, options, expectedStatus, function(callback) {
 			setTimeout(function() {
 			}, 10000);
 			t.end()
