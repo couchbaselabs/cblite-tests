@@ -182,23 +182,23 @@ var common = module.exports = {
           })
 
           response.on('error', function (e) {
-              logger.error("Got error: " + e.message)
-              t.fail("ERROR ")
+              logger.error("Got error: " + e.message);
+              t.fail("ERROR ");
           })
 
           response.on('end', function () {
-              logger.info(response.statusCode + " from http://" + options.host + ":" + options.port + options.path)
+              logger.info(response.statusCode + " from http://" + options.host + ":" + options.port + options.path);
               if (response.statusCode == '200' || response.statusCode == '201') {
-                  t.equals(response.statusCode, expectedStatus, "wrong response status code " + response.statusCode + ". Expected: " + expectedStatus)
+                  t.equals(response.statusCode, expectedStatus, "wrong response status code " + response.statusCode + ". Expected: " + expectedStatus);
                   try {
                       body = JSON.parse(body);
                   } catch (err) {
                       logger.info("not json format of response body");
                   }
-                  callback(body)
+                  callback(body);
               } else {
                   if (response.statusCode == expectedStatus.toString()) {
-                      console.log("got expected status: ", expectedStatus)
+                      console.log("got expected status: ", expectedStatus);
                       try {
                 	  body = JSON.parse(body);
                       } catch (err) {
@@ -258,7 +258,8 @@ var common = module.exports = {
                   callback(body);
               } else {
                   t.fail("wrong response status code " + response.statusCode + " from http://" +
-                      options.host + ":" + options.port + options.path + " for :" + JSON.stringify(options));
+                      options.host + ":" + options.port + options.path + " for :" + JSON.stringify(options) +
+                      " with data: " + post_data);
 
                   callback(body);
               }
@@ -280,29 +281,29 @@ var common = module.exports = {
     var docgen = params.docgen || 'basic';
     var dbs = params.dbs;
     var numdocs = params.numdocs;
-    var localdocs = params.localdocs || ""
+    var localdocs = params.localdocs || "";
     //for local documents id formed as _local/ID
-    if (localdocs) localdocs= localdocs + "/"
+    if (localdocs) localdocs= localdocs + "/";
     async.map(dbs, function(db, nextdb){
 	async.timesSeries(numdocs, function(i, cb){
 		//with async.times cbl-replication-mismatch-2-gateways(restart-gateway).js failed on android:
 		//{"code":"EPIPE","errno":"EPIPE","syscall":"write"}
-		var docid = db + "_" + i
-	    var madeDoc = generators[docgen](i)
-	    madeDoc._id = docid
+	    var docid = db + "_" + i;
+	    var madeDoc = generators[docgen](i);
+	    madeDoc._id = docid;
 
 	    coax.put([server,db, localdocs + docid], madeDoc, function(err, ok){
-	    var url = coax([server,db, localdocs + docid]).pax().toString()
+	    var url = coax([server,db, localdocs + docid]).pax().toString();
 	    if (err){
-	        t.false(err, "error loading " + url +":" + JSON.stringify(err))
+	        t.false(err, "error loading " + url +":" + JSON.stringify(err));
 	    } else
-	        t.equals(localdocs + docid, ok.id, "docid")
-	    cb(err, ok)
-	    })
+	        t.equals(localdocs + docid, ok.id, "docid");
+	    cb(err, ok);
+	    });
 
-	      }, nextdb)
+	      }, nextdb);
 
-	    }, notifycaller.call(t, emits))
+	    }, notifycaller.call(t, emits));
 
 	  },
 
@@ -310,20 +311,20 @@ var common = module.exports = {
   compactDBs : function(t, dbs, emits){
 
     async.map(dbs, function(db, nextdb){
-      coax.post([server, db, "_compact"], nextdb)
-    }, notifycaller.call(t, emits))
+      coax.post([server, db, "_compact"], nextdb);
+    }, notifycaller.call(t, emits));
 
   },
 
   createDBBulkDocs : function(t, params, emits){
 
-    var docgen = params.docgen || 'bulk'
-    var dbs = params.dbs
-    var numdocs = params.numdocs
-    var size = params.size || generators.bsize
+    var docgen = params.docgen || 'bulk';
+    var dbs = params.dbs;
+    var numdocs = params.numdocs;
+    var size = params.size || generators.bsize;
 
     if(size > numdocs){
-      size = numdocs
+      size = numdocs;
     }
 
     var numinserts = numdocs/size
