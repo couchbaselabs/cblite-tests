@@ -141,14 +141,12 @@ test("set pull replication from gateway", test_conf, function(t){
 	  setTimeout(function () {
 		  t.false(err, "replication created")
 		  console.log("info", info)
-		  sg.db.get(function(err, dbinfo){
-			  console.log(dbinfo)
+		  coax([gatewayDB, "_all_docs"],function(err, allDocs){
 			  t.false(err, "sg database exists")
-			  t.ok(dbinfo, "got an info repsonse")
-			  //https://github.com/couchbase/sync_gateway/issues/292
-			  console.log("sg update_seq", coax(sg).pax().toString(), dbinfo)
-        t.equals(dbinfo.doc_count, numDocs, "all docs replicated")
-			  // t.equals(dbinfo.update_seq, numDocs*3, "all docs replicated")
+			  t.ok(allDocs, "got _all_docs repsonse")
+			  console.log("sg doc_count", coax([gatewayDB, "_all_docs"]).pax().toString(), allDocs.total_rows);
+			  t.equals(allDocs.total_rows, numDocs, "all docs replicated")
+			  t.equals(allDocs.update_seq, numDocs*3 + 1, "update_seq correct")
 			  t.end()
 		  })
 	  }, timeoutReplication)

@@ -92,7 +92,7 @@ test("verify sync gateway changes feed has all docs in it", test_conf, function(
       })
 
       t.equals(docs.length, numDocs, "correct number of docs in _all_docs")
-      t.equals(changes.length, numDocs, "correct number of docs in _changes")
+      t.equals(changes.length, numDocs +1, "correct number of docs in _changes")
       t.equals(dupIds.length, 0, "duplicate ids in changes")
       t.equals(dupSeqs.length, 0, "duplicate seqs in changes")
       t.equals(0, missing.length, "missing changes")
