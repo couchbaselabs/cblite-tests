@@ -246,7 +246,7 @@ var common = module.exports = {
               }
               logger.info(callback);
               callback(body);
-              //                  t.end();
+                                t.end();
           } else {
               if (response.statusCode == expectedStatus.toString()) {
                   console.log("got expected status " + options.path + ": ", expectedStatus);

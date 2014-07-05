@@ -5,7 +5,7 @@ var config = module.exports = {
   SyncGatewayPath   : process.env.SYNCGATE_PATH,
   LocalListenerIP   : process.env.LOCAL_IP || "127.0.0.1",
   LocalListenerPort : 8189,
-  DbUrl             : "http://localhost:8091",
+  DbUrl             : "http://localhost:9000",
   DbBucket          : "db",
   provides          : "ios",  // ios, android, pouchdb, couchdb
 }
@@ -19,3 +19,4 @@ var config = module.exports = {
  */
 module.exports.SyncGatewayAdminParty = __dirname+"/admin_party_cb.json"
 module.exports.SyncGatewaySyncFunctionTest = __dirname+"/sync_function_test.json"
+module.exports.cluster_ini_file = __dirname+"/clusters/cluster.ini"
