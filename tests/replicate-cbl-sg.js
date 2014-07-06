@@ -117,6 +117,17 @@ test("_local to _local over native", function(t){
 		}
 })
 
+
+test("cleanup cb bucket", function(t){
+    if (config.DbUrl.indexOf("http") > -1){
+    coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
+	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
+	      t.false(err, "flush cb bucket")
+	    })
+	}
+    t.end()
+})
+
 test("exit", function(t){
 	if (config.provides == "android") {
 		 console.log("Skipping phalanx tests on Android")
