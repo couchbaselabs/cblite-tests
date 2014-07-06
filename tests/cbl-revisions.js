@@ -15,7 +15,7 @@ var server, sg, gateway,
 
 var numDocs=parseInt(config.numDocs) || 100;
 var timeoutReplication = 3000;
-if (config.provides=="android" || config.DbUrl.indexOf("http") > -1) timeoutReplication = 300 * numDocs;
+if (config.provides=="android" || config.DbUrl.indexOf("http") > -1) timeoutReplication = 500 * numDocs;
 
 
 
@@ -94,7 +94,7 @@ test("load databases", test_conf, function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs})
 })
 
-test("verify replicated num-docs=" + numDocs, function(t){
+test("verify replicated num-docs=" + numDocs, test_conf, function(t){
   common.verifySGNumDocs(t, [sg], numDocs)
 })
 
