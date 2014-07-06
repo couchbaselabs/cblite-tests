@@ -14,7 +14,7 @@ var server, sg, gateway,
 
 var numDocs=parseInt(config.numDocs) || 100;
 var timeoutReplication = 0;
-if (config.provides=="android") timeoutReplication = 300 * numDocs;
+if (config.provides=="android" || config.DbUrl.indexOf("http") > -1) timeoutReplication = 300 * numDocs;
 
 // start client endpoint
 test("start test client", function(t){
