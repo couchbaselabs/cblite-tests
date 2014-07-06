@@ -11,9 +11,20 @@ var launcher = require("../lib/launcher"),
 
 var numDocs=(parseInt(config.numDocs) || 100)*5;
 
-var server, sg1, sg2, sg2, sgdb
+var server, sg1, sg2, sgdb
   // local dbs
  dbs = ["mismatch-gateways-one", "mismatch-gateways-two"];
+
+test("cleanup cb bucket", function(t){
+    if (config.DbUrl.indexOf("http") > -1){
+    coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
+	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
+	    //add timeout here
+	    })
+	}else{
+		t.end()
+	}
+})
 
 // start client endpoint
 test("start test client", function(t){

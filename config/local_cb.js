@@ -9,7 +9,7 @@ var config = module.exports = {
   DbUrl             : "http://localhost:8091",
   DbBucket          : "db",
   provides          : "ios",  // ios, android, pouchdb, couchdb
-  numDocs           : process.env.NUM_DOCS || 10,
+  numDocs           : process.env.NUM_DOCS || 100,
 }
 
 /*
