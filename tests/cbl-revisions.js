@@ -15,7 +15,7 @@ var server, sg, gateway,
 
 var numDocs=parseInt(config.numDocs) || 100;
 var timeoutReplication = 3000;
-if (config.provides=="android") timeoutReplication = 300 * numDocs;
+if (config.provides=="android" || config.DbUrl.indexOf("http") > -1) timeoutReplication = 300 * numDocs;
 
 
 
@@ -116,7 +116,7 @@ test("doc update on liteServ", test_conf, function(t){
 
 // setup pull replication from gateway
 test("set pull replication from gateway", test_conf, function(t){
-  var i = 0
+  var i = 0;
   var gatewayDB = coax([gateway, config.DbBucket]).pax().toString()
   if (config.provides=="android") gatewayDB = gatewayDB.replace("localhost", "10.0.2.2")
   async.series([
@@ -132,7 +132,7 @@ test("set pull replication from gateway", test_conf, function(t){
 
             t.equals(err, null,
               util.inspect({_replicate : db+" <- " + gatewayDB}))
-            i++
+            i++;
             cb(err, ok)
           })
 
@@ -154,12 +154,11 @@ test("set pull replication from gateway", test_conf, function(t){
 
 })
 
-test("delete confilcts in docs", test_conf, function(t){
+test("delete conflicts in docs", test_conf, function(t){
   common.deleteDBConflictDocs(t, dbs, numDocs)
-
 })
 
-test("verify confilcts deleted in docs", test_conf, function(t){
+test("verify conflicts deleted in docs", test_conf, function(t){
   common.verifyNoConflictsDocs(t, dbs, numDocs)
 })
 
@@ -190,6 +189,17 @@ test("verify doc revisions 2", test_conf, function(t){
 
 test("delete db docs 2", test_conf, function(t){
 	common.deleteDBDocs(t, dbs, numDocs)
+})
+
+
+test("cleanup cb bucket", function(t){
+    if (config.DbUrl.indexOf("http") > -1){
+    coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
+	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
+	      t.false(err, "flush cb bucket");
+	    })
+	}
+    t.end()
 })
 
 test("done", function(t){
