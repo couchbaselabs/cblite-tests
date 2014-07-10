@@ -123,9 +123,13 @@ test("cleanup cb bucket", function(t){
     coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
 	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
 	      t.false(err, "flush cb bucket")
-	    })
+	    },
+	    setTimeout(function(){
+		 t.end()
+	            }, 5000))
+	}else{
+	    t.end()
 	}
-    t.end()
 })
 
 test("exit", function(t){

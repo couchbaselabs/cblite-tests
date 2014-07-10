@@ -250,8 +250,10 @@ test("cleanup cb bucket", function(t){
 	      t.false(err, "flush cb bucket")
 	    },
 	    setTimeout(function(){
-		 t.end()
-	            }, 5000))
+		 t.end();
+	            }, 5000));
+	}else{
+	    t.end();
 	}
 })
 

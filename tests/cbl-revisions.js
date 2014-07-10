@@ -6,7 +6,7 @@ var launcher = require("../lib/launcher"),
   conf_file = process.env.CONF_FILE || 'local',
   config = require('../config/' + conf_file),
   test = require("tap").test,
-  test_time = process.env.TAP_TIMEOUT || 30,
+  test_time = process.env.TAP_TIMEOUT || 60,
   test_conf = {timeout: test_time * 1000};
 
 var server, sg, gateway,
@@ -199,8 +199,10 @@ test("cleanup cb bucket", function(t){
 	      t.false(err, "flush cb bucket")
 	    },
 	    setTimeout(function(){
-		 t.end()
-	            }, 5000))
+		 t.end();
+	            }, 5000));
+	}else{
+	    t.end();
 	}
 })
 
