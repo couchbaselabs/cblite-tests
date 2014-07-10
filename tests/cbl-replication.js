@@ -132,7 +132,7 @@ test("load databases", test_conf, function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs});
 })
 
-test("verify local-replicated dbs changefeed", test_conf, function(t){
+test("verify local-replicated dbs changefeed after load databases", test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android");
 		 t.end();
@@ -177,7 +177,7 @@ test("delete db docs", test_conf, function(t){
 })
 
 
-test("verify local-replicated dbs changefeed", test_conf, function(t){
+test("verify local-replicated dbs changefeed after delete db docs", test_conf, function(t){
 	 if (config.provides == "android") {
 		 console.log("Skipping local replication on Android");
 		 t.end();
@@ -245,12 +245,14 @@ test("verify local-replicated in dbs: 0", test_conf, function(t){
 
 test("cleanup cb bucket", function(t){
     if (config.DbUrl.indexOf("http") > -1){
-	coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
+    coax.post([config.DbUrl + "/pools/default/buckets/" + config.DbBucket + "/controller/doFlush"],
 	    {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
 	      t.false(err, "flush cb bucket")
-	    });
-    }
-    t.end();
+	    },
+	    setTimeout(function(){
+		 t.end()
+	            }, 5000))
+	}
 })
 
 test("done", function(t){
