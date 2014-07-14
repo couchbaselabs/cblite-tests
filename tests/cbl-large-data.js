@@ -33,6 +33,7 @@ test("create test databases", function (t) {
     common.createDBs(t, dbs);
 });
 
+//https://github.com/couchbase/couchbase-lite-android/issues/357
 test("load databases with large JSON ~4MB", test_conf, function (t) {
     common.createDBDocs(t, {
         numdocs: numDocs,
