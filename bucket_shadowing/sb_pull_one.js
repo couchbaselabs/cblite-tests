@@ -40,35 +40,56 @@ var value_json = {_id : docId,
             at: new Date()};
 var value = JSON.stringify( value_json );
 
+test("create buckets",
+	function(t) {
+		var options = {
+			host : "localhost",
+			port : 8091,
+			path : '/pools/default/buckets',
+			method : 'POST',
+			auth : "Administrator:password",
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded',
+			}
+		};
+		
+		var post_data0 = "name="
+			+ bucketNames[0]
+			+ "&parallelDBAndViewCompaction=false&autoCompactionDefined=false&threadsNumber=3&replicaIndex=0&replicaNumber=1&saslPassword=&authType=sasl&ramQuotaMB=200&bucketType=membase&flushEnabled=1";
+		 var post_data1 = "name="
+			+ bucketNames[1]
+			+ "&parallelDBAndViewCompaction=false&autoCompactionDefined=false&threadsNumber=3&replicaIndex=0&replicaNumber=1&saslPassword=&authType=sasl&ramQuotaMB=200&bucketType=membase&flushEnabled=1";
+		 
+		 common.http_post_api(t, post_data0, options, "OK", function(callback) {
+		 })
+		    common.http_post_api(t, post_data1, options, "OK", function(callback) {
+			t.end();
+		    })	
+		//})
+	})
+	
+	
 
 
-
-// test("cleanup cb buckets - app-bucket and shadow-bucket", function(t){
-//     for (i = 0; i < bucketNames.length; i++) { 
-//         coax.post([urlCB+ "/pools/default/buckets/" + bucketNames[i] + "/controller/doFlush"],
-//             {"auth":{"passwordCredentials":{"username":"Administrator", "password":"password"}}}, function (err, js){
-//               t.false(err, "flush cb bucket")
-//             },
-//             setTimeout(function(){
-//              t.end();
-//                     }, 5000));
-//     }    
-// })
-
-// // start sync gateway
-// test("start syncgateway", function(t){
-//   common.launchSG(t, function(_sg){
-//     sg  = _sg
-//     gateway = sg.url
-//     t.end()
-//   })
-// })
 
 // start client endpoint
 test("start test client", function(t){
   common.launchClient(t, function(_server){
     server = _server
+    setTimeout(function () {
     t.end()
+  }, 10000) 
+  })
+})
+
+	// start sync gateway
+test("start syncgateway", function(t){
+  common.launchSGShadowing(t, function(_sg){
+    sg  = _sg
+    gateway = sg.url
+    
+    t.end()
+    
   })
 })
 
@@ -195,7 +216,7 @@ test("Web client remove the doc in app app-bucket and check the doc no longer ac
 
 test("done", function(t){
   common.cleanup(t, function(json){
-    //sg.kill()
+    sg.kill()
     app_bucket.shutdown();
     shadow_bucket.shutdown();
     t.end()
@@ -203,8 +224,33 @@ test("done", function(t){
 })
 
 
-// test("done", function(t){
-// app_bucket.shutdown();
-// shadow_bucket.shutdown();
-// t.end();
-// })
+test("delete buckets", function (t) {
+    var post_data = 'STR';
+    var options0 = {
+	host : "localhost",
+	port : 8091,
+        path: "/pools/default/buckets/" + bucketNames[0],
+        auth : "Administrator:password",
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'text/html'
+        }
+    };
+    var options1 = {
+	    	host : "localhost",
+		port : 8091,
+	        path: "/pools/default/buckets/" + bucketNames[1],
+	        auth : "Administrator:password",
+	        method: 'DELETE',
+	        headers: {
+	            'Content-Type': 'text/html'
+	        }
+	    };
+    //console.log(options);
+    common.http_post_api(t, post_data, options0, 200, function (callback) {
+	common.http_post_api(t, post_data, options1, 200, function (callback) {
+	    t.end();
+	});
+	});
+    
+});
