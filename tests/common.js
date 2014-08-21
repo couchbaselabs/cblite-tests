@@ -115,19 +115,40 @@ var common = module.exports = {
       dir : __dirname + "/../tmp/sg",
       path : config.SyncGatewayPath,
       configPath : config.SyncGatewayAdminParty
-    })
+    });
     sg.once("ready", function(err){
-      if(t)
-        t.false(err, "no error, Sync Gateway running on our port")
-      sg.db = coax([sg.url, config.DbBucket])
+      if(t);
+        t.false(err, "no error, Sync Gateway running on our port");
+      sg.db = coax([sg.url, config.DbBucket]);
       sg.db(function(err, ok){
-        if(t)
-          t.false(err, "no error, Sync Gateway reachable")
-        done(sg)
-      })
+        if(t);
+          t.false(err, "no error, Sync Gateway reachable");
+        done(sg);
+      });
     });
 
   },
+ 
+  launchSGShadowing : function(t, done){
+      sg = launcher.launchSyncGatewayWithConfig({
+        port : 4984,
+        dir : __dirname + "/../tmp/sg",
+        path : config.SyncGatewayPath,
+	      configPath : __dirname+"/../config/gateway_config_shadow_localhost.json"
+      }
+      )
+      sg.once("ready", function(err){
+        if(t);
+          t.false(err, "no error, Sync Gateway running on our port", err);
+//        sg.db = coax([sg.url, "db"]);
+//        sg.db(function(err, ok){
+//          if(t);
+//            t.false(err, "no error, Sync Gateway reachable", err); why Login required?
+          done(sg);
+//        });
+      });
+
+    },
 
   launchSGWithParams : function(t, port, db, bucket, done){
       sg = launcher.launchSyncGateway({
@@ -137,15 +158,16 @@ var common = module.exports = {
         dir : __dirname + "/../tmp/sg",
         path : config.SyncGatewayPath,
         configPath : config.SyncGatewayAdminParty
-
       })
       sg.once("ready", function(err){
-        if(t)
-          t.false(err, "no error, Sync Gateway running on port " + port  + ": " + JSON.stringify(err))
+        if(t){
+            t.false(err, "no error, Sync Gateway running on port " + port  + ": " + JSON.stringify(err))
+        }
         sg.db = coax([sg.url, bucket])
         sg.db(function(err, ok){
-          if(t)
+          if(t){
             t.false(err, "no error, Sync Gateway reachable by: " + sg.url + bucket +": " + JSON.stringify(err))
+          }
           done(sg)
         })
       });
@@ -238,7 +260,9 @@ var common = module.exports = {
           logger.info(response.statusCode + " from http://" + options.host + ":" + options.port + options.path);
 
           if (response.statusCode == '200' || response.statusCode == '201' || response.statusCode == '202') {
-              t.equals(response.statusCode, expectedStatus, "response status code " + options.path + ": " + response.statusCode + ". Expected: " + expectedStatus);
+              if (expectedStatus !== "OK"){
+        	  t.equals(response.statusCode, expectedStatus, "response status code " + options.path + ": " + response.statusCode + ". Expected: " + expectedStatus);
+              }
               try {
                   body = JSON.parse(body);
               } catch (err) {
