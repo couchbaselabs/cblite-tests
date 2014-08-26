@@ -107,6 +107,61 @@ var common = module.exports = {
 
   },
 
+  createShadowBuckets: function(t, appBucket, shadowBucket){
+    var options = {
+      host : "localhost",
+      port : 8091,
+      path : '/pools/default/buckets',
+      method : 'POST',
+      auth : "Administrator:password",
+      headers : {
+        'Content-Type' : 'application/x-www-form-urlencoded',
+      }
+    };
+    var post_data0 = "name="
+      + appBucket
+      + "&parallelDBAndViewCompaction=false&autoCompactionDefined=false&threadsNumber=3&replicaIndex=0&replicaNumber=1&saslPassword=&authType=sasl&ramQuotaMB=200&bucketType=membase&flushEnabled=1";
+    var post_data1 = "name="
+      + shadowBucket
+      + "&parallelDBAndViewCompaction=false&autoCompactionDefined=false&threadsNumber=3&replicaIndex=0&replicaNumber=1&saslPassword=&authType=sasl&ramQuotaMB=200&bucketType=membase&flushEnabled=1";
+
+    common.http_post_api(t, post_data0, options, "OK", function(callback) {
+    })
+    common.http_post_api(t, post_data1, options, "OK", function(callback) {
+      t.end();
+    })
+  },
+
+  deleteShadowBuckets: function(t, appBucket, shadowBucket){
+    var post_data = 'STR';
+    var options0 = {
+    host : "localhost",
+    port : 8091,
+        path: "/pools/default/buckets/" + appBucket,
+        auth : "Administrator:password",
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'text/html'
+        }
+    };
+    var options1 = {
+            host : "localhost",
+        port : 8091,
+            path: "/pools/default/buckets/" + shadowBucket,
+            auth : "Administrator:password",
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'text/html'
+            }
+        };
+    //console.log(options);
+    common.http_post_api(t, post_data, options0, 200, function (callback) {
+      common.http_post_api(t, post_data, options1, 200, function (callback) {
+          t.end();
+      });
+    });
+  },
+
   launchSG : function(t, done){
     sg = launcher.launchSyncGateway({
       port : 9888,
