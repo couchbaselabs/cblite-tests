@@ -71,12 +71,13 @@ test("Web client create docs in app-bucket and check the doc is shadowed to shad
         var value = {_id : docId,
                     data: data[i],
                     at: timeStamps[i]};
-        console.log("===== Creating doc in app bucket.  Doc id=" + docId + " value=" + JSON.stringify( value ));
+        //console.log("===== Creating doc in app bucket.  Doc id=" + docId + " value=" + JSON.stringify( value ));
         app_bucket.upsert(docId, JSON.stringify( value ), function(err, result) {
             if (err) {
                 throw err;
                 cb(err, result)
             } else {
+                t.ok(!err, "Document " + docId + " created successfully on app_bucket")
                 setTimeout(function () {
                     // Check the doc is shadowed to shadow bucket successfully
                     shadow_bucket.get(docId, function(err, result) {
@@ -111,7 +112,7 @@ test("Web client create docs in app-bucket and check the doc is shadowed to shad
 });
 
 
-test("Web client updating docs in app-bucket and check the doc is shadowed to shadow bucket and replicated to lite db successfully", function(t) {
+test("Web client updating docs with large data in app-bucket and check the doc is shadowed to shadow bucket and replicated to lite db successfully", function(t) {
     async.times(numDocs, function(i, cb){
         var docId = "testdoc_" + i;
         data[i] = "2222";
@@ -119,12 +120,13 @@ test("Web client updating docs in app-bucket and check the doc is shadowed to sh
         var value = {_id : docId,
                     data: data[i],
                     at: timeStamps[i]};
-        console.log("===== Updating doc " + docId + " value=" + JSON.stringify( value ));
+        //console.log("===== Updating doc " + docId + " value=" + JSON.stringify( value ));
         app_bucket.upsert(docId, JSON.stringify( value ), function(err, result) {
             if (err) {
                 throw err;
                 cb(err, result)
             } else {
+                t.ok(!err, "Document " + docId + " updated successfully on app_bucket")
                 setTimeout(function () {
                     // Check the doc is shadowed to shadow bucket successfully
                     shadow_bucket.get(docId, function(err, result) {
@@ -161,12 +163,13 @@ test("Web client updating docs in app-bucket and check the doc is shadowed to sh
 test("Web client remove docs in app-bucket and check the doc is no longer accessible from lite db successfully", function(t) {
     async.times(numDocs, function(i, cb){
         var docId = "testdoc_" + i;
-        console.log("===== Removing doc " + docId);
+        //console.log("===== Removing doc " + docId);
         app_bucket.remove(docId, function(err, result) {
             if (err) {
                 throw err;
                 cb(err, result)
             } else {
+                t.ok(!err, "Document " + docId + " removed successfully from app_bucket")
                 setTimeout(function () {
                     // Mobile client to check the doc replicated to lite db
                     var urlReadDoc = coax([server, pulldb, docId, {attachments: true}]).pax().toString()
