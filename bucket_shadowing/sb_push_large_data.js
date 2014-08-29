@@ -20,13 +20,11 @@ if (config.provides=="android") sgShadowBucketDb = sgShadowBucketDb.replace("loc
 
 var timeoutShadowing = 2000;
 var timeoutReplication = 5000;
+var maxDataSize = 20000000;
 
 var docId = "testdoc";
-var value_data = Math.random().toString(5).substring(4);
-var value_json = {_id : docId,
-            data: value_data,   
-            at: new Date()};
-var value = JSON.stringify( value_json );
+var data = (new Array(maxDataSize - 321 )).join("x");
+var value = {k: data}   
 
 test("create buckets", function (t) {
     common.createShadowBuckets(t, bucketNames[0],bucketNames[1])
@@ -54,20 +52,6 @@ test("create test database " + pushdb, function(t){
   t.end()
 })
 
-test("Load one doc into lite pushdb", function(t){
-  setTimeout(function () {
-    coax.put([server,pushdb, docId], value_json, function(err, ok){
-        if (err){
-            t.false(err, "error loading doc.  url: " + coax.put([server, pushdb, docId]).pax().toString() +" err: " + JSON.stringify(err));
-            t.end()
-        } else {
-            t.equals(docId, ok.id, "Doc " + docId + " created");
-            t.end();
-        }
-    });
-  }, timeoutReplication);  
-})
-
 test("Mobile client start continous push replication", function(t) {
     console.log(coax([server, "_replicate"]).pax().toString(), "source:", pushdb, ">>  target:", sgShadowBucketDb);
     coax.post([server, "_replicate"], {
@@ -80,33 +64,39 @@ test("Mobile client start continous push replication", function(t) {
     });
 });
 
-test("Verify that the doc is replicated to sync_gateway", test_conf, function(t) {
-    setTimeout(function () {
-        coax([sgShadowBucketDb, "_all_docs"],function(err, allDocs){
-            t.false(err, "sg database exists");
-            t.ok(allDocs, "got _all_docs repsonse");
-            t.equals(allDocs.update_seq, 2, "sg sequence number correct")
-            t.end();
-        });
-    }, timeoutReplication);
-});
+test("Load one doc of maximum size into lite pushdb and verify the updated document is replicated to shadow_bucket and shadowed to app-bucket", function(t){
+  setTimeout(function () {
+    coax.put([server,pushdb, docId], value, function(err, ok){
+        if (err){
+            t.false(err, "error loading doc.  url: " + coax.put([server, pushdb, docId]).pax().toString() +" err: " + JSON.stringify(err));
+            t.end()
+        } else {
+            t.equals(docId, ok.id, "Doc " + docId + " created");
+            setTimeout(function () {
+                shadow_bucket.get(docId, function(err, result) {
+                    if (err) {
+                        t.end();
+                        throw err;
+                    } else {
+                        t.equals(JSON.stringify(result.value.k), JSON.stringify(value.k), "Document shadowed successfully to shadow bucket - same data");
+                        app_bucket.get(docId, function(err, result) {
+                            if (err) {
+                                t.end();
+                                throw err;
+                            } else {
+                                t.equals(JSON.stringify(result.value.k), JSON.stringify(value.k), "Document shadowed successfully to app bucket - same data");
+                                t.end();
+                            }
+                        });
+                    }
+                });
+            }, timeoutReplication);
+        }
+    });
+  }, timeoutReplication);  
+})
 
-test("Verify that the doc is shadowed to app-bucket", test_conf, function(t) {
-    setTimeout(function () {
-        app_bucket.get(docId, function(err, result) {
-            if (err) {
-                t.end();
-                throw err;
-            } else {
-                t.equals(JSON.stringify(result.value.at), JSON.stringify(value_json.at), "Document shadowed successfully to app bucket - same timestamp");
-                t.equals(JSON.stringify(result.value.data), JSON.stringify(value_json.data), "Document shadowed successfully to app bucket - same data");
-                t.end();
-            }
-        });
-    }, timeoutReplication);
-});
-
-test("Update the doc in lite pushdb", function(t){
+test("Update the doc in lite pushdb and verify the updated document is shadowed to app-bucket", function(t){
     // get the document revision and update the revision
     coax([server, pushdb, docId], function (err, doc) {
         if (err || (!doc) || doc == undefined) {
@@ -114,10 +104,8 @@ test("Update the doc in lite pushdb", function(t){
             t.end();
         } else {
             // Change the date and data of the doc
-            doc.data = "222222"
-            doc.at = new Date()
-            value_json.data = doc.data
-            value_json.at = doc.at
+            doc.k = (new Array(maxDataSize - 368 )).join("y");
+            value.k = doc.k
             // put updated doc
             coax.put([server, pushdb, docId], doc, function(err, ok){
                 if (err){
@@ -125,27 +113,22 @@ test("Update the doc in lite pushdb", function(t){
                     t.end()
                 } else {
                     t.equals(docId, ok.id, "Doc " + docId + " updated");
-                    t.end();
+                    setTimeout(function () {
+                        app_bucket.get(docId, function(err, result) {
+                            if (err) {
+                                throw err;
+                                t.end();
+                            } else {
+                                t.equals(JSON.stringify(result.value.k), JSON.stringify(value.k), "Document shadowed successfully to app bucket - same data");
+                                t.end();
+                            }
+                        });
+                    }, timeoutReplication);
                 }
             })
         }
     })
 })
-
-test("Verify the updated document is shadowed to app-bucket", test_conf, function(t) {
-    setTimeout(function () {
-        app_bucket.get(docId, function(err, result) {
-            if (err) {
-                throw err;
-                t.end();
-            } else {
-                t.equals(JSON.stringify(result.value.at), JSON.stringify(value_json.at), "Document shadowed successfully to app bucket - same timestamp");
-                t.equals(JSON.stringify(result.value.data), JSON.stringify(value_json.data), "Document shadowed successfully to app bucket - same data");
-                t.end();
-            }
-        });
-    }, timeoutReplication);
-});
 
 test("Mobile client remove the doc in lite and verify the change is shadowed to app-bucke", function(t) {
     // get the document revision and delete the revision
@@ -169,7 +152,7 @@ test("Mobile client remove the doc in lite and verify the change is shadowed to 
 });
 
 test("Re-load the deleted doc into lite pushdb", function(t){
-    coax.put([server,pushdb, docId], value_json, function(err, ok){
+    coax.put([server,pushdb, docId], value, function(err, ok){
         if (err){
             t.false(err, "error loading doc.  url: " + coax.put([server,pushdb, docId]).pax().toString() +" err: " + JSON.stringify(err));
             t.end()
@@ -187,8 +170,7 @@ test("Verify that the doc is shadowed to app-bucket", test_conf, function(t) {
                 throw err;
                 t.end();
             } else {
-                t.equals(JSON.stringify(result.value.at), JSON.stringify(value_json.at), "Document shadowed successfully to app bucket - same timestamp");
-                t.equals(JSON.stringify(result.value.data), JSON.stringify(value_json.data), "Document shadowed successfully to app bucket - same data");
+                t.equals(JSON.stringify(result.value.k), JSON.stringify(value.k), "Document shadowed successfully to app bucket - same data");
                 t.end();
             }
         });

@@ -108,67 +108,65 @@ test("Adding an over-sized document to app-bucket and verify it is not shadowed"
     });            
 });
 
-// test("Adding an empty document to app-bucket and verify it is not shadowed", function(t) {
-//     var docId = "testdoc_empty";
-//     var value = "";
-//     app_bucket.upsert(docId, value, function(err, result) {
-//         if (err) {
-//             t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
-//             throw err;
-//             cb(err, result)
-//         } else {
-//             t.ok(!err, "Document " + docId + " created successfully on app_bucket")
-//             setTimeout(function () {
-//                 // Check the doc is created in app_bucket successfully
-//                 app_bucket.get(docId, function(error, result) {
-//                     if (error) {
-//                         t.fail(error, "empty doc was not created in app-bucket.  error:" + JSON.stringify(error))
-//                         t.end()
-//                     } else {
-//                         t.ok(!error, "empty doc was created in app-bucket.  error:" + JSON.stringify(error))
-//                         // Check the doc is not shadowed to shadow bucket 
-//                         shadow_bucket.get(docId, function(err, result) {
-//                             t.ok(err, "empty doc was not supposed to shadowed to shadow-bucket.  error:" + JSON.stringify(err))
-//                             t.end()
-//                         }); 
-//                     }    
-//                 });    
-//             }, timeoutShadowing ) 
-//         }
-//     });            
-// });
+test("Adding an empty document to app-bucket and verify it is not shadowed", function(t) {
+    var docId = "testdoc_empty";
+    var value = "";
+    app_bucket.upsert(docId, value, function(err, result) {
+        if (err) {
+            t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
+            throw err;
+            cb(err, result)
+        } else {
+            t.ok(!err, "Document " + docId + " created successfully on app_bucket")
+            setTimeout(function () {
+                // Check the doc is created in app_bucket successfully
+                app_bucket.get(docId, function(error, result) {
+                    if (error) {
+                        t.fail(error, "empty doc was not created in app-bucket.  error:" + JSON.stringify(error))
+                        t.end()
+                    } else {
+                        t.ok(!error, "empty doc was created in app-bucket.  error:" + JSON.stringify(error))
+                        // Check the doc is not shadowed to shadow bucket 
+                        shadow_bucket.get(docId, function(err, result) {
+                            t.ok(err, "empty doc was not supposed to shadowed to shadow-bucket.  error:" + JSON.stringify(err))
+                            t.end()
+                        }); 
+                    }    
+                });    
+            }, timeoutShadowing ) 
+        }
+    });            
+});
 
-// test("Adding an non-json document to app-bucket and verify it is not shadowed", function(t) {
-//     var docId = "testdoc_non_json";
-//     var value = "aaaa";
-//     app_bucket.upsert(docId, value, function(err, result) {
-//         if (err) {
-//             t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
-//             throw err;
-//             cb(err, result)
-//         } else {
-//             t.ok(!err, "Document " + docId + " created successfully on app_bucket")
-//             setTimeout(function () {
-//                 // Check the doc is created in app_bucket successfully
-//                 app_bucket.get(docId, function(error, result) {
-//                     if (error) {
-//                         t.fail(error, "Non-json doc was not created in app-bucket.  error:" + JSON.stringify(error))
-//                         t.end()
-//                     } else {
-//                         t.ok(!error, "Non-json doc was created in app-bucket.  error:" + JSON.stringify(error))
-//                         // Check the doc is not shadowed to shadow bucket 
-//                         shadow_bucket.get(docId, function(err, result) {
-//                             t.ok(err, "Non-json doc was not supposed to shadowed to shadow-bucket.  error:" + JSON.stringify(err))
-//                             t.end()
-//                         }); 
-//                     }    
-//                 });    
-//             }, timeoutShadowing ) 
-//         }
-//     });            
-// });
-
- 
+test("Adding an non-json document to app-bucket and verify it is not shadowed", function(t) {
+    var docId = "testdoc_non_json";
+    var value = "aaaa";
+    app_bucket.upsert(docId, value, function(err, result) {
+        if (err) {
+            t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
+            throw err;
+            cb(err, result)
+        } else {
+            t.ok(!err, "Document " + docId + " created successfully on app_bucket")
+            setTimeout(function () {
+                // Check the doc is created in app_bucket successfully
+                app_bucket.get(docId, function(error, result) {
+                    if (error) {
+                        t.fail(error, "Non-json doc was not created in app-bucket.  error:" + JSON.stringify(error))
+                        t.end()
+                    } else {
+                        t.ok(!error, "Non-json doc was created in app-bucket.  error:" + JSON.stringify(error))
+                        // Check the doc is not shadowed to shadow bucket 
+                        shadow_bucket.get(docId, function(err, result) {
+                            t.ok(err, "Non-json doc was not supposed to shadowed to shadow-bucket.  error:" + JSON.stringify(err))
+                            t.end()
+                        }); 
+                    }    
+                });    
+            }, timeoutShadowing ) 
+        }
+    });            
+});
 
 test("delete buckets", function (t) {
     common.deleteShadowBuckets(t, bucketNames[0],bucketNames[1])

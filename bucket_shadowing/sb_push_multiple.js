@@ -36,7 +36,7 @@ test("start test client", function(t){
   })
 })
 
-test("start syncgateway", function(t){
+test("start sync gateway", function(t){
   common.launchSGShadowing(t, function(_sg){
     sg  = _sg
     gateway = sg.url
@@ -82,9 +82,11 @@ test("Verify that the created docs are shadowed to app-bucket", function(t){
             var timestamp = 0
             app_bucket.get(docId, function(err, result) {
                 if (err) {
-                    throw err
+                    t.fail("Fail to get document " + docId + " in app_bucket. err: " + JSON.stringify(err))
+                    throw err;
                     cb(err, result)
                 } else {
+                    t.ok(!err, "the document " + docId + " is shadowed to app_bucket successfully. err: " + JSON.stringify(err))
                     cb(err, result)
                 }
             })
@@ -108,7 +110,7 @@ test("Update the doc in lite pushdb", function(t){
                     if (err){
                         t.false(err, "error updating doc.  url: " + coax.put([server,pushdb, docId]).pax().toString() +" err: " + JSON.stringify(err));
                     } else {
-                        t.equals(docId, ok.id, "Doc " + docId + " updated successfully");
+                        t.equals(docId, ok.id, "Doc " + docId + " updated successfully in lite db");
                         cb(err, ok)
                     }
                 })
@@ -127,10 +129,12 @@ test("Verify that the updated doc are shadowed to app-bucket", function(t){
             var timestamp = 0
             app_bucket.get(docId, function(err, result) {
                 if (err) {
-                    throw err
+                    t.fail("Fail to get document " + docId + " in app_bucket. err: " + JSON.stringify(err))
+                    throw err;
                     cb(err, result)
                 } else {
                     t.equals(JSON.stringify(result.value.data), "\"" + updatedData + "\"", "the updated doc " + docId + " doc has been shadowed to app_bucket - same data ")
+                    t.ok(!err, "the document " + docId + " is shadowed to app_bucket successfully. err: " + JSON.stringify(err))
                     cb(err, result)
                 }
             })
@@ -146,7 +150,7 @@ test("Mobile client remove the doc in lite", function(t) {
         var docId = pushdb + "_" + i;
         coax([server, pushdb, docId], function (err, result) {
             if (err || (!result) || result == undefined) {
-                t.fail("unable to get doc rev for url:" + coax([server, pushdb, docid]).pax().toString() + ", err:" + err + ", result:" + result);
+                t.fail(true, "unable to get doc rev for url:" + coax([server, pushdb, docid]).pax().toString() + ", err:" + err + ", result:" + result);
                 cb(err, result)
             } else {
                 coax.del([server, pushdb, docId, {rev : result._rev}], function (err, json) {
@@ -170,7 +174,7 @@ test("Web client verifies the deleted docs are no longer in app-bucke", function
                     t.equals(JSON.stringify(err.message), "\"The key does not exist on the server\"", "The deleted document is removed at app bucket")
                     cb(err, result)
                 } else {
-                    t.fail("Fail to remove document " + docId)
+                    t.fail(err, "Fail to remove document " + docId)
                     cb(err, result)
                 }
             })
