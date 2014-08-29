@@ -1,18 +1,16 @@
 
 //This file has the test cases to verify the following order of events
-//CBS already has a app bucket, using shadowing it copies over all contents to Sync Gateway bucket
+//1. CBS already has a app bucket, using shadowing it copies over all contents to Sync Gateway bucket
 //   Load documents into app_bucket before starting sync_gateway.  
 //   Start sync_gateway 
 //   Verify the old documents got shadowed to the shadow_bucket as soon as sync_gateway started
 //
-//Verfiy kill and restart of sync_gateway does not affect shadowing 
+//2. Verfiy kill and restart of sync_gateway does not affect shadowing 
 //
-//delete shadow_bucket while sync_gateway is running. Make sure sync_gateway handle it gracefully 
+//3. Delete shadow_bucket while sync_gateway is running. Verify that sync_gateway handle it gracefully 
 //
-//Verify Sync_gateway handle the situation when app_bucket went down
-//   With app_bucket down, push one doc from lite db to shadow_bucket.  Verify sync_gateway handle it correctly
 //
-//Not testing flash or delete of app_bucket and shadow_bucket  
+//Not testing flash or delete of app_bucket and shadow_bucket
 
 
 var launcher = require("../lib/launcher"),
@@ -120,7 +118,7 @@ test("Mobile client start continous push replication", function(t) {
     });
 });
 
-test("Verify the documents in app_bucket is shadowing to shadow_bucket and lite db", function(t) {
+test("Verify the documents in app_bucket are shadowed to shadow_bucket and lite db", function(t) {
     setTimeout(function () {
         async.times(numDocs, function(i, cb){
             var docId = "testdoc_" + i;
@@ -332,7 +330,6 @@ test("delete shadow_bucket while sync_gateway is running. Make sure sync_gateway
       }
     };
     common.http_post_api(t, post_data, options, 200, function (callback) {
-        //t.end();
     });
 });
 
