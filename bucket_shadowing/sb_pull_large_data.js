@@ -17,13 +17,9 @@ shadow_bucket = new couchbase.Connection({host: 'localhost:8091', bucket: bucket
 var sgShadowBucketDb = "http://localhost:4985/db"  
 var urlCB = "http://localhost:8091"  
 if (config.provides=="android") sgShadowBucketDb = sgShadowBucketDb.replace("localhost", "10.0.2.2");
-var timeStamps = [];
-var data = [];
-
-var numDocs= 1;  //???? parseInt(config.numDocs) || 100;
 var timeoutShadowing = 2000;
 var timeoutReplication = 5000;
-var maxDataSize = 400; //??? 10000000; 
+var maxDataSize = 20000000; 
 
 
 test("create buckets", function (t) {
@@ -66,21 +62,23 @@ test("Mobile client start continous replication", function(t) {
 
 test("Adding a document of maximum size to app-bucket and verify it is shadowed correctly", function(t) {
     var docId = "testdoc_max_size";
-    data = (new Array(maxDataSize - 320 )).join("x")  //320 is the size of additional data SG craeted for the doc
+    data = (new Array(maxDataSize - 321 )).join("x")  //321 is the size of additional data SG craeted for the doc
     var value = {k : data};
     //console.log("===== Creating doc in app bucket.  Doc id:" + docId + " with data size of " + maxDataSize);
     app_bucket.upsert(docId, JSON.stringify( value ), function(err, result) {
         if (err) {
+            t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
             throw err;
-            t.end()
+            cb(err, result)
         } else {
             t.ok(!err, "Document " + docId + " created successfully on app_bucket")
             setTimeout(function () {
                 // Check the doc is shadowed to shadow bucket successfully
                 shadow_bucket.get(docId, function(err, result) {
                     if (err) {
+                        t.fail("Fail to get document " + docId + " in shadow_bucket. err: " + JSON.stringify(err))
                         throw err;
-                        t.end()
+                        cb(err, result)
                     } else {
                         t.equals(JSON.stringify(result.value.k), JSON.stringify(data), "Document " + docId + " shadowed successfully to shadow bucket - same data" )
                         setTimeout(function () {
@@ -105,21 +103,23 @@ test("Adding a document of maximum size to app-bucket and verify it is shadowed 
 
 test("Verify updating a doc with maximum size in app-bucket and check shadowing is done properly", function(t) {
     var docId = "testdoc_max_size";
-    data = (new Array(maxDataSize - 320 )).join("y")  //320 is the size of additional data SG craeted for the doc
+    data = (new Array(maxDataSize - 368 )).join("y")   //With update, additional revision takes more space
     var value = {k : data};
     //console.log("===== Updating doc in app bucket.  Doc id:" + docId + " with data size of " + maxDataSize);
     app_bucket.upsert(docId, JSON.stringify( value ), function(err, result) {
         if (err) {
+            t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
             throw err;
-            t.end()
+            cb(err, result)
         } else {
             t.ok(!err, "Document " + docId + " created successfully on app_bucket")
             setTimeout(function () {
                 // Check the doc is shadowed to shadow bucket successfully
                 shadow_bucket.get(docId, function(err, result) {
                     if (err) {
+                        t.fail("Fail to get document " + docId + " in shadow_bucket. err: " + JSON.stringify(err))
                         throw err;
-                        t.end()
+                        cb(err, result)
                     } else {
                         t.equals(JSON.stringify(result.value.k), JSON.stringify(data), "Document " + docId + " shadowed successfully to shadow bucket - same data" )
                         setTimeout(function () {
@@ -146,8 +146,9 @@ test("Verify removing a doc with maximum size in app-bucket and check the doc is
   var docId = "testdoc_max_size";
   app_bucket.remove(docId, function(err, result) {
       if (err) {
+          t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
           throw err;
-          t.end()
+          cb(err, result)
       } else {
           t.ok(!err, "Document " + docId + " created successfully on app_bucket")
           setTimeout(function () {
@@ -158,7 +159,7 @@ test("Verify removing a doc with maximum size in app-bucket and check the doc is
                       t.equals(JSON.stringify(err.status), "404", "expected status code for doc " + docId + " should be 404.  return: " + JSON.stringify(err))
                       t.end()
                   } else {
-                      t.fail("Error: Doc " + docId + " was removed from the app bucket but still accessible from lite db.  result: " + JSON.stringify(result))
+                      t.fail("Error: Doc " + docId + " was removed from the app bucket but still accessible from lite db.")
                       t.end()
                   }
               })

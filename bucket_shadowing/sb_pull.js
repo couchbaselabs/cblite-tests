@@ -74,6 +74,7 @@ test("Web client create docs in app-bucket and check the doc is shadowed to shad
         //console.log("===== Creating doc in app bucket.  Doc id=" + docId + " value=" + JSON.stringify( value ));
         app_bucket.upsert(docId, JSON.stringify( value ), function(err, result) {
             if (err) {
+                t.fail("Fail to create document " + docId + " in app_bucket. err: " + JSON.stringify(err))
                 throw err;
                 cb(err, result)
             } else {
@@ -82,6 +83,7 @@ test("Web client create docs in app-bucket and check the doc is shadowed to shad
                     // Check the doc is shadowed to shadow bucket successfully
                     shadow_bucket.get(docId, function(err, result) {
                         if (err) {
+                            t.fail("Fail to get document " + docId + " in shadow_bucket. err: " + JSON.stringify(err))
                             throw err;
                             cb(err, result)
                         } else {
@@ -123,6 +125,7 @@ test("Web client updating docs with large data in app-bucket and check the doc i
         //console.log("===== Updating doc " + docId + " value=" + JSON.stringify( value ));
         app_bucket.upsert(docId, JSON.stringify( value ), function(err, result) {
             if (err) {
+                t.fail("Fail to ,update document " + docId + " in app_bucket. err: " + JSON.stringify(err))
                 throw err;
                 cb(err, result)
             } else {
@@ -131,6 +134,7 @@ test("Web client updating docs with large data in app-bucket and check the doc i
                     // Check the doc is shadowed to shadow bucket successfully
                     shadow_bucket.get(docId, function(err, result) {
                         if (err) {
+                            t.fail("Fail to get document " + docId + " in shadow_bucket. err: " + JSON.stringify(err))
                             throw err;
                             cb(err, result)
                         } else {
@@ -166,6 +170,7 @@ test("Web client remove docs in app-bucket and check the doc is no longer access
         //console.log("===== Removing doc " + docId);
         app_bucket.remove(docId, function(err, result) {
             if (err) {
+                t.fail("Fail to remove document " + docId + " from app_bucket. err: " + JSON.stringify(err))
                 throw err;
                 cb(err, result)
             } else {
