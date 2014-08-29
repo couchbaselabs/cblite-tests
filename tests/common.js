@@ -135,25 +135,25 @@ var common = module.exports = {
   deleteShadowBuckets: function(t, appBucket, shadowBucket){
     var post_data = 'STR';
     var options0 = {
-    host : "localhost",
-    port : 8091,
-        path: "/pools/default/buckets/" + appBucket,
-        auth : "Administrator:password",
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'text/html'
-        }
+      host : "localhost",
+      port : 8091,
+      path: "/pools/default/buckets/" + appBucket,
+      auth : "Administrator:password",
+      method: 'DELETE',
+      headers: {
+          'Content-Type': 'text/html'
+      }
     };
     var options1 = {
-            host : "localhost",
-        port : 8091,
-            path: "/pools/default/buckets/" + shadowBucket,
-            auth : "Administrator:password",
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'text/html'
-            }
-        };
+      host : "localhost",
+      port : 8091,
+      path: "/pools/default/buckets/" + shadowBucket,
+      auth : "Administrator:password",
+      method: 'DELETE',
+      headers: {
+          'Content-Type': 'text/html'
+      }
+    };
     //console.log(options);
     common.http_post_api(t, post_data, options0, 200, function (callback) {
       common.http_post_api(t, post_data, options1, 200, function (callback) {
