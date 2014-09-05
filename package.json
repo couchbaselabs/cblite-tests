@@ -26,7 +26,8 @@
     "couchbase": "2.x"
   },
   "scripts": {
-    "test": "TAP_TIMEOUT=20000 tap --tap ./tests"
+    "test": "TAP_TIMEOUT=20000 tap --tap ./tests",
+    "bucket_shadowing": "TAP_TIMEOUT=20000 tap --tap ./bucket_shadowing"	
   },
   "author": "Couchbase, Inc.",
   "license": "Apache 2.0"
