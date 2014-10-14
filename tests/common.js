@@ -1013,7 +1013,10 @@ var common = module.exports = {
       target : dbb,
       continuous : true
     }, function(err, info) {
-      if (err) {return cb(err)}
+      if (err) {
+	  console.log("error raised when trying to create replication:", err)
+	  return cb(err)
+	  }
       console.log("_replicate server: " + server + " source: " + dbb + " -> target: " + dba)
       coax.post([server, "_replicate"], {
         source : dbb,
