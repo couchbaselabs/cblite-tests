@@ -264,7 +264,7 @@ var common = module.exports = {
           })
 
           response.on('end', function () {
-              logger.info(response.statusCode + " from http://" + options.host + ":" + options.port + options.path);
+              logger.info(response.statusCode + " from http://" + options.host + ":" + options.port + "/" + options.path);
               if (response.statusCode == '200' || response.statusCode == '201') {
                   t.equals(response.statusCode, expectedStatus, "wrong response status code " + response.statusCode + ". Expected: " + expectedStatus);
                   try {
@@ -285,7 +285,7 @@ var common = module.exports = {
                   } else {
 
                       t.fail("wrong response status code " + response.statusCode + " from http://" +
-                           options.host + ":" + options.port + options.path + " for :" + JSON.stringify(options));
+                           options.host + ":" + options.port + "/" + options.path + " for :" + JSON.stringify(options));
                   }
                   t.end();
               };

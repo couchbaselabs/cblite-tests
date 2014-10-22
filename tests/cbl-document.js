@@ -87,7 +87,7 @@ test("create docs with inline text attachments", test_conf, function (t) {
     })
 })
 
-
+//https://github.com/couchbase/couchbase-lite-java-core/issues/98
 test("verify post on doc without data. negative case", test_conf, function (t) {
         coax([server, dbs[0], "_all_docs", {
             limit: 1
@@ -125,7 +125,7 @@ test("verify post on doc without data. negative case", test_conf, function (t) {
                 })
             })
 })
-
+/*
 
 // purge all dbs
 test("test purge", test_conf, function(t){
@@ -462,4 +462,4 @@ test("done", function(t){
   common.cleanup(t, function(json){
     t.end()
   })
-})
+})*/
