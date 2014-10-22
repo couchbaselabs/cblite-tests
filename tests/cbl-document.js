@@ -125,7 +125,7 @@ test("verify post on doc without data. negative case", test_conf, function (t) {
                 })
             })
 })
-/*
+
 
 // purge all dbs
 test("test purge", test_conf, function(t){
@@ -462,4 +462,4 @@ test("done", function(t){
   common.cleanup(t, function(json){
     t.end()
   })
-})*/
+})
