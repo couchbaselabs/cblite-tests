@@ -113,14 +113,15 @@ test("verify post on doc without data. negative case", test_conf, function (t) {
                             path: dbs[0] + '/' + docid,
                             method: 'POST',
                         }
+//                https://github.com/couchbase/couchbase-lite-ios/issues/499
 //                curl -X POST -d "" http://127.0.0.1:59851/cbl-document1/cbl-document1_0
 //                {
-//                  "status" : 400,
-//                  "error" : "bad_request"
+//                  "status" : 405,
+//                  "error" : "method_not_allowed"
 //                }
 
-                        common.http_get_api(t, options, 400, function (callback) {
-                            t.equals(JSON.stringify(callback), JSON.stringify({"status": 400, "error": "bad_request"}))
+                        common.http_get_api(t, options, 405, function (callback) {
+                            t.equals(JSON.stringify(callback), JSON.stringify({"status": 405, "error": "method_not_allowed"}))
                         })
                 })
             })
