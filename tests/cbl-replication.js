@@ -238,10 +238,15 @@ test("verify local-replicated in dbs: 0", test_conf, function(t){
 })
 
 // timing out and the compareDBSeqNums asserts are dubious so skipping for now
-// test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
-//   common.compareDBSeqNums(t, {sourcedbs : dbs,
-//                               targetdbs : repdbs})
-// })
+ test("verify local-replicated dbs changefeed", {timeout : 15000}, function(t){
+     if (config.provides == "android") {
+	 console.log("Skipping local replication on Android");
+	 t.end();
+     } else {
+	 common.compareDBSeqNums(t, {sourcedbs : dbs,
+                               targetdbs : repdbs})
+	}
+ })
 
 test("cleanup cb bucket", function(t){
     if (config.DbUrl.indexOf("http") > -1){
