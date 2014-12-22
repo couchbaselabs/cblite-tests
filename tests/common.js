@@ -283,8 +283,7 @@ var common = module.exports = {
                       }
                       callback(body);
                   } else {
-
-                      t.fail("wrong response status code " + response.statusCode + " from http://" +
+                      t.fail("wrong response status code " + response.statusCode + ". Expected: " + expectedStatus + "; from http://" +
                            options.host + ":" + options.port + "/" + options.path + " for :" + JSON.stringify(options));
                   }
                   t.end();
