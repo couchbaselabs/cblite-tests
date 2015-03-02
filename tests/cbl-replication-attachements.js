@@ -90,6 +90,7 @@ test("set push/pull replication to gateway", function(t){
 
 })
 
+//size of attachment GGate_BIG.JPG 2,358,797 bytes
 test("load databases", test_conf, function(t){
   common.createDBDocs(t, {numdocs : numDocs, dbs : dbs, docgen: 'inlinePngtBigAtt'});
 })
