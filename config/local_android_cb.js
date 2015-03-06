@@ -22,3 +22,4 @@ var config = module.exports = {
  */
 module.exports.SyncGatewayAdminParty = __dirname+"/admin_party_cb.json"
 module.exports.SyncGatewaySyncFunctionTest = __dirname+"/sync_function_test.json"
+module.exports.cluster_ini_file = __dirname+"/clusters/cluster.ini"

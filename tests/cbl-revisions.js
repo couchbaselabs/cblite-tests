@@ -14,7 +14,7 @@ var server, sg, gateway,
  dbs = ["api-revision1"];
 
 var numDocs=parseInt(config.numDocs) || 100;
-var timeoutReplication = 3000;
+var timeoutReplication = 5000;
 if (config.provides=="android" || config.DbUrl.indexOf("http") > -1) timeoutReplication = 500 * numDocs;
 
 

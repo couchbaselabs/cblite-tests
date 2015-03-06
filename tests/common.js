@@ -580,9 +580,9 @@ var common = module.exports = {
 	          coax(url, function (err, json) {
 	              if (err) {
 	                  t.fail("unable to get doc " + url + " to delete conflicts", err)
-	              } else {
+	              } else
+                          //console.log(json)
 	                  confls = json._conflicts
-	                  //console.log(json)
 	                  //delete conflicts
 	                  var docUrl = coax([server, db, localdocs + docid]).pax().toString()
 	                  //console.log(docUrl)
