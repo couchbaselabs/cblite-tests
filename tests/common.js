@@ -324,7 +324,7 @@ var common = module.exports = {
               }
               logger.info(callback);
               callback(body);
-                                t.end();
+//                                t.end();
           } else {
               if (response.statusCode == expectedStatus.toString()) {
                   console.log("got expected status " + options.path + ": ", expectedStatus);
@@ -333,7 +333,7 @@ var common = module.exports = {
                   } catch (err) {
                       logger.info("not json format of response body", options.path, body);
                   }
-                  callback(body);
+//                  callback(body);
               } else {
                   t.fail("wrong response status code " + response.statusCode + " from http://" +
                       options.host + ":" + options.port + options.path + " for :" + JSON.stringify(options) +
@@ -341,7 +341,7 @@ var common = module.exports = {
 
                   callback(body);
               }
-              t.end();
+//              t.end();
           };
       });
     }).on('error', function (e) {
