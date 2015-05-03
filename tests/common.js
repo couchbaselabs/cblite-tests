@@ -344,7 +344,17 @@ var common = module.exports = {
               t.end();
           };
       });
-  });
+    }).on('error', function (e) {
+        logger.error("Got error: " + e.message);
+        t.fail("ERROR ");
+        t.end();
+    }).on('socket', function (e) {
+	  //tests/cbl-simple-requests.js stuck on android
+	  req.socket.setTimeout(25000);
+	    req.socket.on('timeout', function() {
+	        req.abort();
+	    });
+    })
   logger.info(post_data);
   req.write(post_data);
   req.end();

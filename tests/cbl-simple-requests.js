@@ -78,7 +78,7 @@ test("try to create json doc without 'Content-Type'", function (t) {
         }
     };
     console.log(options);
-    common.http_post_api(t, post_data, options, 502, function (callback) {});
+    common.http_post_api(t, post_data, options, 502, function (callback) {t.end()});
 });
 */
 
@@ -103,7 +103,7 @@ test("try to create json doc without 'Content-Type'", function (t) {
             'Content-Type': 'text/html'
         }
     };
-    common.http_post_api(t, post_data, options, 406, function (callback) {});
+    common.http_post_api(t, post_data, options, 406, function (callback) {t.end()});
 });
 */
 
