@@ -31,7 +31,7 @@ test("create bucket",
                     'Content-Length': post_data.length
                 }
             };
-            common.http_post_api(t, post_data, options, 202, function (callback) {});
+            common.http_post_api(t, post_data, options, 202, function (callback) {t.end()});
         } else {
             t.end();
         };

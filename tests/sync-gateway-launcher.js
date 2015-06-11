@@ -1,8 +1,9 @@
 var launcher = require("../lib/launcher"),
-  coax = require("coax"),
-  conf_file = process.env.CONF_FILE || 'local',
-  config = require('../config/' + conf_file),
-  test = require("tap").test;
+    coax = require("coax"),
+    conf_file = process.env.CONF_FILE || 'local',
+    config = require('../config/' + conf_file),
+    test = require("tap").test,
+    test_time = process.env.TAP_TIMEOUT || 30;
 
 var serve, port = 8888, server = "http://localhost:"+port+"/"
 var admin_server = "http://localhost:"+(port+1)+"/"
@@ -104,7 +105,7 @@ test("cleanup cb bucket", function(t){
 	    },
 	    setTimeout(function(){
 		 t.end()
-	            }, 5000))
+	            }, test_time/10))
 	}else{
 	    t.end()
 	}
