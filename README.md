@@ -1,3 +1,6 @@
+
+**THIS IS DEPRECATED, DO NOT USE -- SEE https://github.com/couchbaselabs/sync-gateway-tests**
+
 ## Mobile API tests
 
 Since mobile is all about a ReST protocol for sync, we can test it at the ReST level.
